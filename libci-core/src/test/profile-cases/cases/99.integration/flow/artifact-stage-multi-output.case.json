@@ -1,0 +1,271 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "prepare",
+    "build",
+    "package",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "build-linux": {
+      "id": "build-linux",
+      "stage": "build",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p out\necho \"linux build artifact\" > out/linux.txt\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "out/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "build-macos": {
+      "id": "build-macos",
+      "stage": "build",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p out\necho \"macos build artifact\" > out/macos.txt\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "out/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "package-release": {
+      "id": "package-release",
+      "stage": "package",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p out\necho \"release bundle\" > out/release.txt\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "out/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [],
+      "needs": [
+        {
+          "job": "prepare-artifacts"
+        },
+        {
+          "job": "build-linux"
+        },
+        {
+          "job": "build-macos"
+        }
+      ]
+    },
+    "prepare-artifacts": {
+      "id": "prepare-artifacts",
+      "stage": "prepare",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p out\necho \"prepare stage artifact\" > out/prepare.txt\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "out/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-artifacts-flow": {
+      "id": "verify-artifacts-flow",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f out/prepare.txt || {\n  echo '[ERROR] missing out/prepare.txt'\n  exit 1\n}\ntest -f out/linux.txt || {\n  echo '[ERROR] missing out/linux.txt'\n  exit 1\n}\ntest -f out/macos.txt || {\n  echo '[ERROR] missing out/macos.txt'\n  exit 1\n}\ntest -f out/release.txt || {\n  echo '[ERROR] missing out/release.txt'\n  exit 1\n}\ngrep -F 'prepare stage artifact' out/prepare.txt || {\n  echo '[ERROR] prepare artifact mismatch'\n  exit 1\n}\ngrep -F 'linux build artifact' out/linux.txt || {\n  echo '[ERROR] linux artifact mismatch'\n  exit 1\n}\ngrep -F 'macos build artifact' out/macos.txt || {\n  echo '[ERROR] macos artifact mismatch'\n  exit 1\n}\ngrep -F 'release bundle' out/release.txt || {\n  echo '[ERROR] release artifact mismatch'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "out/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    }
+  }
+}

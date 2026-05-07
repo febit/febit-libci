@@ -1,0 +1,42 @@
+{
+  "stages": [
+    "delayed",
+    "verify"
+  ],
+  ".delayed-artifacts": {
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports"
+    ]
+  },
+  "delayed-self-check": {
+    "extends": ".delayed-artifacts",
+    "stage": "delayed",
+    "image": "debian:13-slim",
+    "when": "delayed",
+    "start_in": "6 seconds",
+    "script": "stage_ms=\"$(date -u -d \"$LIBCI_STAGE_STARTED_AT\" +%s%3N)\"\njob_ms=\"$(date -u -d \"$CI_JOB_STARTED_AT\" +%s%3N)\"\ndelay_ms=\"$((job_ms - stage_ms))\"\n\n{\n  printf 'stage_started_at=%s\\n' \"$LIBCI_STAGE_STARTED_AT\"\n  printf 'job_started_at=%s\\n' \"$CI_JOB_STARTED_AT\"\n  printf 'delay_ms=%s\\n' \"$delay_ms\"\n} > reports/delayed-self-check.log\n\nif [ \"$delay_ms\" -lt 5800 ]; then\n  echo \"[ERROR] delayed job started too early: ${delay_ms}ms\"\n  exit 1\nfi\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports"
+    ]
+  },
+  "verify-delayed-self-check": {
+    "stage": "verify",
+    "when": "always",
+    "dependencies": [
+      "delayed-self-check"
+    ],
+    "script": "test -f reports/delayed-self-check.log || {\n  echo '[ERROR] missing delayed report'\n  exit 1\n}\n\ngrep -E '^stage_started_at=.*Z$' reports/delayed-self-check.log >/dev/null || {\n  echo '[ERROR] missing stage_started_at instant'\n  exit 1\n}\n\ngrep -E '^job_started_at=.*Z$' reports/delayed-self-check.log >/dev/null || {\n  echo '[ERROR] missing job_started_at instant'\n  exit 1\n}\n\ndelay_ms=\"$(sed -n 's/^delay_ms=//p' reports/delayed-self-check.log)\"\ntest -n \"$delay_ms\" || {\n  echo '[ERROR] missing delay_ms value'\n  exit 1\n}\n\nif [ \"$delay_ms\" -lt 5800 ]; then\n  echo \"[ERROR] delayed verification failed: ${delay_ms}ms\"\n  exit 1\nfi\n"
+  }
+}

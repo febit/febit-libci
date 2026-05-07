@@ -1,0 +1,6 @@
+.libci-kubectl:
+  image: febit-libci/kubectl:1.34
+  lib: |
+    # Infra Library for Kubectl
+    set -e
+    ...

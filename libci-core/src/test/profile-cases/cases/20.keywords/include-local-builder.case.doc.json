@@ -1,0 +1,7 @@
+{
+  "stages": [
+    "test"
+  ],
+  ".included-entries_blank": true,
+  ".included-libs_basic_main_blank-lib": true
+}

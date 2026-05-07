@@ -1,0 +1,77 @@
+{
+  "stages": [
+    "exercise",
+    "verify"
+  ],
+  ".allow-failure-template": {
+    "stage": "exercise",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "script": "mkdir -p reports\ncat > \"reports/${CI_JOB_NAME}.meta\" <<EOF\njob=$CI_JOB_NAME\nexpected_exit_code=$FAIL_CODE\nEOF\nexit \"$FAIL_CODE\"\n",
+    "variables": {
+      "FAIL_CODE": "1"
+    }
+  },
+  "allow-failure-boolean": {
+    "extends": ".allow-failure-template",
+    "allow_failure": true,
+    "variables": {
+      "FAIL_CODE": "7"
+    },
+    "stage": "exercise",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "script": "mkdir -p reports\ncat > \"reports/${CI_JOB_NAME}.meta\" <<EOF\njob=$CI_JOB_NAME\nexpected_exit_code=$FAIL_CODE\nEOF\nexit \"$FAIL_CODE\"\n"
+  },
+  "allow-failure-by-exit-code": {
+    "extends": ".allow-failure-template",
+    "allow_failure": {
+      "exit_codes": [
+        42
+      ]
+    },
+    "variables": {
+      "FAIL_CODE": "42"
+    },
+    "stage": "exercise",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "script": "mkdir -p reports\ncat > \"reports/${CI_JOB_NAME}.meta\" <<EOF\njob=$CI_JOB_NAME\nexpected_exit_code=$FAIL_CODE\nEOF\nexit \"$FAIL_CODE\"\n"
+  },
+  "not-allowed-by-exit-code": {
+    "extends": ".allow-failure-template",
+    "allow_failure": {
+      "exit_codes": [
+        42
+      ]
+    },
+    "variables": {
+      "FAIL_CODE": "9"
+    },
+    "stage": "exercise",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "script": "mkdir -p reports\ncat > \"reports/${CI_JOB_NAME}.meta\" <<EOF\njob=$CI_JOB_NAME\nexpected_exit_code=$FAIL_CODE\nEOF\nexit \"$FAIL_CODE\"\n"
+  },
+  "verify-allow-failure-behavior": {
+    "stage": "verify",
+    "when": "always",
+    "script": "test -f reports/allow-failure-boolean.meta || {\n  echo '[ERROR] missing allow-failure-boolean marker'\n  exit 1\n}\ntest -f reports/allow-failure-by-exit-code.meta || {\n  echo '[ERROR] missing allow-failure-by-exit-code marker'\n  exit 1\n}\ntest -f reports/not-allowed-by-exit-code.meta || {\n  echo '[ERROR] missing not-allowed-by-exit-code marker'\n  exit 1\n}\ngrep -F 'expected_exit_code=7' reports/allow-failure-boolean.meta || {\n  echo '[ERROR] allow_failure=true marker mismatch'\n  exit 1\n}\ngrep -F 'expected_exit_code=42' reports/allow-failure-by-exit-code.meta || {\n  echo '[ERROR] allow_failure.exit_codes accepted marker mismatch'\n  exit 1\n}\ngrep -F 'expected_exit_code=9' reports/not-allowed-by-exit-code.meta || {\n  echo '[ERROR] rejected exit code marker mismatch'\n  exit 1\n}\n"
+  }
+}

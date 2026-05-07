@@ -1,0 +1,9 @@
+.app-common-settings:
+  lib: |
+    # Common settings for Gradle
+    export APP_VENDOR="febit.org"
+    export APP_VERSION="${CI_COMMIT_TAG:1}"
+
+    say_hi () {
+      echo "Hi from common settings!"
+    }

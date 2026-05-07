@@ -1,0 +1,9 @@
+.glob-template:
+  image: eclipse-temurin:21-jre
+  before_script:
+    - echo include-local-glob-before
+  artifacts:
+    when: always
+    paths:
+      - reports/
+

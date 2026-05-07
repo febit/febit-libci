@@ -1,0 +1,50 @@
+spec:
+  inputs:
+    environment:
+      default: test
+      options:
+        - test
+        - prod
+      regex: '[a-z]+'
+    job-stage:
+      default: unit-test
+    bool:
+      default: true
+    bool-string:
+      type: string
+      default: true
+    array:
+      default:
+        - a
+        - b
+        - c
+    number:
+      default: 1
+    version:
+      type: string
+      default: v1.2
+      regex: 'v\d+\.\d+'
+    retry:
+      type: number
+      default: 2
+      options:
+        - '1'
+        - '2'
+        - '3'
+
+---
+stages:
+  - $[[ inputs.job-stage ]]
+
+scan-website:
+  stage: $[[ inputs.job-stage ]]
+  script:
+    - ./scan-website $[[ inputs.environment ]]
+    - $[[ inputs.array ]]
+    - $[[ inputs.number ]]
+    - $[[ inputs.version ]]
+    - $[[ inputs.retry ]]
+    - $[[ inputs.bool ]]
+    - $[[ inputs.bool ]] - $[[ inputs.number ]]
+    - $[[ inputs.bool-string ]]
+  after_script: $[[ inputs.array ]]

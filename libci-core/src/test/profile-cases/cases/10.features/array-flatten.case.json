@@ -1,0 +1,84 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "s1",
+    "s2-1",
+    "s2-2",
+    "s2-3-1",
+    "s2-3-2",
+    "s2-3-3",
+    "s3",
+    "s4",
+    ".post"
+  ],
+  "jobs": {
+    "build": {
+      "id": "build",
+      "stage": ".pre",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo 1",
+        "n1-1",
+        "n1-2",
+        "n1-3-1",
+        "n1-3-2",
+        "n1-3-3",
+        "n2",
+        "n3",
+        "echo 2",
+        "n1-1",
+        "n1-2",
+        "n1-3-1",
+        "n1-3-2",
+        "n1-3-3",
+        "n2",
+        "n3",
+        "echo 3",
+        "n1-1",
+        "n1-2",
+        "n1-3-1",
+        "n1-3-2",
+        "n1-3-3",
+        "n2",
+        "n3",
+        "echo 4"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

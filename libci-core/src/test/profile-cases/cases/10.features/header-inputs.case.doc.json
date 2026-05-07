@@ -1,0 +1,25 @@
+{
+  "stages": [
+    "unit-test"
+  ],
+  "scan-website": {
+    "stage": "unit-test",
+    "script": [
+      "./scan-website test",
+      "a",
+      "b",
+      "c",
+      1,
+      "v1.2",
+      2,
+      true,
+      "true - 1",
+      "true"
+    ],
+    "after_script": [
+      "a",
+      "b",
+      "c"
+    ]
+  }
+}

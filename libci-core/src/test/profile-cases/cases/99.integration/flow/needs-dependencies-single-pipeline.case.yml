@@ -1,0 +1,352 @@
+stages:
+  - prepare
+  - build
+  - observe
+  - verify
+
+.base-needs-job:
+  before_script:
+    - |
+      mkdir -p reports
+
+      test -n "$DOTENV_FILE" || {
+        echo '[ERROR] DOTENV_FILE is required'
+        exit 1
+      }
+      : > "$DOTENV_FILE"
+
+      mark() {
+        printf '%s\n' "$1" >> "reports/${CI_JOB_NAME}.log"
+      }
+
+      require_env() {
+        name="$1"
+        eval "value=\${$name:-}"
+        test -n "$value" || {
+          echo "[ERROR] missing env: $name"
+          exit 1
+        }
+      }
+
+      reject_env() {
+        name="$1"
+        eval "is_set=\${$name+x}"
+        if [ -n "$is_set" ]; then
+          eval "value=\${$name}"
+          echo "[ERROR] unexpected env: $name=$value"
+          exit 1
+        fi
+      }
+
+      export_dotenv() {
+        printf '%s=%s\n' "$1" "$2" >> "$DOTENV_FILE"
+      }
+
+prepare-env:
+  extends: .base-needs-job
+  stage: prepare
+  variables:
+    DOTENV_FILE: reports/prepare-env.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/prepare-env.env
+  script: |
+    mark 'prepare-env:start'
+    sleep 2
+    export_dotenv PREPARE_ENV_READY yes
+    export_dotenv PREPARE_ENV_CHAIN prepare-env
+    mark 'prepare-env:done'
+
+prepare-cache:
+  extends: .base-needs-job
+  stage: prepare
+  variables:
+    DOTENV_FILE: reports/prepare-cache.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/prepare-cache.env
+  script: |
+    mark 'prepare-cache:start'
+    sleep 6
+    export_dotenv PREPARE_CACHE_READY yes
+    export_dotenv PREPARE_CACHE_CHAIN prepare-cache
+    mark 'prepare-cache:done'
+
+build-foundation:
+  extends: .base-needs-job
+  stage: build
+  variables:
+    DOTENV_FILE: reports/build-foundation.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/build-foundation.env
+  script: |
+    require_env PREPARE_ENV_READY
+    require_env PREPARE_CACHE_READY
+
+    mark 'build-foundation:confirmed-full-prepare'
+    sleep 3
+
+    export_dotenv BUILD_FOUNDATION_READY yes
+    export_dotenv BUILD_FOUNDATION_CHAIN "${PREPARE_ENV_CHAIN}>${PREPARE_CACHE_CHAIN}>build-foundation"
+    mark 'build-foundation:done'
+
+build-needs-cross-stage-single:
+  extends: .base-needs-job
+  stage: build
+  needs:
+    - prepare-env
+  variables:
+    DOTENV_FILE: reports/build-needs-cross-stage-single.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/build-needs-cross-stage-single.env
+  script: |
+    require_env PREPARE_ENV_READY
+    reject_env PREPARE_CACHE_READY
+
+    mark 'build-needs-cross-stage-single:started-before-prepare-cache-finished'
+    sleep 2
+
+    export_dotenv BUILD_CROSS_STAGE_SINGLE_READY yes
+    export_dotenv BUILD_CROSS_STAGE_SINGLE_CHAIN "${PREPARE_ENV_CHAIN}>build-needs-cross-stage-single"
+    mark 'build-needs-cross-stage-single:done'
+
+build-needs-cross-stage-multi:
+  extends: .base-needs-job
+  stage: build
+  needs:
+    - prepare-env
+    - prepare-cache
+  variables:
+    DOTENV_FILE: reports/build-needs-cross-stage-multi.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/build-needs-cross-stage-multi.env
+  script: |
+    require_env PREPARE_ENV_READY
+    require_env PREPARE_CACHE_READY
+
+    mark 'build-needs-cross-stage-multi:confirmed-both-prepare-jobs'
+    sleep 5
+
+    export_dotenv BUILD_CROSS_STAGE_MULTI_READY yes
+    export_dotenv BUILD_CROSS_STAGE_MULTI_CHAIN "${PREPARE_ENV_CHAIN}>${PREPARE_CACHE_CHAIN}>build-needs-cross-stage-multi"
+    mark 'build-needs-cross-stage-multi:done'
+
+build-needs-same-stage-single:
+  extends: .base-needs-job
+  stage: build
+  needs:
+    - job: build-foundation
+  variables:
+    DOTENV_FILE: reports/build-needs-same-stage-single.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/build-needs-same-stage-single.env
+  script: |
+    require_env BUILD_FOUNDATION_READY
+    reject_env BUILD_CROSS_STAGE_MULTI_READY
+
+    mark 'build-needs-same-stage-single:started-before-build-needs-cross-stage-multi-finished'
+    sleep 2
+
+    export_dotenv BUILD_SAME_STAGE_SINGLE_READY yes
+    export_dotenv BUILD_SAME_STAGE_SINGLE_CHAIN "${BUILD_FOUNDATION_CHAIN}>build-needs-same-stage-single"
+    mark 'build-needs-same-stage-single:done'
+
+observe-needs-mixed:
+  extends: .base-needs-job
+  stage: observe
+  needs:
+    - build-needs-cross-stage-single
+    - job: build-needs-same-stage-single
+  variables:
+    DOTENV_FILE: reports/observe-needs-mixed.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/observe-needs-mixed.env
+  script: |
+    require_env BUILD_CROSS_STAGE_SINGLE_READY
+    require_env BUILD_SAME_STAGE_SINGLE_READY
+    reject_env BUILD_CROSS_STAGE_MULTI_READY
+
+    mark 'observe-needs-mixed:started-before-build-needs-cross-stage-multi-finished'
+    sleep 1
+
+    export_dotenv OBSERVE_NEEDS_MIXED_READY yes
+    export_dotenv OBSERVE_NEEDS_MIXED_CHAIN "${BUILD_CROSS_STAGE_SINGLE_CHAIN}>${BUILD_SAME_STAGE_SINGLE_CHAIN}>observe-needs-mixed"
+    mark 'observe-needs-mixed:done'
+
+observe-dependencies-single:
+  extends: .base-needs-job
+  stage: observe
+  dependencies:
+    - build-needs-cross-stage-single
+  variables:
+    DOTENV_FILE: reports/observe-dependencies-single.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/observe-dependencies-single.env
+  script: |
+    require_env BUILD_CROSS_STAGE_SINGLE_READY
+    # CANNOT require_env BUILD_CROSS_STAGE_MULTI_READY
+    # CANNOT require_env BUILD_SAME_STAGE_SINGLE_READY
+
+    mark 'observe-dependencies-single:ran-after-build-stage-complete'
+    export_dotenv OBSERVE_DEPENDENCIES_SINGLE_READY yes
+    export_dotenv OBSERVE_DEPENDENCIES_SINGLE_CHAIN "${BUILD_CROSS_STAGE_SINGLE_CHAIN}>observe-dependencies-single"
+    mark 'observe-dependencies-single:done'
+
+observe-dependencies-multi:
+  extends: .base-needs-job
+  stage: observe
+  dependencies:
+    - prepare-env
+    - build-needs-cross-stage-multi
+  variables:
+    DOTENV_FILE: reports/observe-dependencies-multi.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/observe-dependencies-multi.env
+  script: |
+    require_env PREPARE_ENV_READY
+    require_env BUILD_CROSS_STAGE_MULTI_READY
+
+    mark 'observe-dependencies-multi:consumed-upstream-dotenv'
+    export_dotenv OBSERVE_DEPENDENCIES_MULTI_READY yes
+    export_dotenv OBSERVE_DEPENDENCIES_MULTI_CHAIN "${PREPARE_ENV_CHAIN}>${BUILD_CROSS_STAGE_MULTI_CHAIN}>observe-dependencies-multi"
+    mark 'observe-dependencies-multi:done'
+
+observe-needs-and-dependencies:
+  extends: .base-needs-job
+  stage: observe
+  needs:
+    - build-needs-cross-stage-multi
+    - job: build-needs-same-stage-single
+  dependencies:
+    - prepare-cache
+    - build-needs-cross-stage-multi
+  variables:
+    DOTENV_FILE: reports/observe-needs-and-dependencies.env
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      dotenv:
+        - reports/observe-needs-and-dependencies.env
+  script: |
+    require_env PREPARE_CACHE_READY
+    require_env BUILD_CROSS_STAGE_MULTI_READY
+    require_env BUILD_SAME_STAGE_SINGLE_READY
+
+    mark 'observe-needs-and-dependencies:ran-with-needs-and-dependencies'
+    export_dotenv OBSERVE_NEEDS_AND_DEPENDENCIES_READY yes
+    export_dotenv OBSERVE_NEEDS_AND_DEPENDENCIES_CHAIN "${PREPARE_CACHE_CHAIN}>${BUILD_CROSS_STAGE_MULTI_CHAIN}>${BUILD_SAME_STAGE_SINGLE_CHAIN}>observe-needs-and-dependencies"
+    mark 'observe-needs-and-dependencies:done'
+
+verify-needs-dependencies-flow:
+  stage: verify
+  when: always
+  dependencies:
+    - prepare-env
+    - prepare-cache
+    - build-foundation
+    - build-needs-cross-stage-single
+    - build-needs-cross-stage-multi
+    - build-needs-same-stage-single
+    - observe-needs-mixed
+    - observe-dependencies-single
+    - observe-dependencies-multi
+    - observe-needs-and-dependencies
+  script: |
+    assert_exists() {
+      file="$1"
+      test -f "$file" || {
+        echo "[ERROR] missing expected file: $file"
+        exit 1
+      }
+    }
+
+    assert_contains() {
+      file="$1"
+      expected="$2"
+      grep -F "$expected" "$file" >/dev/null || {
+        echo "[ERROR] expected '$expected' in $file"
+        exit 1
+      }
+    }
+
+    assert_exists reports/prepare-env.log
+    assert_exists reports/prepare-cache.log
+    assert_exists reports/build-foundation.log
+    assert_exists reports/build-needs-cross-stage-single.log
+    assert_exists reports/build-needs-cross-stage-multi.log
+    assert_exists reports/build-needs-same-stage-single.log
+    assert_exists reports/observe-needs-mixed.log
+    assert_exists reports/observe-dependencies-single.log
+    assert_exists reports/observe-dependencies-multi.log
+    assert_exists reports/observe-needs-and-dependencies.log
+
+    assert_exists reports/build-foundation.env
+    assert_exists reports/build-needs-cross-stage-single.env
+    assert_exists reports/build-needs-cross-stage-multi.env
+    assert_exists reports/build-needs-same-stage-single.env
+    assert_exists reports/observe-needs-mixed.env
+    assert_exists reports/observe-dependencies-single.env
+    assert_exists reports/observe-dependencies-multi.env
+    assert_exists reports/observe-needs-and-dependencies.env
+
+    assert_contains reports/build-needs-cross-stage-single.log 'build-needs-cross-stage-single:started-before-prepare-cache-finished'
+    assert_contains reports/build-needs-same-stage-single.log 'build-needs-same-stage-single:started-before-build-needs-cross-stage-multi-finished'
+    assert_contains reports/observe-needs-mixed.log 'observe-needs-mixed:started-before-build-needs-cross-stage-multi-finished'
+    assert_contains reports/observe-dependencies-single.log 'observe-dependencies-single:ran-after-build-stage-complete'
+    assert_contains reports/observe-dependencies-multi.log 'observe-dependencies-multi:consumed-upstream-dotenv'
+    assert_contains reports/observe-needs-and-dependencies.log 'observe-needs-and-dependencies:ran-with-needs-and-dependencies'
+
+    assert_contains reports/build-foundation.env 'BUILD_FOUNDATION_CHAIN=prepare-env>prepare-cache>build-foundation'
+    assert_contains reports/build-needs-cross-stage-single.env 'BUILD_CROSS_STAGE_SINGLE_CHAIN=prepare-env>build-needs-cross-stage-single'
+    assert_contains reports/build-needs-cross-stage-multi.env 'BUILD_CROSS_STAGE_MULTI_CHAIN=prepare-env>prepare-cache>build-needs-cross-stage-multi'
+    assert_contains reports/build-needs-same-stage-single.env 'BUILD_SAME_STAGE_SINGLE_CHAIN=prepare-env>prepare-cache>build-foundation>build-needs-same-stage-single'
+    assert_contains reports/observe-needs-mixed.env 'OBSERVE_NEEDS_MIXED_CHAIN=prepare-env>build-needs-cross-stage-single>prepare-env>prepare-cache>build-foundation>build-needs-same-stage-single>observe-needs-mixed'
+    assert_contains reports/observe-dependencies-single.env 'OBSERVE_DEPENDENCIES_SINGLE_CHAIN=prepare-env>build-needs-cross-stage-single>observe-dependencies-single'
+    assert_contains reports/observe-dependencies-multi.env 'OBSERVE_DEPENDENCIES_MULTI_CHAIN=prepare-env>prepare-env>prepare-cache>build-needs-cross-stage-multi>observe-dependencies-multi'
+    assert_contains reports/observe-needs-and-dependencies.env 'OBSERVE_NEEDS_AND_DEPENDENCIES_CHAIN=prepare-cache>prepare-env>prepare-cache>build-needs-cross-stage-multi>prepare-env>prepare-cache>build-foundation>build-needs-same-stage-single>observe-needs-and-dependencies'
+

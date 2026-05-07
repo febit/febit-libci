@@ -1,0 +1,114 @@
+{
+  "stages": [
+    "clear",
+    "produce",
+    "inspect",
+    "clear-again",
+    "inspect-empty",
+    "verify"
+  ],
+  ".cache-template": {
+    "cache": {
+      "key": "flow-cache-roundtrip",
+      "paths": [
+        "cached/"
+      ]
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "cache-clear-initial": {
+    "extends": ".cache-template",
+    "stage": "clear",
+    "script": "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-clear-initial.log\n}\n\nmkdir -p reports cached\nrm -rf cached/*\nreport 'cleared-initial'\nif [ -e cached/payload.txt ]; then\n  echo '[ERROR] payload should not exist after initial clear'\n  exit 1\nfi\n",
+    "cache": {
+      "key": "flow-cache-roundtrip",
+      "paths": [
+        "cached/"
+      ]
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "cache-produce-payload": {
+    "extends": ".cache-template",
+    "stage": "produce",
+    "script": "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-produce-payload.log\n}\n\nmkdir -p reports cached\ncat > cached/payload.txt <<EOF\nproduced-by=$CI_JOB_NAME\ncache-key=flow-cache-roundtrip\nEOF\nreport 'payload-created'\nreport \"payload=$(tr '\\n' ';' < cached/payload.txt)\"\n",
+    "cache": {
+      "key": "flow-cache-roundtrip",
+      "paths": [
+        "cached/"
+      ]
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "cache-inspect-hit": {
+    "extends": ".cache-template",
+    "stage": "inspect",
+    "script": "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-inspect-hit.log\n}\n\nmkdir -p reports cached\ntest -f cached/payload.txt || {\n  echo '[ERROR] expected cache payload is missing'\n  exit 1\n}\ngrep -F 'produced-by=cache-produce-payload' cached/payload.txt || {\n  echo '[ERROR] cache payload producer mismatch'\n  exit 1\n}\nreport 'cache-hit'\nreport \"payload=$(tr '\\n' ';' < cached/payload.txt)\"\n",
+    "cache": {
+      "key": "flow-cache-roundtrip",
+      "paths": [
+        "cached/"
+      ]
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "cache-clear-second": {
+    "extends": ".cache-template",
+    "stage": "clear-again",
+    "script": "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-clear-second.log\n}\n\nmkdir -p reports cached\nrm -f cached/payload.txt\nreport 'payload-removed'\n",
+    "cache": {
+      "key": "flow-cache-roundtrip",
+      "paths": [
+        "cached/"
+      ]
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "cache-inspect-empty": {
+    "extends": ".cache-template",
+    "stage": "inspect-empty",
+    "script": "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-inspect-empty.log\n}\n\nmkdir -p reports cached\nif [ -e cached/payload.txt ]; then\n  echo '[ERROR] cache payload should have been removed'\n  exit 1\nfi\nreport 'cache-empty'\n",
+    "cache": {
+      "key": "flow-cache-roundtrip",
+      "paths": [
+        "cached/"
+      ]
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "verify-cache-roundtrip": {
+    "stage": "verify",
+    "when": "always",
+    "script": "test -f reports/cache-clear-initial.log || {\n  echo '[ERROR] missing initial clear report'\n  exit 1\n}\ntest -f reports/cache-produce-payload.log || {\n  echo '[ERROR] missing cache producer report'\n  exit 1\n}\ntest -f reports/cache-inspect-hit.log || {\n  echo '[ERROR] missing cache hit report'\n  exit 1\n}\ntest -f reports/cache-clear-second.log || {\n  echo '[ERROR] missing second clear report'\n  exit 1\n}\ntest -f reports/cache-inspect-empty.log || {\n  echo '[ERROR] missing empty-cache report'\n  exit 1\n}\n\ngrep -F 'cleared-initial' reports/cache-clear-initial.log || {\n  echo '[ERROR] initial clear marker mismatch'\n  exit 1\n}\ngrep -F 'payload-created' reports/cache-produce-payload.log || {\n  echo '[ERROR] payload creation marker mismatch'\n  exit 1\n}\ngrep -F 'cache-hit' reports/cache-inspect-hit.log || {\n  echo '[ERROR] cache hit marker mismatch'\n  exit 1\n}\ngrep -F 'payload-removed' reports/cache-clear-second.log || {\n  echo '[ERROR] second clear marker mismatch'\n  exit 1\n}\ngrep -F 'cache-empty' reports/cache-inspect-empty.log || {\n  echo '[ERROR] empty cache marker mismatch'\n  exit 1\n}\n"
+  }
+}

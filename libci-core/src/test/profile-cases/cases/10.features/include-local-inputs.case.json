@@ -1,0 +1,106 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "build",
+    "release",
+    ".post"
+  ],
+  "jobs": {
+    "build": {
+      "id": "build",
+      "stage": "build",
+      "image": {
+        "name": "eclipse-temurin:21-jre"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "echo include-prepare",
+        "echo setup-from-input-1",
+        "echo setup-from-input-2"
+      ],
+      "script": [
+        "echo build"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "on_success",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "deploy-from-include": {
+      "id": "deploy-from-include",
+      "stage": "release",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo deploy-from-include"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

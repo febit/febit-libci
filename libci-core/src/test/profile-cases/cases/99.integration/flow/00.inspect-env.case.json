@@ -1,0 +1,111 @@
+{
+  "variables": {
+    "FLOW_MESSAGE": {
+      "value": "flow-env-print",
+      "expand": true
+    },
+    "FLOW_SCOPE": {
+      "value": "integration",
+      "expand": true
+    }
+  },
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "inspect",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "print-current-env": {
+      "id": "print-current-env",
+      "stage": "inspect",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\nenv | sort | tee reports/current-env.txt\ncat > reports/expected-env.txt <<EOF\nCI_JOB_NAME=$CI_JOB_NAME\nCI_JOB_STAGE=$CI_JOB_STAGE\nCI_NODE_INDEX=$CI_NODE_INDEX\nCI_NODE_TOTAL=$CI_NODE_TOTAL\nFLOW_SCOPE=$FLOW_SCOPE\nFLOW_MESSAGE=$FLOW_MESSAGE\nEOF\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-env-print": {
+      "id": "verify-env-print",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/current-env.txt || {\n  echo '[ERROR] missing reports/current-env.txt'\n  exit 1\n}\ntest -f reports/expected-env.txt || {\n  echo '[ERROR] missing reports/expected-env.txt'\n  exit 1\n}\ngrep -F 'FLOW_MESSAGE=flow-env-print' reports/current-env.txt || {\n  echo '[ERROR] FLOW_MESSAGE not found in captured env'\n  exit 1\n}\ngrep -F 'FLOW_SCOPE=integration' reports/expected-env.txt || {\n  echo '[ERROR] FLOW_SCOPE marker mismatch'\n  exit 1\n}\ngrep -F 'CI_JOB_NAME=print-current-env' reports/expected-env.txt || {\n  echo '[ERROR] CI_JOB_NAME marker mismatch'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "stages": [
+    "build",
+    "verify"
+  ],
+  ".matrix-base": {
+    "stage": "build",
+    "before_script": [
+      "mkdir -p reports"
+    ],
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "build-plain": {
+    "extends": ".matrix-base",
+    "script": [
+      "echo \"plain:$LIBCI_JOB_MATRIX_IID\" > reports/plain.txt"
+    ],
+    "stage": "build",
+    "before_script": [
+      "mkdir -p reports"
+    ],
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "build-matrix": {
+    "extends": ".matrix-base",
+    "stage": "build",
+    "parallel": {
+      "matrix": [
+        {
+          "OS": [
+            "linux",
+            "macos"
+          ],
+          "ARCH": [
+            "amd64",
+            "arm64"
+          ]
+        },
+        {
+          "OS": [
+            "windows"
+          ],
+          "ARCH": [
+            "amd64"
+          ]
+        }
+      ]
+    },
+    "script": [
+      "echo \"$OS-$ARCH-$LIBCI_JOB_MATRIX_IID\" > \"reports/$OS-$ARCH.txt\""
+    ],
+    "before_script": [
+      "mkdir -p reports"
+    ],
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "verify-matrix": {
+    "stage": "verify",
+    "when": "always",
+    "script": "assert_exists() {\n  file=\"$1\"\n  test -f \"$file\" || {\n    echo \"[ERROR] missing expected file: $file\"\n    exit 1\n  }\n}\n\nassert_exists reports/plain.txt\nassert_exists reports/linux-amd64.txt\nassert_exists reports/linux-arm64.txt\nassert_exists reports/macos-amd64.txt\nassert_exists reports/macos-arm64.txt\nassert_exists reports/windows-amd64.txt\n"
+  }
+}

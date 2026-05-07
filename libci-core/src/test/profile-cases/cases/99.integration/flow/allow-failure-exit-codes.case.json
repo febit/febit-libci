@@ -1,0 +1,215 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "exercise",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "allow-failure-boolean": {
+      "id": "allow-failure-boolean",
+      "stage": "exercise",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": true,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\ncat > \"reports/${CI_JOB_NAME}.meta\" <<EOF\njob=$CI_JOB_NAME\nexpected_exit_code=$FAIL_CODE\nEOF\nexit \"$FAIL_CODE\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "FAIL_CODE": {
+          "value": "7",
+          "expand": true
+        }
+      },
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "allow-failure-by-exit-code": {
+      "id": "allow-failure-by-exit-code",
+      "stage": "exercise",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "exit_codes": [
+          42
+        ]
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\ncat > \"reports/${CI_JOB_NAME}.meta\" <<EOF\njob=$CI_JOB_NAME\nexpected_exit_code=$FAIL_CODE\nEOF\nexit \"$FAIL_CODE\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "FAIL_CODE": {
+          "value": "42",
+          "expand": true
+        }
+      },
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "not-allowed-by-exit-code": {
+      "id": "not-allowed-by-exit-code",
+      "stage": "exercise",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "exit_codes": [
+          42
+        ]
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\ncat > \"reports/${CI_JOB_NAME}.meta\" <<EOF\njob=$CI_JOB_NAME\nexpected_exit_code=$FAIL_CODE\nEOF\nexit \"$FAIL_CODE\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "FAIL_CODE": {
+          "value": "9",
+          "expand": true
+        }
+      },
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-allow-failure-behavior": {
+      "id": "verify-allow-failure-behavior",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/allow-failure-boolean.meta || {\n  echo '[ERROR] missing allow-failure-boolean marker'\n  exit 1\n}\ntest -f reports/allow-failure-by-exit-code.meta || {\n  echo '[ERROR] missing allow-failure-by-exit-code marker'\n  exit 1\n}\ntest -f reports/not-allowed-by-exit-code.meta || {\n  echo '[ERROR] missing not-allowed-by-exit-code marker'\n  exit 1\n}\ngrep -F 'expected_exit_code=7' reports/allow-failure-boolean.meta || {\n  echo '[ERROR] allow_failure=true marker mismatch'\n  exit 1\n}\ngrep -F 'expected_exit_code=42' reports/allow-failure-by-exit-code.meta || {\n  echo '[ERROR] allow_failure.exit_codes accepted marker mismatch'\n  exit 1\n}\ngrep -F 'expected_exit_code=9' reports/not-allowed-by-exit-code.meta || {\n  echo '[ERROR] rejected exit code marker mismatch'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

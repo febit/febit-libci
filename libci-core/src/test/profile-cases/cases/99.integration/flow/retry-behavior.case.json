@@ -1,0 +1,211 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "retry-check",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "retry-on-any-failure": {
+      "id": "retry-on-any-failure",
+      "stage": "retry-check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 2,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"attempt=$LIBCI_JOB_RETRY_ATTEMPT / max=$LIBCI_JOB_RETRY_MAX\"\nprintf 'attempt=%s\\n' \"$LIBCI_JOB_RETRY_ATTEMPT\" >> \"reports/${CI_JOB_NAME}.attempts.log\"\ntest \"$LIBCI_JOB_RETRY_ATTEMPT\" -ge \"$SUCCESS_AT_ATTEMPT\"\nprintf 'success_at=%s\\n' \"$LIBCI_JOB_RETRY_ATTEMPT\" > \"reports/${CI_JOB_NAME}.status\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "SUCCESS_AT_ATTEMPT": {
+          "value": "1",
+          "expand": true
+        }
+      },
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "retry-on-script-failure": {
+      "id": "retry-on-script-failure",
+      "stage": "retry-check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 3,
+        "when": [
+          "script_failure"
+        ],
+        "exit_codes": [
+          1,
+          2
+        ]
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"attempt=$LIBCI_JOB_RETRY_ATTEMPT / max=$LIBCI_JOB_RETRY_MAX\"\nprintf 'attempt=%s\\n' \"$LIBCI_JOB_RETRY_ATTEMPT\" >> \"reports/${CI_JOB_NAME}.attempts.log\"\ntest \"$LIBCI_JOB_RETRY_ATTEMPT\" -ge \"$SUCCESS_AT_ATTEMPT\"\nprintf 'success_at=%s\\n' \"$LIBCI_JOB_RETRY_ATTEMPT\" > \"reports/${CI_JOB_NAME}.status\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "SUCCESS_AT_ATTEMPT": {
+          "value": "2",
+          "expand": true
+        }
+      },
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "retry-on-timeout": {
+      "id": "retry-on-timeout",
+      "stage": "retry-check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "0months3seconds",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 2,
+        "when": [
+          "job_execution_timeout"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"simulate timeout for retry\"\nprintf 'attempt=%s\\n' \"$LIBCI_JOB_RETRY_ATTEMPT\" >> reports/retry-on-timeout.attempts.log\nprintf 'timeout_expected=true\\n' > reports/retry-on-timeout.status\nsleep 10\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-retry-behavior": {
+      "id": "verify-retry-behavior",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/retry-on-script-failure.attempts.log || {\n  echo '[ERROR] missing retry-on-script-failure attempts log'\n  exit 1\n}\ntest -f reports/retry-on-any-failure.attempts.log || {\n  echo '[ERROR] missing retry-on-any-failure attempts log'\n  exit 1\n}\ntest -f reports/retry-on-timeout.attempts.log || {\n  echo '[ERROR] missing retry-on-timeout attempts log'\n  exit 1\n}\ngrep -F 'attempt=0' reports/retry-on-script-failure.attempts.log || {\n  echo '[ERROR] retry-on-script-failure never started'\n  exit 1\n}\ngrep -F 'attempt=2' reports/retry-on-script-failure.attempts.log || {\n  echo '[ERROR] retry-on-script-failure did not reach success attempt'\n  exit 1\n}\ngrep -F 'success_at=2' reports/retry-on-script-failure.status || {\n  echo '[ERROR] retry-on-script-failure success marker mismatch'\n  exit 1\n}\ngrep -F 'attempt=1' reports/retry-on-any-failure.attempts.log || {\n  echo '[ERROR] retry-on-any-failure did not retry as expected'\n  exit 1\n}\ngrep -F 'success_at=1' reports/retry-on-any-failure.status || {\n  echo '[ERROR] retry-on-any-failure success marker mismatch'\n  exit 1\n}\ngrep -F 'attempt=2' reports/retry-on-timeout.attempts.log || {\n  echo '[ERROR] retry-on-timeout did not exhaust retry attempts'\n  exit 1\n}\ngrep -F 'timeout_expected=true' reports/retry-on-timeout.status || {\n  echo '[ERROR] retry-on-timeout marker mismatch'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

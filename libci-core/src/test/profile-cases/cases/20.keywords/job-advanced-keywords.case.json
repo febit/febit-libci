@@ -1,0 +1,238 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "build",
+    "deploy",
+    ".post"
+  ],
+  "jobs": {
+    "advanced-job": {
+      "id": "advanced-job",
+      "stage": "build",
+      "image": {
+        "name": "eclipse-temurin:21",
+        "docker": {
+          "platform": "linux/amd64",
+          "user": "1000"
+        },
+        "entrypoint": [
+          "/bin/sh",
+          "-lc"
+        ]
+      },
+      "services": [
+        {
+          "name": "redis:7",
+          "alias": [
+            "cache",
+            "redis"
+          ],
+          "entrypoint": [
+            "/bin/sh"
+          ],
+          "command": [
+            "-lc",
+            "redis-server"
+          ]
+        }
+      ],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {
+        "vault": {
+          "aud": [
+            "https://vault.example.test",
+            "https://vault-backup.example.test"
+          ]
+        }
+      },
+      "before_script": [],
+      "script": [
+        "./gradlew test"
+      ],
+      "after_script": [],
+      "hooks": {
+        "pre_get_sources_script": [
+          "git config --global advice.detachedHead false"
+        ]
+      },
+      "interruptible": false,
+      "variables": {},
+      "environment": {
+        "name": "review/$CI_COMMIT_REF_SLUG",
+        "action": "prepare",
+        "url": "https://review.example.test/$CI_COMMIT_REF_SLUG",
+        "auto_stop_in": "0months259200seconds",
+        "kubernetes": {
+          "agent": "ops/review",
+          "namespace": "review-$CI_COMMIT_REF_SLUG",
+          "flux_resource_path": "clusters/review"
+        }
+      },
+      "cache": {
+        "key": {
+          "prefix": "build",
+          "files": [
+            "gradle/libs.versions.toml",
+            "settings.gradle"
+          ]
+        },
+        "untracked": false,
+        "unprotect": true,
+        "when": "always",
+        "policy": "pull",
+        "paths": [
+          ".gradle/",
+          "build/cache/"
+        ],
+        "fallback_keys": [
+          "build-default",
+          "build-shared"
+        ]
+      },
+      "rules": []
+    },
+    "release-job": {
+      "id": "release-job",
+      "stage": "deploy",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo release"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "release": {
+        "tag_name": "$CI_COMMIT_TAG",
+        "tag_message": "release tag",
+        "name": "Release $CI_COMMIT_TAG",
+        "description": "release notes",
+        "ref": "main",
+        "milestones": [
+          "m1",
+          "m2"
+        ],
+        "released_at": "2026-01-01T00:00:00Z",
+        "assets": {
+          "links": [
+            {
+              "name": "docs",
+              "url": "https://example.test/docs",
+              "filepath": "/docs",
+              "link_type": "runbook"
+            }
+          ]
+        }
+      },
+      "trigger": {
+        "project": "group/downstream",
+        "branch": "main",
+        "include": [
+          {
+            "local": "child.yml",
+            "inputs": {}
+          },
+          {
+            "project": "group/shared",
+            "ref": "main",
+            "file": [
+              "child-a.yml",
+              "child-b.yml"
+            ],
+            "inputs": {
+              "DEPLOY_ENV": "prod"
+            }
+          }
+        ],
+        "strategy": "depend",
+        "forward": {
+          "yaml_variables": true,
+          "pipeline_variables": false
+        },
+        "inputs": {
+          "DEPLOY_ENV": "prod"
+        }
+      },
+      "secrets": {
+        "DATABASE_PASSWORD": {
+          "vault": {
+            "engine": {
+              "name": "kv-v2",
+              "path": "ops"
+            },
+            "path": "production/db",
+            "field": "password"
+          },
+          "file": false,
+          "token": "VAULT_ID_TOKEN"
+        },
+        "API_KEY": {
+          "gcp_secret_manager": {
+            "name": "api-key",
+            "version": "latest"
+          }
+        },
+        "AZURE_TOKEN": {
+          "azure_key_vault": {
+            "name": "azure-token",
+            "version": "latest"
+          }
+        }
+      },
+      "pages": {
+        "publish": "dist",
+        "path_prefix": "docs",
+        "expire_in": "never"
+      },
+      "rules": []
+    }
+  }
+}

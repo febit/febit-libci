@@ -1,0 +1,40 @@
+plugins {
+  id 'groovy'
+}
+
+sourceSets {
+  main {
+    groovy {
+      srcDirs "${rootDir}/src"
+      srcDirs "${rootDir}/vars"
+      include 'febit/libci/**/*.groovy'
+      include '*.groovy'
+    }
+  }
+  test {
+    groovy {
+      srcDirs "test/groovy"
+    }
+    resources {
+      srcDirs "test/resources"
+    }
+  }
+}
+
+
+dependencies {
+  compileOnly project(':febit-libci-core')
+  compileOnly project(':febit-libci-jenkins-support-plugin')
+
+  compileOnly "com.cloudbees:groovy-cps:${libs.versions.groovy.cps.get()}"
+  compileOnly "org.jenkins-ci.main:jenkins-core:${libs.versions.jenkins.bom.get()}"
+
+  compileOnly 'io.jenkins.plugins:jackson3-api'
+  compileOnly 'org.jenkins-ci.plugins.workflow:workflow-basic-steps@jar'
+  compileOnly 'org.jenkins-ci.plugins.workflow:workflow-cps@jar'
+  compileOnly 'org.jenkins-ci.plugins.workflow:workflow-step-api@jar'
+  compileOnly 'org.jenkins-ci.plugins.workflow:workflow-support@jar'
+  compileOnly 'org.jenkins-ci.plugins:pipeline-utility-steps@jar'
+
+  testImplementation localGroovy()
+}

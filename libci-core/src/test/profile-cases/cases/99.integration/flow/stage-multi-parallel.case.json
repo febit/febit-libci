@@ -1,0 +1,307 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "prepare",
+    "test",
+    "package",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "lint-shell": {
+      "id": "lint-shell",
+      "stage": "test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"job=$CI_JOB_NAME stage=$CI_JOB_STAGE\"\necho \"$CI_JOB_NAME@$CI_JOB_STAGE\" > \"reports/${CI_JOB_NAME}.txt\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "package-bundle": {
+      "id": "package-bundle",
+      "stage": "package",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"job=$CI_JOB_NAME stage=$CI_JOB_STAGE\"\necho \"$CI_JOB_NAME@$CI_JOB_STAGE\" > \"reports/${CI_JOB_NAME}.txt\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [],
+      "needs": [
+        {
+          "job": "lint-shell"
+        },
+        {
+          "job": "unit-linux"
+        },
+        {
+          "job": "unit-macos"
+        }
+      ]
+    },
+    "prepare-workspace": {
+      "id": "prepare-workspace",
+      "stage": "prepare",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"job=$CI_JOB_NAME stage=$CI_JOB_STAGE\"\necho \"$CI_JOB_NAME@$CI_JOB_STAGE\" > \"reports/${CI_JOB_NAME}.txt\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "unit-linux": {
+      "id": "unit-linux",
+      "stage": "test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"job=$CI_JOB_NAME stage=$CI_JOB_STAGE\"\necho \"$CI_JOB_NAME@$CI_JOB_STAGE\" > \"reports/${CI_JOB_NAME}.txt\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "unit-macos": {
+      "id": "unit-macos",
+      "stage": "test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports\necho \"job=$CI_JOB_NAME stage=$CI_JOB_STAGE\"\necho \"$CI_JOB_NAME@$CI_JOB_STAGE\" > \"reports/${CI_JOB_NAME}.txt\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-multi-stage-flow": {
+      "id": "verify-multi-stage-flow",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/prepare-workspace.txt || {\n  echo '[ERROR] prepare-workspace marker missing'\n  exit 1\n}\ntest -f reports/lint-shell.txt || {\n  echo '[ERROR] lint-shell marker missing'\n  exit 1\n}\ntest -f reports/unit-linux.txt || {\n  echo '[ERROR] unit-linux marker missing'\n  exit 1\n}\ntest -f reports/unit-macos.txt || {\n  echo '[ERROR] unit-macos marker missing'\n  exit 1\n}\ntest -f reports/package-bundle.txt || {\n  echo '[ERROR] package-bundle marker missing'\n  exit 1\n}\ngrep -F 'prepare-workspace@prepare' reports/prepare-workspace.txt || {\n  echo '[ERROR] prepare-workspace stage mismatch'\n  exit 1\n}\ngrep -F 'lint-shell@test' reports/lint-shell.txt || {\n  echo '[ERROR] lint-shell stage mismatch'\n  exit 1\n}\ngrep -F 'unit-linux@test' reports/unit-linux.txt || {\n  echo '[ERROR] unit-linux stage mismatch'\n  exit 1\n}\ngrep -F 'unit-macos@test' reports/unit-macos.txt || {\n  echo '[ERROR] unit-macos stage mismatch'\n  exit 1\n}\ngrep -F 'package-bundle@package' reports/package-bundle.txt || {\n  echo '[ERROR] package-bundle stage mismatch'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

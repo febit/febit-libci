@@ -1,0 +1,100 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "deploy",
+    ".post"
+  ],
+  "jobs": {
+    "shorthand-keywords": {
+      "id": "shorthand-keywords",
+      "stage": "deploy",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo shorthand-keywords"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "environment": {
+        "name": "review/$CI_COMMIT_REF_SLUG",
+        "action": "start"
+      },
+      "cache": {
+        "key": {
+          "value": "shorthand-cache",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          ".cache/"
+        ],
+        "fallback_keys": []
+      },
+      "trigger": {
+        "include": [
+          {
+            "local": "child.yml",
+            "inputs": {}
+          }
+        ],
+        "inputs": {}
+      },
+      "secrets": {
+        "DB_PASSWORD": {
+          "vault": {
+            "secret": "production/db/password@ops"
+          }
+        },
+        "API_KEY": {
+          "gcp_secret_manager": {
+            "name": "api-key"
+          }
+        },
+        "AZURE_TOKEN": {
+          "azure_key_vault": {
+            "name": "azure-token"
+          }
+        }
+      },
+      "pages": {
+        "enabled": true
+      },
+      "rules": []
+    }
+  }
+}

@@ -1,0 +1,30 @@
+include:
+  - project: libci-infra
+    ref: v1.x
+    file: libci.all.yml
+  - project: libci
+    ref: main
+    file: lib/compose/libci.all.yml
+  - 99.integration/gradle/.libci/lib/*.yml
+  - ./.libci/rules/*.yml
+
+stages:
+  - prepare
+  - check
+  - build
+  - package
+
+variables:
+  APP_CI_DEBUG: 'true'
+  APP_LIB_GRAMMAR_VERSION: '25.12.1'
+  APP_SHARED_ENV: '.libci.shared.env'
+
+workflow:
+  rules:
+    # Skip if the commit message contains "SKIP_CI" for push events
+    - if: >-
+        $CI_PIPELINE_SOURCE == "push"
+        && $CI_COMMIT_MESSAGE =~ /(^|\s+)SKIP_CI($|\s+)/
+      when: never
+    # Run CI for all other cases
+    - when: always

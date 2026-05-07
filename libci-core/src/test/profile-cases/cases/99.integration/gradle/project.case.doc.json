@@ -1,0 +1,186 @@
+{
+  "stages": [
+    "prepare",
+    "check",
+    "build",
+    "package"
+  ],
+  "variables": {
+    "APP_CI_DEBUG": "true",
+    "APP_LIB_GRAMMAR_VERSION": "25.12.1",
+    "APP_SHARED_ENV": ".libci.shared.env"
+  },
+  "workflow": {
+    "rules": [
+      {
+        "if": "$CI_PIPELINE_SOURCE == \"push\" && $CI_COMMIT_MESSAGE =~ /(^|\\s+)SKIP_CI($|\\s+)/",
+        "when": "never"
+      },
+      {
+        "when": "always"
+      }
+    ]
+  },
+  ".libci-docker-build": {
+    "image": {
+      "name": "docker:29.3.0-dind",
+      "entrypoint": [
+        ""
+      ]
+    },
+    "lib": "# Infra Library for Docker Build\n...\n"
+  },
+  ".libci-gradle": {
+    "image": "febit-libci/jdk:lts-17",
+    "lib": "# Infra Library for Gradle\n...\n"
+  },
+  ".libci-maven": {
+    "image": "febit-libci/jdk:lts-17",
+    "lib": "# Infra Library for Maven\n...\n"
+  },
+  ".libci-kubectl": {
+    "image": "febit-libci/kubectl:1.34",
+    "lib": "# Infra Library for Kubectl\nset -e\n...\n"
+  },
+  ".libci-nodejs": {
+    "image": "febit-libci/node:24",
+    "lib": "# Infra Library for NodeJS\n...\n"
+  },
+  ".docker-image-build": {
+    "image": {
+      "name": "docker:29.3.0-dind",
+      "entrypoint": [
+        ""
+      ]
+    },
+    "script": [
+      "set -e",
+      "# Infra Library for Docker Build\n...\n",
+      "libci docker login",
+      "echo \"Inputs:\"\n...\n",
+      "docker buildx build \\\n  -f $APP_DOCKERFILE\n...\n"
+    ]
+  },
+  ".gradle-env": {
+    "image": "febit-libci/jdk:lts-17",
+    "variables": {
+      "GRADLE_USER_HOME": "$CI_PROJECT_DIR/.gradle-home",
+      "SONAR_USER_HOME": "${CI_PROJECT_DIR}/.sonar"
+    },
+    "cache": {
+      "key": "gradle-home",
+      "paths": [
+        ".gradle-home"
+      ]
+    },
+    "before_script": [
+      "set -e",
+      "# Infra Library for Gradle\n...\n",
+      "libci templates apply '.libci/templates/gradle'"
+    ],
+    "after_script": [
+      "# Infra Library for Gradle\n...\n",
+      "./gradlew --stop"
+    ]
+  },
+  ".app-common-settings": {
+    "lib": "# Common settings for Gradle\nexport APP_VENDOR=\"febit.org\"\nexport APP_VERSION=\"${CI_COMMIT_TAG:1}\"\n\nsay_hi () {\n  echo \"Hi from common settings!\"\n}\n"
+  },
+  ".with-rules": {
+    "rules": [
+      {
+        "if": "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == \"main\""
+      },
+      {
+        "if": "$CI_COMMIT_REF_PROTECTED == \"true\""
+      },
+      {
+        "if": "$CI_COMMIT_TAG =~ /^v[0-9.]+/"
+      }
+    ]
+  },
+  "check-sonar": {
+    "<<": {
+      "rules": [
+        {
+          "if": "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == \"main\""
+        },
+        {
+          "if": "$CI_COMMIT_REF_PROTECTED == \"true\""
+        },
+        {
+          "if": "$CI_COMMIT_TAG =~ /^v[0-9.]+/"
+        }
+      ]
+    },
+    "stage": "build",
+    "extends": ".gradle-env",
+    "variables": {
+      "GRADLE_USER_HOME": "$CI_PROJECT_DIR/.gradle-home",
+      "SONAR_USER_HOME": "${CI_PROJECT_DIR}/.sonar"
+    },
+    "cache": {
+      "key": "sonar",
+      "paths": [
+        ".sonar/cache"
+      ]
+    },
+    "script": [
+      "set -e",
+      "## For Merge Request: Fetch target branch\nif [ -n \"$CI_MERGE_REQUEST_TARGET_BRANCH_NAME\" ]; then\n  git fetch -f origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME\nfi",
+      "libci sonar init",
+      "./gradlew check sonar"
+    ],
+    "image": "febit-libci/jdk:lts-17",
+    "before_script": [
+      "set -e",
+      "# Infra Library for Gradle\n...\n",
+      "libci templates apply '.libci/templates/gradle'"
+    ],
+    "after_script": [
+      "# Infra Library for Gradle\n...\n",
+      "./gradlew --stop"
+    ]
+  },
+  "build-packages": {
+    "<<": {
+      "rules": [
+        {
+          "if": "$CI_COMMIT_TAG =~ /^v[0-9]+/"
+        }
+      ]
+    },
+    "stage": "build",
+    "extends": ".gradle-env",
+    "artifacts": {
+      "name": "build",
+      "paths": [
+        "./*/build/libs"
+      ]
+    },
+    "script": [
+      "# Common settings for Gradle\nexport APP_VENDOR=\"febit.org\"\nexport APP_VERSION=\"${CI_COMMIT_TAG:1}\"\n\nsay_hi () {\n  echo \"Hi from common settings!\"\n}\n",
+      "./gradlew build -x check -Papp.release.version=$APP_VERSION"
+    ],
+    "image": "febit-libci/jdk:lts-17",
+    "variables": {
+      "GRADLE_USER_HOME": "$CI_PROJECT_DIR/.gradle-home",
+      "SONAR_USER_HOME": "${CI_PROJECT_DIR}/.sonar"
+    },
+    "cache": {
+      "key": "gradle-home",
+      "paths": [
+        ".gradle-home"
+      ]
+    },
+    "before_script": [
+      "set -e",
+      "# Infra Library for Gradle\n...\n",
+      "libci templates apply '.libci/templates/gradle'"
+    ],
+    "after_script": [
+      "# Infra Library for Gradle\n...\n",
+      "./gradlew --stop"
+    ]
+  }
+}

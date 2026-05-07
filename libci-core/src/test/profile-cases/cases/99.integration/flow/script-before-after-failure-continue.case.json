@@ -1,0 +1,106 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "exercise",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "main-script-fails-but-after-runs": {
+      "id": "main-script-fails-but-after-runs",
+      "stage": "exercise",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": true,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mark() {\n  printf '%s\\n' \"$1\" >> reports/${CI_JOB_NAME}.order.log\n}\n\nmkdir -p reports\nmark 'before:start'\nprintf 'job=%s\\n' \"$CI_JOB_NAME\" > reports/${CI_JOB_NAME}.meta\n"
+      ],
+      "script": [
+        "mark() {\n  printf '%s\\n' \"$1\" >> reports/${CI_JOB_NAME}.order.log\n}\n\nmark 'script:before-fail'\nprintf 'exit_code=%s\\n' '23' > reports/${CI_JOB_NAME}.failure.meta\nexit 23\n"
+      ],
+      "after_script": [
+        "mark_after() {\n  printf '%s\\n' \"$1\" >> reports/${CI_JOB_NAME}.order.log\n}\n\nmkdir -p reports\nmark_after 'after:executed'\nprintf 'CI_JOB_STATUS=%s\\n' \"$CI_JOB_STATUS\" > reports/${CI_JOB_NAME}.after-status\n"
+      ],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-before-after-failure": {
+      "id": "verify-before-after-failure",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/main-script-fails-but-after-runs.order.log || {\n  echo '[ERROR] missing execution order log'\n  exit 1\n}\ntest -f reports/main-script-fails-but-after-runs.after-status || {\n  echo '[ERROR] missing after_script status marker'\n  exit 1\n}\ntest -f reports/main-script-fails-but-after-runs.failure.meta || {\n  echo '[ERROR] missing failure marker from main script'\n  exit 1\n}\n\ngrep -F 'before:start' reports/main-script-fails-but-after-runs.order.log || {\n  echo '[ERROR] before_script did not run'\n  exit 1\n}\ngrep -F 'script:before-fail' reports/main-script-fails-but-after-runs.order.log || {\n  echo '[ERROR] main script marker missing'\n  exit 1\n}\ngrep -F 'after:executed' reports/main-script-fails-but-after-runs.order.log || {\n  echo '[ERROR] after_script did not run after main script failure'\n  exit 1\n}\ngrep -F 'CI_JOB_STATUS=failed' reports/main-script-fails-but-after-runs.after-status || {\n  echo '[ERROR] after_script did not observe failed job status'\n  exit 1\n}\ngrep -F 'exit_code=23' reports/main-script-fails-but-after-runs.failure.meta || {\n  echo '[ERROR] main script failure marker mismatch'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "stages": [
+    "test"
+  ],
+  "default": {
+    "image": "alpine:3.20",
+    "before_script": [
+      "echo default-before"
+    ],
+    "tags": [
+      "docker"
+    ],
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "default/output.log"
+      ],
+      "exclude": [
+        "tmp/**"
+      ]
+    }
+  },
+  "inherit-all": {
+    "stage": "test",
+    "inherit": {
+      "default": true
+    },
+    "script": [
+      "echo inherit-all"
+    ]
+  },
+  "inherit-none": {
+    "stage": "test",
+    "inherit": {
+      "default": false
+    },
+    "script": [
+      "echo inherit-none"
+    ]
+  },
+  "inherit-only": {
+    "stage": "test",
+    "inherit": {
+      "default": [
+        "image",
+        "before_script",
+        "artifacts"
+      ]
+    },
+    "script": [
+      "echo inherit-only"
+    ]
+  }
+}

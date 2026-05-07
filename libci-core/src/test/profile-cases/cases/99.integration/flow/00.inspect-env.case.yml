@@ -1,0 +1,51 @@
+stages:
+  - inspect
+  - verify
+
+variables:
+  FLOW_MESSAGE: flow-env-print
+  FLOW_SCOPE: integration
+
+print-current-env:
+  stage: inspect
+  artifacts:
+    when: always
+    paths:
+      - reports/
+  script: |
+    mkdir -p reports
+    env | sort | tee reports/current-env.txt
+    cat > reports/expected-env.txt <<EOF
+    CI_JOB_NAME=$CI_JOB_NAME
+    CI_JOB_STAGE=$CI_JOB_STAGE
+    CI_NODE_INDEX=$CI_NODE_INDEX
+    CI_NODE_TOTAL=$CI_NODE_TOTAL
+    FLOW_SCOPE=$FLOW_SCOPE
+    FLOW_MESSAGE=$FLOW_MESSAGE
+    EOF
+
+verify-env-print:
+  stage: verify
+  when: always
+  script: |
+    test -f reports/current-env.txt || {
+      echo '[ERROR] missing reports/current-env.txt'
+      exit 1
+    }
+    test -f reports/expected-env.txt || {
+      echo '[ERROR] missing reports/expected-env.txt'
+      exit 1
+    }
+    grep -F 'FLOW_MESSAGE=flow-env-print' reports/current-env.txt || {
+      echo '[ERROR] FLOW_MESSAGE not found in captured env'
+      exit 1
+    }
+    grep -F 'FLOW_SCOPE=integration' reports/expected-env.txt || {
+      echo '[ERROR] FLOW_SCOPE marker mismatch'
+      exit 1
+    }
+    grep -F 'CI_JOB_NAME=print-current-env' reports/expected-env.txt || {
+      echo '[ERROR] CI_JOB_NAME marker mismatch'
+      exit 1
+    }
+

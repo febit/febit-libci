@@ -1,0 +1,214 @@
+{
+  "variables": {
+    "GLOBAL_LEVEL": {
+      "value": "root",
+      "expand": true
+    }
+  },
+  "workflow": {
+    "name": "pipeline-$CI_COMMIT_REF_SLUG",
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": [
+      {
+        "if": "$CI_PIPELINE_SOURCE == \"schedule\"",
+        "when": "never",
+        "changes": {
+          "paths": []
+        },
+        "exists": {
+          "paths": []
+        },
+        "variables": {}
+      },
+      {
+        "when": "always",
+        "changes": {
+          "paths": []
+        },
+        "exists": {
+          "paths": [
+            "README.md"
+          ]
+        },
+        "variables": {
+          "PIPELINE_KIND": {
+            "value": "docs"
+          }
+        }
+      },
+      {
+        "when": "always",
+        "changes": {
+          "paths": []
+        },
+        "exists": {
+          "paths": []
+        },
+        "variables": {
+          "PIPELINE_KIND": {
+            "value": "default"
+          }
+        }
+      }
+    ]
+  },
+  "stages": [
+    ".pre",
+    "test",
+    "deploy",
+    ".post"
+  ],
+  "jobs": {
+    "deploy-approval": {
+      "id": "deploy-approval",
+      "stage": "deploy",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "manual",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo approval"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "resource_group": "production",
+      "manual_confirmation": "Deploy to production?",
+      "rules": []
+    },
+    "deploy-delayed": {
+      "id": "deploy-delayed",
+      "stage": "deploy",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "delayed",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo delayed"
+      ],
+      "after_script": [],
+      "start_in": "0months600seconds",
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "resource_group": "production",
+      "rules": []
+    },
+    "scan": {
+      "id": "scan",
+      "stage": "test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo scan"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": [
+        {
+          "if": "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH",
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": []
+          },
+          "when": "manual",
+          "allow_failure": {
+            "value": true,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {
+            "JOB_KIND": {
+              "value": "guarded"
+            }
+          }
+        },
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": []
+          },
+          "when": "on_success",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        }
+      ]
+    }
+  }
+}

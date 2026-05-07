@@ -1,0 +1,285 @@
+{
+  "stages": [
+    "prepare",
+    "build",
+    "observe",
+    "verify"
+  ],
+  ".base-needs-job": {
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "prepare-env": {
+    "extends": ".base-needs-job",
+    "stage": "prepare",
+    "variables": {
+      "DOTENV_FILE": "reports/prepare-env.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/prepare-env.env"
+        ]
+      }
+    },
+    "script": "mark 'prepare-env:start'\nsleep 2\nexport_dotenv PREPARE_ENV_READY yes\nexport_dotenv PREPARE_ENV_CHAIN prepare-env\nmark 'prepare-env:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "prepare-cache": {
+    "extends": ".base-needs-job",
+    "stage": "prepare",
+    "variables": {
+      "DOTENV_FILE": "reports/prepare-cache.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/prepare-cache.env"
+        ]
+      }
+    },
+    "script": "mark 'prepare-cache:start'\nsleep 6\nexport_dotenv PREPARE_CACHE_READY yes\nexport_dotenv PREPARE_CACHE_CHAIN prepare-cache\nmark 'prepare-cache:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "build-foundation": {
+    "extends": ".base-needs-job",
+    "stage": "build",
+    "variables": {
+      "DOTENV_FILE": "reports/build-foundation.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/build-foundation.env"
+        ]
+      }
+    },
+    "script": "require_env PREPARE_ENV_READY\nrequire_env PREPARE_CACHE_READY\n\nmark 'build-foundation:confirmed-full-prepare'\nsleep 3\n\nexport_dotenv BUILD_FOUNDATION_READY yes\nexport_dotenv BUILD_FOUNDATION_CHAIN \"${PREPARE_ENV_CHAIN}>${PREPARE_CACHE_CHAIN}>build-foundation\"\nmark 'build-foundation:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "build-needs-cross-stage-single": {
+    "extends": ".base-needs-job",
+    "stage": "build",
+    "needs": [
+      "prepare-env"
+    ],
+    "variables": {
+      "DOTENV_FILE": "reports/build-needs-cross-stage-single.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/build-needs-cross-stage-single.env"
+        ]
+      }
+    },
+    "script": "require_env PREPARE_ENV_READY\nreject_env PREPARE_CACHE_READY\n\nmark 'build-needs-cross-stage-single:started-before-prepare-cache-finished'\nsleep 2\n\nexport_dotenv BUILD_CROSS_STAGE_SINGLE_READY yes\nexport_dotenv BUILD_CROSS_STAGE_SINGLE_CHAIN \"${PREPARE_ENV_CHAIN}>build-needs-cross-stage-single\"\nmark 'build-needs-cross-stage-single:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "build-needs-cross-stage-multi": {
+    "extends": ".base-needs-job",
+    "stage": "build",
+    "needs": [
+      "prepare-env",
+      "prepare-cache"
+    ],
+    "variables": {
+      "DOTENV_FILE": "reports/build-needs-cross-stage-multi.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/build-needs-cross-stage-multi.env"
+        ]
+      }
+    },
+    "script": "require_env PREPARE_ENV_READY\nrequire_env PREPARE_CACHE_READY\n\nmark 'build-needs-cross-stage-multi:confirmed-both-prepare-jobs'\nsleep 5\n\nexport_dotenv BUILD_CROSS_STAGE_MULTI_READY yes\nexport_dotenv BUILD_CROSS_STAGE_MULTI_CHAIN \"${PREPARE_ENV_CHAIN}>${PREPARE_CACHE_CHAIN}>build-needs-cross-stage-multi\"\nmark 'build-needs-cross-stage-multi:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "build-needs-same-stage-single": {
+    "extends": ".base-needs-job",
+    "stage": "build",
+    "needs": [
+      {
+        "job": "build-foundation"
+      }
+    ],
+    "variables": {
+      "DOTENV_FILE": "reports/build-needs-same-stage-single.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/build-needs-same-stage-single.env"
+        ]
+      }
+    },
+    "script": "require_env BUILD_FOUNDATION_READY\nreject_env BUILD_CROSS_STAGE_MULTI_READY\n\nmark 'build-needs-same-stage-single:started-before-build-needs-cross-stage-multi-finished'\nsleep 2\n\nexport_dotenv BUILD_SAME_STAGE_SINGLE_READY yes\nexport_dotenv BUILD_SAME_STAGE_SINGLE_CHAIN \"${BUILD_FOUNDATION_CHAIN}>build-needs-same-stage-single\"\nmark 'build-needs-same-stage-single:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "observe-needs-mixed": {
+    "extends": ".base-needs-job",
+    "stage": "observe",
+    "needs": [
+      "build-needs-cross-stage-single",
+      {
+        "job": "build-needs-same-stage-single"
+      }
+    ],
+    "variables": {
+      "DOTENV_FILE": "reports/observe-needs-mixed.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/observe-needs-mixed.env"
+        ]
+      }
+    },
+    "script": "require_env BUILD_CROSS_STAGE_SINGLE_READY\nrequire_env BUILD_SAME_STAGE_SINGLE_READY\nreject_env BUILD_CROSS_STAGE_MULTI_READY\n\nmark 'observe-needs-mixed:started-before-build-needs-cross-stage-multi-finished'\nsleep 1\n\nexport_dotenv OBSERVE_NEEDS_MIXED_READY yes\nexport_dotenv OBSERVE_NEEDS_MIXED_CHAIN \"${BUILD_CROSS_STAGE_SINGLE_CHAIN}>${BUILD_SAME_STAGE_SINGLE_CHAIN}>observe-needs-mixed\"\nmark 'observe-needs-mixed:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "observe-dependencies-single": {
+    "extends": ".base-needs-job",
+    "stage": "observe",
+    "dependencies": [
+      "build-needs-cross-stage-single"
+    ],
+    "variables": {
+      "DOTENV_FILE": "reports/observe-dependencies-single.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/observe-dependencies-single.env"
+        ]
+      }
+    },
+    "script": "require_env BUILD_CROSS_STAGE_SINGLE_READY\n# CANNOT require_env BUILD_CROSS_STAGE_MULTI_READY\n# CANNOT require_env BUILD_SAME_STAGE_SINGLE_READY\n\nmark 'observe-dependencies-single:ran-after-build-stage-complete'\nexport_dotenv OBSERVE_DEPENDENCIES_SINGLE_READY yes\nexport_dotenv OBSERVE_DEPENDENCIES_SINGLE_CHAIN \"${BUILD_CROSS_STAGE_SINGLE_CHAIN}>observe-dependencies-single\"\nmark 'observe-dependencies-single:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "observe-dependencies-multi": {
+    "extends": ".base-needs-job",
+    "stage": "observe",
+    "dependencies": [
+      "prepare-env",
+      "build-needs-cross-stage-multi"
+    ],
+    "variables": {
+      "DOTENV_FILE": "reports/observe-dependencies-multi.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/observe-dependencies-multi.env"
+        ]
+      }
+    },
+    "script": "require_env PREPARE_ENV_READY\nrequire_env BUILD_CROSS_STAGE_MULTI_READY\n\nmark 'observe-dependencies-multi:consumed-upstream-dotenv'\nexport_dotenv OBSERVE_DEPENDENCIES_MULTI_READY yes\nexport_dotenv OBSERVE_DEPENDENCIES_MULTI_CHAIN \"${PREPARE_ENV_CHAIN}>${BUILD_CROSS_STAGE_MULTI_CHAIN}>observe-dependencies-multi\"\nmark 'observe-dependencies-multi:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "observe-needs-and-dependencies": {
+    "extends": ".base-needs-job",
+    "stage": "observe",
+    "needs": [
+      "build-needs-cross-stage-multi",
+      {
+        "job": "build-needs-same-stage-single"
+      }
+    ],
+    "dependencies": [
+      "prepare-cache",
+      "build-needs-cross-stage-multi"
+    ],
+    "variables": {
+      "DOTENV_FILE": "reports/observe-needs-and-dependencies.env"
+    },
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ],
+      "reports": {
+        "dotenv": [
+          "reports/observe-needs-and-dependencies.env"
+        ]
+      }
+    },
+    "script": "require_env PREPARE_CACHE_READY\nrequire_env BUILD_CROSS_STAGE_MULTI_READY\nrequire_env BUILD_SAME_STAGE_SINGLE_READY\n\nmark 'observe-needs-and-dependencies:ran-with-needs-and-dependencies'\nexport_dotenv OBSERVE_NEEDS_AND_DEPENDENCIES_READY yes\nexport_dotenv OBSERVE_NEEDS_AND_DEPENDENCIES_CHAIN \"${PREPARE_CACHE_CHAIN}>${BUILD_CROSS_STAGE_MULTI_CHAIN}>${BUILD_SAME_STAGE_SINGLE_CHAIN}>observe-needs-and-dependencies\"\nmark 'observe-needs-and-dependencies:done'\n",
+    "before_script": [
+      "mkdir -p reports\n\ntest -n \"$DOTENV_FILE\" || {\n  echo '[ERROR] DOTENV_FILE is required'\n  exit 1\n}\n: > \"$DOTENV_FILE\"\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nrequire_env() {\n  name=\"$1\"\n  eval \"value=\\${$name:-}\"\n  test -n \"$value\" || {\n    echo \"[ERROR] missing env: $name\"\n    exit 1\n  }\n}\n\nreject_env() {\n  name=\"$1\"\n  eval \"is_set=\\${$name+x}\"\n  if [ -n \"$is_set\" ]; then\n    eval \"value=\\${$name}\"\n    echo \"[ERROR] unexpected env: $name=$value\"\n    exit 1\n  fi\n}\n\nexport_dotenv() {\n  printf '%s=%s\\n' \"$1\" \"$2\" >> \"$DOTENV_FILE\"\n}\n"
+    ]
+  },
+  "verify-needs-dependencies-flow": {
+    "stage": "verify",
+    "when": "always",
+    "dependencies": [
+      "prepare-env",
+      "prepare-cache",
+      "build-foundation",
+      "build-needs-cross-stage-single",
+      "build-needs-cross-stage-multi",
+      "build-needs-same-stage-single",
+      "observe-needs-mixed",
+      "observe-dependencies-single",
+      "observe-dependencies-multi",
+      "observe-needs-and-dependencies"
+    ],
+    "script": "assert_exists() {\n  file=\"$1\"\n  test -f \"$file\" || {\n    echo \"[ERROR] missing expected file: $file\"\n    exit 1\n  }\n}\n\nassert_contains() {\n  file=\"$1\"\n  expected=\"$2\"\n  grep -F \"$expected\" \"$file\" >/dev/null || {\n    echo \"[ERROR] expected '$expected' in $file\"\n    exit 1\n  }\n}\n\nassert_exists reports/prepare-env.log\nassert_exists reports/prepare-cache.log\nassert_exists reports/build-foundation.log\nassert_exists reports/build-needs-cross-stage-single.log\nassert_exists reports/build-needs-cross-stage-multi.log\nassert_exists reports/build-needs-same-stage-single.log\nassert_exists reports/observe-needs-mixed.log\nassert_exists reports/observe-dependencies-single.log\nassert_exists reports/observe-dependencies-multi.log\nassert_exists reports/observe-needs-and-dependencies.log\n\nassert_exists reports/build-foundation.env\nassert_exists reports/build-needs-cross-stage-single.env\nassert_exists reports/build-needs-cross-stage-multi.env\nassert_exists reports/build-needs-same-stage-single.env\nassert_exists reports/observe-needs-mixed.env\nassert_exists reports/observe-dependencies-single.env\nassert_exists reports/observe-dependencies-multi.env\nassert_exists reports/observe-needs-and-dependencies.env\n\nassert_contains reports/build-needs-cross-stage-single.log 'build-needs-cross-stage-single:started-before-prepare-cache-finished'\nassert_contains reports/build-needs-same-stage-single.log 'build-needs-same-stage-single:started-before-build-needs-cross-stage-multi-finished'\nassert_contains reports/observe-needs-mixed.log 'observe-needs-mixed:started-before-build-needs-cross-stage-multi-finished'\nassert_contains reports/observe-dependencies-single.log 'observe-dependencies-single:ran-after-build-stage-complete'\nassert_contains reports/observe-dependencies-multi.log 'observe-dependencies-multi:consumed-upstream-dotenv'\nassert_contains reports/observe-needs-and-dependencies.log 'observe-needs-and-dependencies:ran-with-needs-and-dependencies'\n\nassert_contains reports/build-foundation.env 'BUILD_FOUNDATION_CHAIN=prepare-env>prepare-cache>build-foundation'\nassert_contains reports/build-needs-cross-stage-single.env 'BUILD_CROSS_STAGE_SINGLE_CHAIN=prepare-env>build-needs-cross-stage-single'\nassert_contains reports/build-needs-cross-stage-multi.env 'BUILD_CROSS_STAGE_MULTI_CHAIN=prepare-env>prepare-cache>build-needs-cross-stage-multi'\nassert_contains reports/build-needs-same-stage-single.env 'BUILD_SAME_STAGE_SINGLE_CHAIN=prepare-env>prepare-cache>build-foundation>build-needs-same-stage-single'\nassert_contains reports/observe-needs-mixed.env 'OBSERVE_NEEDS_MIXED_CHAIN=prepare-env>build-needs-cross-stage-single>prepare-env>prepare-cache>build-foundation>build-needs-same-stage-single>observe-needs-mixed'\nassert_contains reports/observe-dependencies-single.env 'OBSERVE_DEPENDENCIES_SINGLE_CHAIN=prepare-env>build-needs-cross-stage-single>observe-dependencies-single'\nassert_contains reports/observe-dependencies-multi.env 'OBSERVE_DEPENDENCIES_MULTI_CHAIN=prepare-env>prepare-env>prepare-cache>build-needs-cross-stage-multi>observe-dependencies-multi'\nassert_contains reports/observe-needs-and-dependencies.env 'OBSERVE_NEEDS_AND_DEPENDENCIES_CHAIN=prepare-cache>prepare-env>prepare-cache>build-needs-cross-stage-multi>prepare-env>prepare-cache>build-foundation>build-needs-same-stage-single>observe-needs-and-dependencies'\n"
+  }
+}

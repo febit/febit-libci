@@ -1,0 +1,162 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "export",
+    "consume",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "consume-dotenv": {
+      "id": "consume-dotenv",
+      "stage": "consume",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports out\necho \"APP_VERSION=$APP_VERSION\"\necho \"APP_CHANNEL=$APP_CHANNEL\"\necho \"DEPLOY_REGION=$DEPLOY_REGION\"\ntest -n \"$APP_VERSION\"\ntest -n \"$DEPLOY_REGION\"\ncat > out/consume.env <<EOF\nAPP_VERSION=$APP_VERSION\nAPP_CHANNEL=$APP_CHANNEL\nDEPLOY_REGION=$DEPLOY_REGION\nEOF\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "out/",
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [],
+      "needs": [
+        {
+          "job": "export-dotenv"
+        }
+      ]
+    },
+    "export-dotenv": {
+      "id": "export-dotenv",
+      "stage": "export",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "mkdir -p reports out\ncat > reports/runtime.env <<EOF\nAPP_VERSION=1.2.3\nAPP_CHANNEL=nightly\nDEPLOY_REGION=ap-southeast-1\nEOF\ncp reports/runtime.env out/runtime.env\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "on_success",
+        "access": "all",
+        "paths": [
+          "out/",
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {
+          "dotenv": [
+            "reports/runtime.env"
+          ]
+        }
+      },
+      "rules": []
+    },
+    "verify-dotenv-flow": {
+      "id": "verify-dotenv-flow",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/runtime.env || {\n  echo '[ERROR] missing reports/runtime.env'\n  exit 1\n}\ntest -f out/runtime.env || {\n  echo '[ERROR] missing out/runtime.env'\n  exit 1\n}\ntest -f out/consume.env || {\n  echo '[ERROR] missing out/consume.env'\n  exit 1\n}\ngrep -F 'APP_VERSION=1.2.3' reports/runtime.env || {\n  echo '[ERROR] APP_VERSION missing from dotenv report'\n  exit 1\n}\ngrep -F 'APP_CHANNEL=nightly' out/consume.env || {\n  echo '[ERROR] APP_CHANNEL missing from consumed dotenv values'\n  exit 1\n}\ngrep -F 'DEPLOY_REGION=ap-southeast-1' out/consume.env || {\n  echo '[ERROR] DEPLOY_REGION missing from consumed dotenv values'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

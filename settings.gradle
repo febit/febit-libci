@@ -1,0 +1,20 @@
+pluginManagement {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+  }
+}
+
+rootProject.name = 'febit-libci-parent'
+
+libci 'libci-bom'
+libci 'libci-core'
+libci 'libci-jenkins-shared-library'
+libci 'libci-jenkins-support-plugin'
+
+def libci(String dir) {
+  def name = ":febit-$dir"
+  include name
+  project(name).projectDir = file(dir)
+}
+

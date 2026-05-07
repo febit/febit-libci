@@ -1,0 +1,176 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "build",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "build-matrix": {
+      "id": "build-matrix",
+      "stage": "build",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "parallel": {
+        "matrix": [
+          {
+            "OS": [
+              "linux",
+              "macos"
+            ],
+            "ARCH": [
+              "amd64",
+              "arm64"
+            ]
+          },
+          {
+            "OS": [
+              "windows"
+            ],
+            "ARCH": [
+              "amd64"
+            ]
+          }
+        ]
+      },
+      "before_script": [
+        "mkdir -p reports"
+      ],
+      "script": [
+        "echo \"$OS-$ARCH-$LIBCI_JOB_MATRIX_IID\" > \"reports/$OS-$ARCH.txt\""
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "build-plain": {
+      "id": "build-plain",
+      "stage": "build",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mkdir -p reports"
+      ],
+      "script": [
+        "echo \"plain:$LIBCI_JOB_MATRIX_IID\" > reports/plain.txt"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-matrix": {
+      "id": "verify-matrix",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "assert_exists() {\n  file=\"$1\"\n  test -f \"$file\" || {\n    echo \"[ERROR] missing expected file: $file\"\n    exit 1\n  }\n}\n\nassert_exists reports/plain.txt\nassert_exists reports/linux-amd64.txt\nassert_exists reports/linux-arm64.txt\nassert_exists reports/macos-amd64.txt\nassert_exists reports/macos-arm64.txt\nassert_exists reports/windows-amd64.txt\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

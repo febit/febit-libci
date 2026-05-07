@@ -1,0 +1,80 @@
+stages:
+  - exercise
+  - verify
+
+.before-after-template:
+  stage: exercise
+  allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - reports/
+  before_script:
+    - |
+      mark() {
+        printf '%s\n' "$1" >> reports/${CI_JOB_NAME}.order.log
+      }
+
+      mkdir -p reports
+      mark 'before:start'
+      printf 'job=%s\n' "$CI_JOB_NAME" > reports/${CI_JOB_NAME}.meta
+  after_script:
+    - |
+      mark_after() {
+        printf '%s\n' "$1" >> reports/${CI_JOB_NAME}.order.log
+      }
+
+      mkdir -p reports
+      mark_after 'after:executed'
+      printf 'CI_JOB_STATUS=%s\n' "$CI_JOB_STATUS" > reports/${CI_JOB_NAME}.after-status
+
+main-script-fails-but-after-runs:
+  extends: .before-after-template
+  script:
+    - |
+      mark() {
+        printf '%s\n' "$1" >> reports/${CI_JOB_NAME}.order.log
+      }
+
+      mark 'script:before-fail'
+      printf 'exit_code=%s\n' '23' > reports/${CI_JOB_NAME}.failure.meta
+      exit 23
+
+verify-before-after-failure:
+  stage: verify
+  when: always
+  script: |
+    test -f reports/main-script-fails-but-after-runs.order.log || {
+      echo '[ERROR] missing execution order log'
+      exit 1
+    }
+    test -f reports/main-script-fails-but-after-runs.after-status || {
+      echo '[ERROR] missing after_script status marker'
+      exit 1
+    }
+    test -f reports/main-script-fails-but-after-runs.failure.meta || {
+      echo '[ERROR] missing failure marker from main script'
+      exit 1
+    }
+
+    grep -F 'before:start' reports/main-script-fails-but-after-runs.order.log || {
+      echo '[ERROR] before_script did not run'
+      exit 1
+    }
+    grep -F 'script:before-fail' reports/main-script-fails-but-after-runs.order.log || {
+      echo '[ERROR] main script marker missing'
+      exit 1
+    }
+    grep -F 'after:executed' reports/main-script-fails-but-after-runs.order.log || {
+      echo '[ERROR] after_script did not run after main script failure'
+      exit 1
+    }
+    grep -F 'CI_JOB_STATUS=failed' reports/main-script-fails-but-after-runs.after-status || {
+      echo '[ERROR] after_script did not observe failed job status'
+      exit 1
+    }
+    grep -F 'exit_code=23' reports/main-script-fails-but-after-runs.failure.meta || {
+      echo '[ERROR] main script failure marker mismatch'
+      exit 1
+    }
+

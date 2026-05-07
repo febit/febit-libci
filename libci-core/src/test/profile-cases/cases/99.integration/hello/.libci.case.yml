@@ -1,0 +1,4 @@
+Say-Hello:
+  stage: test
+  script:
+    - echo "Hello, World!"

@@ -1,0 +1,163 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "test",
+    ".post"
+  ],
+  "jobs": {
+    "inherit-all": {
+      "id": "inherit-all",
+      "stage": "test",
+      "image": {
+        "name": "alpine:3.20"
+      },
+      "services": [],
+      "tags": [
+        "docker"
+      ],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "echo default-before"
+      ],
+      "script": [
+        "echo inherit-all"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "default/output.log"
+        ],
+        "exclude": [
+          "tmp/**"
+        ],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "inherit-none": {
+      "id": "inherit-none",
+      "stage": "test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": false,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "echo inherit-none"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    },
+    "inherit-only": {
+      "id": "inherit-only",
+      "stage": "test",
+      "image": {
+        "name": "alpine:3.20"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": [
+          "image",
+          "before_script",
+          "artifacts"
+        ],
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "echo default-before"
+      ],
+      "script": [
+        "echo inherit-only"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "default/output.log"
+        ],
+        "exclude": [
+          "tmp/**"
+        ],
+        "reports": {}
+      },
+      "rules": []
+    }
+  }
+}

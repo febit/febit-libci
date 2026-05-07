@@ -1,0 +1,52 @@
+{
+  "stages": [
+    "test"
+  ],
+  "test-include-local-glob": {
+    "extends": ".glob-template",
+    "stage": "test",
+    "script": [
+      "echo test-include-local-glob"
+    ],
+    "image": "eclipse-temurin:21-jre",
+    "before_script": [
+      "echo include-local-glob-before"
+    ],
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "variables": {
+      "GLOB_SOURCE": "local-glob"
+    },
+    "cache": {
+      "key": "glob-cache",
+      "paths": [
+        ".gradle/"
+      ]
+    }
+  },
+  ".glob-template": {
+    "image": "eclipse-temurin:21-jre",
+    "before_script": [
+      "echo include-local-glob-before"
+    ],
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "variables": {
+      "GLOB_SOURCE": "local-glob"
+    },
+    "cache": {
+      "key": "glob-cache",
+      "paths": [
+        ".gradle/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+.libci-docker-build:
+  image:
+    name: docker:29.3.0-dind
+    entrypoint: [ "" ]
+  lib: |
+    # Infra Library for Docker Build
+    ...

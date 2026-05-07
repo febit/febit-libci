@@ -1,0 +1,23 @@
+stages:
+  - deploy
+
+shorthand-keywords:
+  stage: deploy
+  cache:
+    key: shorthand-cache
+    paths:
+      - .cache/
+  environment: review/$CI_COMMIT_REF_SLUG
+  trigger:
+    include: child.yml
+  secrets:
+    DB_PASSWORD:
+      vault: production/db/password@ops
+    API_KEY:
+      gcp_secret_manager: api-key
+    AZURE_TOKEN:
+      azure_key_vault: azure-token
+  pages: true
+  script:
+    - echo shorthand-keywords
+

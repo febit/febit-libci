@@ -1,0 +1,116 @@
+stages:
+  - check
+  - verify
+
+.rules-exists-reporting-job:
+  artifacts:
+    when: always
+    paths:
+      - reports/
+  before_script:
+    - |
+      mkdir -p reports
+
+      mark() {
+        printf '%s\n' "$1" >> "reports/${CI_JOB_NAME}.log"
+      }
+
+root-gradle-file-exists:
+  extends: .rules-exists-reporting-job
+  stage: check
+  rules:
+    - exists:
+        - build.gradle
+  script: |
+    mark 'root-gradle-file-exists:ran'
+    mark 'matched:build.gradle'
+
+nested-gradle-file-exists:
+  extends: .rules-exists-reporting-job
+  stage: check
+  rules:
+    - exists:
+        - gradle/wrapper/gradle-wrapper.properties
+  script: |
+    mark 'nested-gradle-file-exists:ran'
+    mark 'matched:gradle/wrapper/gradle-wrapper.properties'
+
+multiple-gradle-files-exist:
+  extends: .rules-exists-reporting-job
+  stage: check
+  rules:
+    - exists:
+        - build.gradle
+        - gradle/wrapper/gradle-wrapper.properties
+  script: |
+    mark 'multiple-gradle-files-exist:ran'
+    mark 'matched:build.gradle'
+    mark 'matched:gradle/wrapper/gradle-wrapper.properties'
+
+missing-gradle-file-falls-through:
+  extends: .rules-exists-reporting-job
+  stage: check
+  rules:
+    - exists:
+        - gradle/not-found.properties
+    - when: never
+  script: |
+    mark 'unexpected-execution'
+    exit 1
+
+mixed-gradle-files-fall-through:
+  extends: .rules-exists-reporting-job
+  stage: check
+  rules:
+    - exists:
+        - build.gradle
+        - gradle/not-found.properties
+    - when: never
+  script: |
+    mark 'unexpected-execution'
+    exit 1
+
+verify-rules-exists-gradle-files:
+  stage: verify
+  when: always
+  script: |
+    assert_exists() {
+      file="$1"
+      test -f "$file" || {
+        echo "[ERROR] missing expected file: $file"
+        exit 1
+      }
+    }
+
+    assert_absent() {
+      file="$1"
+      if [ -e "$file" ]; then
+        echo "[ERROR] unexpected file present: $file"
+        exit 1
+      fi
+    }
+
+    assert_contains() {
+      file="$1"
+      expected="$2"
+      grep -F "$expected" "$file" >/dev/null || {
+        echo "[ERROR] expected '$expected' in $file"
+        exit 1
+      }
+    }
+
+    assert_exists reports/root-gradle-file-exists.log
+    assert_exists reports/nested-gradle-file-exists.log
+    assert_exists reports/multiple-gradle-files-exist.log
+
+    assert_absent reports/missing-gradle-file-falls-through.log
+    assert_absent reports/mixed-gradle-files-fall-through.log
+
+    assert_contains reports/root-gradle-file-exists.log 'root-gradle-file-exists:ran'
+    assert_contains reports/root-gradle-file-exists.log 'matched:build.gradle'
+    assert_contains reports/nested-gradle-file-exists.log 'nested-gradle-file-exists:ran'
+    assert_contains reports/nested-gradle-file-exists.log 'matched:gradle/wrapper/gradle-wrapper.properties'
+    assert_contains reports/multiple-gradle-files-exist.log 'multiple-gradle-files-exist:ran'
+    assert_contains reports/multiple-gradle-files-exist.log 'matched:build.gradle'
+    assert_contains reports/multiple-gradle-files-exist.log 'matched:gradle/wrapper/gradle-wrapper.properties'
+

@@ -1,0 +1,108 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "delayed",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "delayed-self-check": {
+      "id": "delayed-self-check",
+      "stage": "delayed",
+      "image": {
+        "name": "debian:13-slim"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "delayed",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mkdir -p reports"
+      ],
+      "script": [
+        "stage_ms=\"$(date -u -d \"$LIBCI_STAGE_STARTED_AT\" +%s%3N)\"\njob_ms=\"$(date -u -d \"$CI_JOB_STARTED_AT\" +%s%3N)\"\ndelay_ms=\"$((job_ms - stage_ms))\"\n\n{\n  printf 'stage_started_at=%s\\n' \"$LIBCI_STAGE_STARTED_AT\"\n  printf 'job_started_at=%s\\n' \"$CI_JOB_STARTED_AT\"\n  printf 'delay_ms=%s\\n' \"$delay_ms\"\n} > reports/delayed-self-check.log\n\nif [ \"$delay_ms\" -lt 5800 ]; then\n  echo \"[ERROR] delayed job started too early: ${delay_ms}ms\"\n  exit 1\nfi\n"
+      ],
+      "after_script": [],
+      "start_in": "0months6seconds",
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "verify-delayed-self-check": {
+      "id": "verify-delayed-self-check",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/delayed-self-check.log || {\n  echo '[ERROR] missing delayed report'\n  exit 1\n}\n\ngrep -E '^stage_started_at=.*Z$' reports/delayed-self-check.log >/dev/null || {\n  echo '[ERROR] missing stage_started_at instant'\n  exit 1\n}\n\ngrep -E '^job_started_at=.*Z$' reports/delayed-self-check.log >/dev/null || {\n  echo '[ERROR] missing job_started_at instant'\n  exit 1\n}\n\ndelay_ms=\"$(sed -n 's/^delay_ms=//p' reports/delayed-self-check.log)\"\ntest -n \"$delay_ms\" || {\n  echo '[ERROR] missing delay_ms value'\n  exit 1\n}\n\nif [ \"$delay_ms\" -lt 5800 ]; then\n  echo \"[ERROR] delayed verification failed: ${delay_ms}ms\"\n  exit 1\nfi\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": [],
+      "dependencies": [
+        "delayed-self-check"
+      ]
+    }
+  }
+}

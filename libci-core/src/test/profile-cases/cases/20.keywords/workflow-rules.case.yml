@@ -1,0 +1,48 @@
+workflow:
+  name: pipeline-$CI_COMMIT_REF_SLUG
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - exists:
+        - README.md
+      variables:
+        PIPELINE_KIND: docs
+    - when: always
+      variables:
+        PIPELINE_KIND: default
+
+stages:
+  - test
+  - deploy
+
+variables:
+  GLOBAL_LEVEL: root
+
+scan:
+  stage: test
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+      variables:
+        JOB_KIND: guarded
+    - when: on_success
+  script:
+    - echo scan
+
+deploy-approval:
+  stage: deploy
+  when: manual
+  manual_confirmation: Deploy to production?
+  resource_group: production
+  script:
+    - echo approval
+
+deploy-delayed:
+  stage: deploy
+  when: delayed
+  start_in: 10 minutes
+  resource_group: production
+  script:
+    - echo delayed
+

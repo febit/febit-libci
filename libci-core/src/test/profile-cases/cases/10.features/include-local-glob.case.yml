@@ -1,0 +1,12 @@
+include:
+  - local: 10.features/include-local-glob/*.yml
+
+stages:
+  - test
+
+test-include-local-glob:
+  extends: .glob-template
+  stage: test
+  script:
+    - echo test-include-local-glob
+

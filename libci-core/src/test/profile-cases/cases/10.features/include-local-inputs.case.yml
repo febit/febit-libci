@@ -1,0 +1,19 @@
+include:
+  - local: 10.features/include-local-inputs.lib.yml
+    inputs:
+      base_image: eclipse-temurin:21-jre
+      deploy-stage: release
+      setup:
+        - echo setup-from-input-1
+        - echo setup-from-input-2
+
+stages:
+  - build
+  - release
+
+build:
+  stage: build
+  extends: .included-template
+  script:
+    - echo build
+

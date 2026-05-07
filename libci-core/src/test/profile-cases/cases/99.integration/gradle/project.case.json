@@ -1,0 +1,203 @@
+{
+  "variables": {
+    "APP_CI_DEBUG": {
+      "value": "true",
+      "expand": true
+    },
+    "APP_LIB_GRAMMAR_VERSION": {
+      "value": "25.12.1",
+      "expand": true
+    },
+    "APP_SHARED_ENV": {
+      "value": ".libci.shared.env",
+      "expand": true
+    }
+  },
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": [
+      {
+        "if": "$CI_PIPELINE_SOURCE == \"push\" && $CI_COMMIT_MESSAGE =~ /(^|\\s+)SKIP_CI($|\\s+)/",
+        "when": "never",
+        "changes": {
+          "paths": []
+        },
+        "exists": {
+          "paths": []
+        },
+        "variables": {}
+      },
+      {
+        "when": "always",
+        "changes": {
+          "paths": []
+        },
+        "exists": {
+          "paths": []
+        },
+        "variables": {}
+      }
+    ]
+  },
+  "stages": [
+    ".pre",
+    "prepare",
+    "check",
+    "build",
+    "package",
+    ".post"
+  ],
+  "jobs": {
+    "build-packages": {
+      "id": "build-packages",
+      "stage": "build",
+      "image": {
+        "name": "febit-libci/jdk:lts-17"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "set -e",
+        "# Infra Library for Gradle\n...\n",
+        "libci templates apply '.libci/templates/gradle'"
+      ],
+      "script": [
+        "# Common settings for Gradle\nexport APP_VENDOR=\"febit.org\"\nexport APP_VERSION=\"${CI_COMMIT_TAG:1}\"\n\nsay_hi () {\n  echo \"Hi from common settings!\"\n}\n",
+        "./gradlew build -x check -Papp.release.version=$APP_VERSION"
+      ],
+      "after_script": [
+        "# Infra Library for Gradle\n...\n",
+        "./gradlew --stop"
+      ],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "GRADLE_USER_HOME": {
+          "value": "$CI_PROJECT_DIR/.gradle-home",
+          "expand": true
+        },
+        "SONAR_USER_HOME": {
+          "value": "${CI_PROJECT_DIR}/.sonar",
+          "expand": true
+        }
+      },
+      "artifacts": {
+        "name": "build",
+        "public": true,
+        "untracked": false,
+        "when": "on_success",
+        "access": "all",
+        "paths": [
+          "./*/build/libs"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "cache": {
+        "key": {
+          "value": "gradle-home",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          ".gradle-home"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    },
+    "check-sonar": {
+      "id": "check-sonar",
+      "stage": "build",
+      "image": {
+        "name": "febit-libci/jdk:lts-17"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "set -e",
+        "# Infra Library for Gradle\n...\n",
+        "libci templates apply '.libci/templates/gradle'"
+      ],
+      "script": [
+        "set -e",
+        "## For Merge Request: Fetch target branch\nif [ -n \"$CI_MERGE_REQUEST_TARGET_BRANCH_NAME\" ]; then\n  git fetch -f origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME\nfi",
+        "libci sonar init",
+        "./gradlew check sonar"
+      ],
+      "after_script": [
+        "# Infra Library for Gradle\n...\n",
+        "./gradlew --stop"
+      ],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "GRADLE_USER_HOME": {
+          "value": "$CI_PROJECT_DIR/.gradle-home",
+          "expand": true
+        },
+        "SONAR_USER_HOME": {
+          "value": "${CI_PROJECT_DIR}/.sonar",
+          "expand": true
+        }
+      },
+      "cache": {
+        "key": {
+          "value": "sonar",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          ".sonar/cache"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    }
+  }
+}

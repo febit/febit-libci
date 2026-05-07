@@ -1,0 +1,426 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "check",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "missing-gradle-file-falls-through": {
+      "id": "missing-gradle-file-falls-through",
+      "stage": "check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+      ],
+      "script": [
+        "mark 'unexpected-execution'\nexit 1\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": [
+              "gradle/not-found.properties"
+            ]
+          },
+          "when": "on_success",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        },
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": []
+          },
+          "when": "never",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        }
+      ]
+    },
+    "mixed-gradle-files-fall-through": {
+      "id": "mixed-gradle-files-fall-through",
+      "stage": "check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+      ],
+      "script": [
+        "mark 'unexpected-execution'\nexit 1\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": [
+              "build.gradle",
+              "gradle/not-found.properties"
+            ]
+          },
+          "when": "on_success",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        },
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": []
+          },
+          "when": "never",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        }
+      ]
+    },
+    "multiple-gradle-files-exist": {
+      "id": "multiple-gradle-files-exist",
+      "stage": "check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+      ],
+      "script": [
+        "mark 'multiple-gradle-files-exist:ran'\nmark 'matched:build.gradle'\nmark 'matched:gradle/wrapper/gradle-wrapper.properties'\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": [
+              "build.gradle",
+              "gradle/wrapper/gradle-wrapper.properties"
+            ]
+          },
+          "when": "on_success",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        }
+      ]
+    },
+    "nested-gradle-file-exists": {
+      "id": "nested-gradle-file-exists",
+      "stage": "check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+      ],
+      "script": [
+        "mark 'nested-gradle-file-exists:ran'\nmark 'matched:gradle/wrapper/gradle-wrapper.properties'\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": [
+              "gradle/wrapper/gradle-wrapper.properties"
+            ]
+          },
+          "when": "on_success",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        }
+      ]
+    },
+    "root-gradle-file-exists": {
+      "id": "root-gradle-file-exists",
+      "stage": "check",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+      ],
+      "script": [
+        "mark 'root-gradle-file-exists:ran'\nmark 'matched:build.gradle'\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": [
+        {
+          "changes": {
+            "paths": []
+          },
+          "exists": {
+            "paths": [
+              "build.gradle"
+            ]
+          },
+          "when": "on_success",
+          "allow_failure": {
+            "value": false,
+            "exit_codes": []
+          },
+          "needs": [],
+          "variables": {}
+        }
+      ]
+    },
+    "verify-rules-exists-gradle-files": {
+      "id": "verify-rules-exists-gradle-files",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "assert_exists() {\n  file=\"$1\"\n  test -f \"$file\" || {\n    echo \"[ERROR] missing expected file: $file\"\n    exit 1\n  }\n}\n\nassert_absent() {\n  file=\"$1\"\n  if [ -e \"$file\" ]; then\n    echo \"[ERROR] unexpected file present: $file\"\n    exit 1\n  fi\n}\n\nassert_contains() {\n  file=\"$1\"\n  expected=\"$2\"\n  grep -F \"$expected\" \"$file\" >/dev/null || {\n    echo \"[ERROR] expected '$expected' in $file\"\n    exit 1\n  }\n}\n\nassert_exists reports/root-gradle-file-exists.log\nassert_exists reports/nested-gradle-file-exists.log\nassert_exists reports/multiple-gradle-files-exist.log\n\nassert_absent reports/missing-gradle-file-falls-through.log\nassert_absent reports/mixed-gradle-files-fall-through.log\n\nassert_contains reports/root-gradle-file-exists.log 'root-gradle-file-exists:ran'\nassert_contains reports/root-gradle-file-exists.log 'matched:build.gradle'\nassert_contains reports/nested-gradle-file-exists.log 'nested-gradle-file-exists:ran'\nassert_contains reports/nested-gradle-file-exists.log 'matched:gradle/wrapper/gradle-wrapper.properties'\nassert_contains reports/multiple-gradle-files-exist.log 'multiple-gradle-files-exist:ran'\nassert_contains reports/multiple-gradle-files-exist.log 'matched:build.gradle'\nassert_contains reports/multiple-gradle-files-exist.log 'matched:gradle/wrapper/gradle-wrapper.properties'\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

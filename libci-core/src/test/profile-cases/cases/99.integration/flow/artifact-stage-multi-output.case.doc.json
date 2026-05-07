@@ -1,0 +1,77 @@
+{
+  "stages": [
+    "prepare",
+    "build",
+    "package",
+    "verify"
+  ],
+  ".artifact-template": {
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "out/"
+      ]
+    }
+  },
+  "prepare-artifacts": {
+    "extends": ".artifact-template",
+    "stage": "prepare",
+    "script": "mkdir -p out\necho \"prepare stage artifact\" > out/prepare.txt\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "out/"
+      ]
+    }
+  },
+  "build-linux": {
+    "extends": ".artifact-template",
+    "stage": "build",
+    "script": "mkdir -p out\necho \"linux build artifact\" > out/linux.txt\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "out/"
+      ]
+    }
+  },
+  "build-macos": {
+    "extends": ".artifact-template",
+    "stage": "build",
+    "script": "mkdir -p out\necho \"macos build artifact\" > out/macos.txt\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "out/"
+      ]
+    }
+  },
+  "package-release": {
+    "extends": ".artifact-template",
+    "stage": "package",
+    "needs": [
+      "prepare-artifacts",
+      "build-linux",
+      "build-macos"
+    ],
+    "script": "mkdir -p out\necho \"release bundle\" > out/release.txt\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "out/"
+      ]
+    }
+  },
+  "verify-artifacts-flow": {
+    "extends": ".artifact-template",
+    "stage": "verify",
+    "when": "always",
+    "script": "test -f out/prepare.txt || {\n  echo '[ERROR] missing out/prepare.txt'\n  exit 1\n}\ntest -f out/linux.txt || {\n  echo '[ERROR] missing out/linux.txt'\n  exit 1\n}\ntest -f out/macos.txt || {\n  echo '[ERROR] missing out/macos.txt'\n  exit 1\n}\ntest -f out/release.txt || {\n  echo '[ERROR] missing out/release.txt'\n  exit 1\n}\ngrep -F 'prepare stage artifact' out/prepare.txt || {\n  echo '[ERROR] prepare artifact mismatch'\n  exit 1\n}\ngrep -F 'linux build artifact' out/linux.txt || {\n  echo '[ERROR] linux artifact mismatch'\n  exit 1\n}\ngrep -F 'macos build artifact' out/macos.txt || {\n  echo '[ERROR] macos artifact mismatch'\n  exit 1\n}\ngrep -F 'release bundle' out/release.txt || {\n  echo '[ERROR] release artifact mismatch'\n  exit 1\n}\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "out/"
+      ]
+    }
+  }
+}

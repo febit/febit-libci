@@ -1,0 +1,8 @@
+.glob-template:
+  variables:
+    GLOB_SOURCE: local-glob
+  cache:
+    key: glob-cache
+    paths:
+      - .gradle/
+

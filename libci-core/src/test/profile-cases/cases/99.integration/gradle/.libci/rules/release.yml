@@ -1,0 +1,16 @@
+.with-rules: &with-rules
+  rules:
+    - if: >-
+        $CI_COMMIT_TAG =~ /^v[0-9]+/
+
+build-packages:
+  <<: *with-rules
+  stage: build
+  extends: .gradle-env
+  artifacts:
+    name: build
+    paths:
+      - ./*/build/libs
+  script:
+    - !reference [ .app-common-settings, lib ]
+    - ./gradlew build -x check -Papp.release.version=$APP_VERSION

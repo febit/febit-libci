@@ -1,0 +1,101 @@
+stages:
+  - retry-check
+  - verify
+
+.retry-template:
+  stage: retry-check
+  artifacts:
+    when: always
+    paths:
+      - reports/
+  script: |
+    mkdir -p reports
+    echo "attempt=$LIBCI_JOB_RETRY_ATTEMPT / max=$LIBCI_JOB_RETRY_MAX"
+    printf 'attempt=%s\n' "$LIBCI_JOB_RETRY_ATTEMPT" >> "reports/${CI_JOB_NAME}.attempts.log"
+    test "$LIBCI_JOB_RETRY_ATTEMPT" -ge "$SUCCESS_AT_ATTEMPT"
+    printf 'success_at=%s\n' "$LIBCI_JOB_RETRY_ATTEMPT" > "reports/${CI_JOB_NAME}.status"
+  variables:
+    SUCCESS_AT_ATTEMPT: '0'
+
+retry-on-script-failure:
+  extends: .retry-template
+  retry:
+    max: 3
+    when:
+      - script_failure
+    exit_codes:
+      - 1
+      - 2
+  variables:
+    SUCCESS_AT_ATTEMPT: '2'
+
+retry-on-timeout:
+  stage: retry-check
+  timeout: 3s
+  artifacts:
+    when: always
+    paths:
+      - reports/
+  script: |
+    mkdir -p reports
+    echo "simulate timeout for retry"
+    printf 'attempt=%s\n' "$LIBCI_JOB_RETRY_ATTEMPT" >> reports/retry-on-timeout.attempts.log
+    printf 'timeout_expected=true\n' > reports/retry-on-timeout.status
+    sleep 10
+  retry:
+    max: 2
+    when:
+      - job_execution_timeout
+
+retry-on-any-failure:
+  extends: .retry-template
+  retry: 2
+  variables:
+    SUCCESS_AT_ATTEMPT: '1'
+
+verify-retry-behavior:
+  stage: verify
+  when: always
+  script: |
+    test -f reports/retry-on-script-failure.attempts.log || {
+      echo '[ERROR] missing retry-on-script-failure attempts log'
+      exit 1
+    }
+    test -f reports/retry-on-any-failure.attempts.log || {
+      echo '[ERROR] missing retry-on-any-failure attempts log'
+      exit 1
+    }
+    test -f reports/retry-on-timeout.attempts.log || {
+      echo '[ERROR] missing retry-on-timeout attempts log'
+      exit 1
+    }
+    grep -F 'attempt=0' reports/retry-on-script-failure.attempts.log || {
+      echo '[ERROR] retry-on-script-failure never started'
+      exit 1
+    }
+    grep -F 'attempt=2' reports/retry-on-script-failure.attempts.log || {
+      echo '[ERROR] retry-on-script-failure did not reach success attempt'
+      exit 1
+    }
+    grep -F 'success_at=2' reports/retry-on-script-failure.status || {
+      echo '[ERROR] retry-on-script-failure success marker mismatch'
+      exit 1
+    }
+    grep -F 'attempt=1' reports/retry-on-any-failure.attempts.log || {
+      echo '[ERROR] retry-on-any-failure did not retry as expected'
+      exit 1
+    }
+    grep -F 'success_at=1' reports/retry-on-any-failure.status || {
+      echo '[ERROR] retry-on-any-failure success marker mismatch'
+      exit 1
+    }
+    grep -F 'attempt=2' reports/retry-on-timeout.attempts.log || {
+      echo '[ERROR] retry-on-timeout did not exhaust retry attempts'
+      exit 1
+    }
+    grep -F 'timeout_expected=true' reports/retry-on-timeout.status || {
+      echo '[ERROR] retry-on-timeout marker mismatch'
+      exit 1
+    }
+
+

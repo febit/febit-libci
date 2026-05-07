@@ -1,0 +1,16 @@
+.gradle-env:
+  image: !reference [ .libci-gradle, image ]
+  variables:
+    GRADLE_USER_HOME: $CI_PROJECT_DIR/.gradle-home
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  cache:
+    key: "gradle-home"
+    paths:
+      - .gradle-home
+  before_script:
+    - set -e
+    - !reference [ .libci-gradle, lib ]
+    - libci templates apply '.libci/templates/gradle'
+  after_script:
+    - !reference [ .libci-gradle, lib ]
+    - ./gradlew --stop

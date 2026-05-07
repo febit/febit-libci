@@ -1,0 +1,143 @@
+{
+  "stages": [
+    "success-path",
+    "failure-trigger",
+    "failure-follow-up",
+    "verify"
+  ],
+  ".when-reporting-job": {
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "success-anchor": {
+    "extends": ".when-reporting-job",
+    "stage": "success-path",
+    "when": "on_success",
+    "script": "mark 'success-anchor:ran'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "run-on-success-before-failure": {
+    "extends": ".when-reporting-job",
+    "stage": "success-path",
+    "when": "on_success",
+    "script": "mark 'run-on-success-before-failure:ran'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "skip-on-failure-before-failure": {
+    "extends": ".when-reporting-job",
+    "stage": "success-path",
+    "when": "on_failure",
+    "script": "fail_if_reached\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "run-always-before-failure": {
+    "extends": ".when-reporting-job",
+    "stage": "success-path",
+    "when": "always",
+    "script": "mark 'run-always-before-failure:ran'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "trigger-pipeline-failure": {
+    "extends": ".when-reporting-job",
+    "stage": "failure-trigger",
+    "script": "mark 'trigger-pipeline-failure:about-to-fail'\nexit 17\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "skip-on-success-after-failure": {
+    "extends": ".when-reporting-job",
+    "stage": "failure-follow-up",
+    "when": "on_success",
+    "script": "fail_if_reached\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "run-on-failure-after-failure": {
+    "extends": ".when-reporting-job",
+    "stage": "failure-follow-up",
+    "when": "on_failure",
+    "script": "mark 'run-on-failure-after-failure:ran'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "run-always-after-failure": {
+    "extends": ".when-reporting-job",
+    "stage": "failure-follow-up",
+    "when": "always",
+    "script": "mark 'run-always-after-failure:ran'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n\nfail_if_reached() {\n  echo \"[ERROR] unexpected execution for $CI_JOB_NAME\"\n  mark 'unexpected-execution'\n  exit 1\n}\n"
+    ]
+  },
+  "verify-when-job-scheduling": {
+    "stage": "verify",
+    "when": "always",
+    "script": "assert_exists() {\n  local file=\"$1\"\n  test -f \"$file\" || {\n    echo \"[ERROR] missing expected marker: $file\"\n    exit 1\n  }\n}\n\nassert_absent() {\n  local file=\"$1\"\n  if [ -e \"$file\" ]; then\n    echo \"[ERROR] unexpected marker present: $file\"\n    exit 1\n  fi\n}\n\nassert_contains() {\n  local file=\"$1\"\n  local expected=\"$2\"\n  grep -F \"$expected\" \"$file\" >/dev/null || {\n    echo \"[ERROR] expected '$expected' in $file\"\n    exit 1\n  }\n}\n\nassert_exists reports/success-anchor.log\nassert_exists reports/run-on-success-before-failure.log\nassert_exists reports/run-always-before-failure.log\nassert_exists reports/trigger-pipeline-failure.log\nassert_exists reports/run-on-failure-after-failure.log\nassert_exists reports/run-always-after-failure.log\n\nassert_absent reports/skip-on-failure-before-failure.log\nassert_absent reports/skip-on-success-after-failure.log\n\nassert_contains reports/success-anchor.log 'success-anchor:ran'\nassert_contains reports/run-on-success-before-failure.log 'run-on-success-before-failure:ran'\nassert_contains reports/run-always-before-failure.log 'run-always-before-failure:ran'\nassert_contains reports/trigger-pipeline-failure.log 'trigger-pipeline-failure:about-to-fail'\nassert_contains reports/run-on-failure-after-failure.log 'run-on-failure-after-failure:ran'\nassert_contains reports/run-always-after-failure.log 'run-always-after-failure:ran'\n"
+  }
+}

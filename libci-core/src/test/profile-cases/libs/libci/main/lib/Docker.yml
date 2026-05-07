@@ -1,0 +1,13 @@
+.docker-image-build:
+  image: !reference [ .libci-docker-build, image ]
+  script:
+    - set -e
+    - !reference [ .libci-docker-build, lib ]
+    - libci docker login
+    - |
+      echo "Inputs:"
+      ...
+    - |
+      docker buildx build \
+        -f $APP_DOCKERFILE
+      ...

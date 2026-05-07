@@ -1,0 +1,43 @@
+{
+  "stages": [
+    "build",
+    "release"
+  ],
+  "build": {
+    "stage": "build",
+    "extends": ".included-template",
+    "script": [
+      "echo build"
+    ],
+    "image": "eclipse-temurin:21-jre",
+    "before_script": [
+      "echo include-prepare",
+      "echo setup-from-input-1",
+      "echo setup-from-input-2"
+    ],
+    "artifacts": {
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  ".included-template": {
+    "image": "eclipse-temurin:21-jre",
+    "before_script": [
+      "echo include-prepare",
+      "echo setup-from-input-1",
+      "echo setup-from-input-2"
+    ],
+    "artifacts": {
+      "paths": [
+        "reports/"
+      ]
+    }
+  },
+  "deploy-from-include": {
+    "stage": "release",
+    "script": [
+      "echo deploy-from-include"
+    ]
+  }
+}

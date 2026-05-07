@@ -1,0 +1,368 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "clear",
+    "produce",
+    "inspect",
+    "clear-again",
+    "inspect-empty",
+    "verify",
+    ".post"
+  ],
+  "jobs": {
+    "cache-clear-initial": {
+      "id": "cache-clear-initial",
+      "stage": "clear",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-clear-initial.log\n}\n\nmkdir -p reports cached\nrm -rf cached/*\nreport 'cleared-initial'\nif [ -e cached/payload.txt ]; then\n  echo '[ERROR] payload should not exist after initial clear'\n  exit 1\nfi\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "cache": {
+        "key": {
+          "value": "flow-cache-roundtrip",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          "cached/"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    },
+    "cache-clear-second": {
+      "id": "cache-clear-second",
+      "stage": "clear-again",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-clear-second.log\n}\n\nmkdir -p reports cached\nrm -f cached/payload.txt\nreport 'payload-removed'\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "cache": {
+        "key": {
+          "value": "flow-cache-roundtrip",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          "cached/"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    },
+    "cache-inspect-empty": {
+      "id": "cache-inspect-empty",
+      "stage": "inspect-empty",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-inspect-empty.log\n}\n\nmkdir -p reports cached\nif [ -e cached/payload.txt ]; then\n  echo '[ERROR] cache payload should have been removed'\n  exit 1\nfi\nreport 'cache-empty'\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "cache": {
+        "key": {
+          "value": "flow-cache-roundtrip",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          "cached/"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    },
+    "cache-inspect-hit": {
+      "id": "cache-inspect-hit",
+      "stage": "inspect",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-inspect-hit.log\n}\n\nmkdir -p reports cached\ntest -f cached/payload.txt || {\n  echo '[ERROR] expected cache payload is missing'\n  exit 1\n}\ngrep -F 'produced-by=cache-produce-payload' cached/payload.txt || {\n  echo '[ERROR] cache payload producer mismatch'\n  exit 1\n}\nreport 'cache-hit'\nreport \"payload=$(tr '\\n' ';' < cached/payload.txt)\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "cache": {
+        "key": {
+          "value": "flow-cache-roundtrip",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          "cached/"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    },
+    "cache-produce-payload": {
+      "id": "cache-produce-payload",
+      "stage": "produce",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "report() {\n  printf '%s\\n' \"$1\" >> reports/cache-produce-payload.log\n}\n\nmkdir -p reports cached\ncat > cached/payload.txt <<EOF\nproduced-by=$CI_JOB_NAME\ncache-key=flow-cache-roundtrip\nEOF\nreport 'payload-created'\nreport \"payload=$(tr '\\n' ';' < cached/payload.txt)\"\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "cache": {
+        "key": {
+          "value": "flow-cache-roundtrip",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          "cached/"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    },
+    "verify-cache-roundtrip": {
+      "id": "verify-cache-roundtrip",
+      "stage": "verify",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "always",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "test -f reports/cache-clear-initial.log || {\n  echo '[ERROR] missing initial clear report'\n  exit 1\n}\ntest -f reports/cache-produce-payload.log || {\n  echo '[ERROR] missing cache producer report'\n  exit 1\n}\ntest -f reports/cache-inspect-hit.log || {\n  echo '[ERROR] missing cache hit report'\n  exit 1\n}\ntest -f reports/cache-clear-second.log || {\n  echo '[ERROR] missing second clear report'\n  exit 1\n}\ntest -f reports/cache-inspect-empty.log || {\n  echo '[ERROR] missing empty-cache report'\n  exit 1\n}\n\ngrep -F 'cleared-initial' reports/cache-clear-initial.log || {\n  echo '[ERROR] initial clear marker mismatch'\n  exit 1\n}\ngrep -F 'payload-created' reports/cache-produce-payload.log || {\n  echo '[ERROR] payload creation marker mismatch'\n  exit 1\n}\ngrep -F 'cache-hit' reports/cache-inspect-hit.log || {\n  echo '[ERROR] cache hit marker mismatch'\n  exit 1\n}\ngrep -F 'payload-removed' reports/cache-clear-second.log || {\n  echo '[ERROR] second clear marker mismatch'\n  exit 1\n}\ngrep -F 'cache-empty' reports/cache-inspect-empty.log || {\n  echo '[ERROR] empty cache marker mismatch'\n  exit 1\n}\n"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

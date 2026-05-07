@@ -1,0 +1,33 @@
+{
+  "stages": [
+    "test"
+  ],
+  "test-defaults": {
+    "artifacts": {
+      "paths": "default/path"
+    }
+  },
+  "test-overrides": {
+    "artifacts": {
+      "name": "overridden-name",
+      "public": false,
+      "untracked": true,
+      "when": "always",
+      "access": "developer",
+      "paths": [
+        "overridden/path1",
+        "overridden/path2"
+      ],
+      "exclude": [
+        "overridden/exclude1",
+        "overridden/exclude2"
+      ],
+      "reports": {
+        "junit": [
+          "overridden/report1.xml",
+          "overridden/report2.xml"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+[versions]
+hierynomus-license = "0.16.1"
+
+febit-devkit = '1.6.1'
+febit-commons = "4.0.2"
+mina-sshd = "2.17.1"
+groovy-cps = "1.31"
+jpi2 = "0.57.0"
+eddsa = "0.3.0"
+
+xbib-jflex = "3.0.2"
+
+# Ref: https://github.com/jenkinsci/jenkins/blob/jenkins-2.555.1/bom/pom.xml
+# Ref: https://github.com/jenkinsci/jenkins/blob/jenkins-2.561/bom/pom.xml
+jenkins-bom = "2.561"
+spring = "7.0.7"
+
+# Ref: https://github.com/jenkinsci/git-client-plugin/blob/git-client-6.6.0/pom.xml
+jgit = "7.6.0.202603022253-r"
+
+# Ref: https://repo.jenkins-ci.org/artifactory/public/io/jenkins/tools/bom/bom-weekly/
+jenkins-tools-bom = "6364.v16b_76a_4023c7"
+
+[libraries]
+febit-commons-deps = { module = "org.febit:febit-commons-dependencies", version.ref = "febit-commons" }
+jenkins-bom = { module = "org.jenkins-ci.main:jenkins-bom", version.ref = "jenkins-bom" }
+jenkins-tools-bom = { module = "io.jenkins.tools.bom:bom-weekly", version.ref = "jenkins-tools-bom" }
+spring-framework-bom = { module = "org.springframework:spring-framework-bom", version.ref = "spring" }
+
+jgit-core = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
+jgit-jsch = { module = "org.eclipse.jgit:org.eclipse.jgit.ssh.jsch", version.ref = "jgit" }
+jgit-sshd = { module = "org.eclipse.jgit:org.eclipse.jgit.ssh.apache", version.ref = "jgit" }
+jgit-junit = { module = "org.eclipse.jgit:org.eclipse.jgit.junit", version.ref = "jgit" }
+jgit-junit-ssh = { module = "org.eclipse.jgit:org.eclipse.jgit.junit.ssh", version.ref = "jgit" }
+jgit-junit-http = { module = "org.eclipse.jgit:org.eclipse.jgit.junit.http", version.ref = "jgit" }
+
+mina-sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "mina-sshd" }
+eddsa = { module = "net.i2p.crypto:eddsa", version.ref = "eddsa" }
+
+[plugins]
+febit-bom = { id = "org.febit.standard-bom", version.ref = "febit-devkit" }
+febit-codegen-module = { id = "org.febit.codegen-module", version.ref = "febit-devkit" }
+febit-java = { id = "org.febit.standard-java", version.ref = "febit-devkit" }
+febit-maven-publish = { id = "org.febit.standard-maven-publish", version.ref = "febit-devkit" }
+xbib-jflex = { id = "org.xbib.gradle.plugin.jflex", version.ref = "xbib-jflex" }
+jpi2 = { id = "org.jenkins-ci.jpi2", version.ref = "jpi2" }
+
+license = { id = "com.github.hierynomus.license", version.ref = "hierynomus-license" }

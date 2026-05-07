@@ -1,0 +1,25 @@
+spec:
+  inputs:
+    base_image:
+      default: alpine:3.20
+    deploy-stage:
+      default: deploy
+    setup:
+      type: array
+      default: [ ]
+
+---
+.included-template:
+  image: $[[ inputs.base_image ]]
+  before_script:
+    - echo include-prepare
+    - $[[ inputs.setup ]]
+  artifacts:
+    paths:
+      - reports/
+
+deploy-from-include:
+  stage: $[[ inputs.deploy-stage ]]
+  script:
+    - echo deploy-from-include
+

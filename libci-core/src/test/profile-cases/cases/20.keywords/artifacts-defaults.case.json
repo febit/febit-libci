@@ -1,0 +1,118 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "test",
+    ".post"
+  ],
+  "jobs": {
+    "test-defaults": {
+      "id": "test-defaults",
+      "stage": "test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "on_success",
+        "access": "all",
+        "paths": [
+          "default/path"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "rules": []
+    },
+    "test-overrides": {
+      "id": "test-overrides",
+      "stage": "test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "artifacts": {
+        "name": "overridden-name",
+        "public": false,
+        "untracked": true,
+        "when": "always",
+        "access": "developer",
+        "paths": [
+          "overridden/path1",
+          "overridden/path2"
+        ],
+        "exclude": [
+          "overridden/exclude1",
+          "overridden/exclude2"
+        ],
+        "reports": {
+          "junit": [
+            "overridden/report1.xml",
+            "overridden/report2.xml"
+          ]
+        }
+      },
+      "rules": []
+    }
+  }
+}

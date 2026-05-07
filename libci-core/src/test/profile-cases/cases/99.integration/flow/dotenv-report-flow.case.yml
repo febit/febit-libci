@@ -1,0 +1,75 @@
+stages:
+  - export
+  - consume
+  - verify
+
+export-dotenv:
+  stage: export
+  script: |
+    mkdir -p reports out
+    cat > reports/runtime.env <<EOF
+    APP_VERSION=1.2.3
+    APP_CHANNEL=nightly
+    DEPLOY_REGION=ap-southeast-1
+    EOF
+    cp reports/runtime.env out/runtime.env
+  artifacts:
+    paths:
+      - out/
+      - reports/
+    reports:
+      dotenv:
+        - reports/runtime.env
+
+consume-dotenv:
+  stage: consume
+  needs:
+    - export-dotenv
+  artifacts:
+    when: always
+    paths:
+      - out/
+      - reports/
+  script: |
+    mkdir -p reports out
+    echo "APP_VERSION=$APP_VERSION"
+    echo "APP_CHANNEL=$APP_CHANNEL"
+    echo "DEPLOY_REGION=$DEPLOY_REGION"
+    test -n "$APP_VERSION"
+    test -n "$DEPLOY_REGION"
+    cat > out/consume.env <<EOF
+    APP_VERSION=$APP_VERSION
+    APP_CHANNEL=$APP_CHANNEL
+    DEPLOY_REGION=$DEPLOY_REGION
+    EOF
+
+verify-dotenv-flow:
+  stage: verify
+  when: always
+  script: |
+    test -f reports/runtime.env || {
+      echo '[ERROR] missing reports/runtime.env'
+      exit 1
+    }
+    test -f out/runtime.env || {
+      echo '[ERROR] missing out/runtime.env'
+      exit 1
+    }
+    test -f out/consume.env || {
+      echo '[ERROR] missing out/consume.env'
+      exit 1
+    }
+    grep -F 'APP_VERSION=1.2.3' reports/runtime.env || {
+      echo '[ERROR] APP_VERSION missing from dotenv report'
+      exit 1
+    }
+    grep -F 'APP_CHANNEL=nightly' out/consume.env || {
+      echo '[ERROR] APP_CHANNEL missing from consumed dotenv values'
+      exit 1
+    }
+    grep -F 'DEPLOY_REGION=ap-southeast-1' out/consume.env || {
+      echo '[ERROR] DEPLOY_REGION missing from consumed dotenv values'
+      exit 1
+    }
+
+

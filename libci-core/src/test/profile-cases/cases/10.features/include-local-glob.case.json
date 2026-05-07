@@ -1,0 +1,86 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "test",
+    ".post"
+  ],
+  "jobs": {
+    "test-include-local-glob": {
+      "id": "test-include-local-glob",
+      "stage": "test",
+      "image": {
+        "name": "eclipse-temurin:21-jre"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [
+        "echo include-local-glob-before"
+      ],
+      "script": [
+        "echo test-include-local-glob"
+      ],
+      "after_script": [],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {
+        "GLOB_SOURCE": {
+          "value": "local-glob",
+          "expand": true
+        }
+      },
+      "artifacts": {
+        "name": "artifacts",
+        "public": true,
+        "untracked": false,
+        "when": "always",
+        "access": "all",
+        "paths": [
+          "reports/"
+        ],
+        "exclude": [],
+        "reports": {}
+      },
+      "cache": {
+        "key": {
+          "value": "glob-cache",
+          "files": []
+        },
+        "untracked": false,
+        "unprotect": false,
+        "when": "on_success",
+        "policy": "pull-push",
+        "paths": [
+          ".gradle/"
+        ],
+        "fallback_keys": []
+      },
+      "rules": []
+    }
+  }
+}

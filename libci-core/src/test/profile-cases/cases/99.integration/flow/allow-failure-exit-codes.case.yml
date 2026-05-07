@@ -1,0 +1,72 @@
+stages:
+  - exercise
+  - verify
+
+.allow-failure-template:
+  stage: exercise
+  artifacts:
+    when: always
+    paths:
+      - reports/
+  script: |
+    mkdir -p reports
+    cat > "reports/${CI_JOB_NAME}.meta" <<EOF
+    job=$CI_JOB_NAME
+    expected_exit_code=$FAIL_CODE
+    EOF
+    exit "$FAIL_CODE"
+  variables:
+    FAIL_CODE: '1'
+
+allow-failure-boolean:
+  extends: .allow-failure-template
+  allow_failure: true
+  variables:
+    FAIL_CODE: '7'
+
+allow-failure-by-exit-code:
+  extends: .allow-failure-template
+  allow_failure:
+    exit_codes:
+      - 42
+  variables:
+    FAIL_CODE: '42'
+
+not-allowed-by-exit-code:
+  extends: .allow-failure-template
+  allow_failure:
+    exit_codes:
+      - 42
+  variables:
+    FAIL_CODE: '9'
+
+verify-allow-failure-behavior:
+  stage: verify
+  when: always
+  script: |
+    test -f reports/allow-failure-boolean.meta || {
+      echo '[ERROR] missing allow-failure-boolean marker'
+      exit 1
+    }
+    test -f reports/allow-failure-by-exit-code.meta || {
+      echo '[ERROR] missing allow-failure-by-exit-code marker'
+      exit 1
+    }
+    test -f reports/not-allowed-by-exit-code.meta || {
+      echo '[ERROR] missing not-allowed-by-exit-code marker'
+      exit 1
+    }
+    grep -F 'expected_exit_code=7' reports/allow-failure-boolean.meta || {
+      echo '[ERROR] allow_failure=true marker mismatch'
+      exit 1
+    }
+    grep -F 'expected_exit_code=42' reports/allow-failure-by-exit-code.meta || {
+      echo '[ERROR] allow_failure.exit_codes accepted marker mismatch'
+      exit 1
+    }
+    grep -F 'expected_exit_code=9' reports/not-allowed-by-exit-code.meta || {
+      echo '[ERROR] rejected exit code marker mismatch'
+      exit 1
+    }
+
+

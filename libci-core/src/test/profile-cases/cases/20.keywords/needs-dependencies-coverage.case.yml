@@ -1,0 +1,37 @@
+stages:
+  - build
+  - test
+  - package
+
+build-output:
+  stage: build
+  script:
+    - echo build-output
+  artifacts:
+    paths:
+      - build/output.txt
+
+test-with-needs:
+  stage: test
+  needs:
+    - build-output
+  dependencies:
+    - build-output
+  coverage: '/TOTAL.+ ([0-9]{1,3}%)/'
+  interruptible: true
+  script:
+    - echo TOTAL 98%
+
+package-with-structured-needs:
+  stage: package
+  needs:
+    - job: build-output
+      artifacts: false
+    - job: test-with-needs
+      optional: false
+  dependencies:
+    - build-output
+    - test-with-needs
+  script:
+    - echo package-with-structured-needs
+

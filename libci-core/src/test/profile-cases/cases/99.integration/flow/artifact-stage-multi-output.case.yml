@@ -1,0 +1,83 @@
+stages:
+  - prepare
+  - build
+  - package
+  - verify
+
+.artifact-template:
+  artifacts:
+    when: always
+    paths:
+      - out/
+
+prepare-artifacts:
+  extends: .artifact-template
+  stage: prepare
+  script: |
+    mkdir -p out
+    echo "prepare stage artifact" > out/prepare.txt
+
+build-linux:
+  extends: .artifact-template
+  stage: build
+  script: |
+    mkdir -p out
+    echo "linux build artifact" > out/linux.txt
+
+build-macos:
+  extends: .artifact-template
+  stage: build
+  script: |
+    mkdir -p out
+    echo "macos build artifact" > out/macos.txt
+
+package-release:
+  extends: .artifact-template
+  stage: package
+  needs:
+    - prepare-artifacts
+    - build-linux
+    - build-macos
+  script: |
+    mkdir -p out
+    echo "release bundle" > out/release.txt
+
+verify-artifacts-flow:
+  extends: .artifact-template
+  stage: verify
+  when: always
+  script: |
+    test -f out/prepare.txt || {
+      echo '[ERROR] missing out/prepare.txt'
+      exit 1
+    }
+    test -f out/linux.txt || {
+      echo '[ERROR] missing out/linux.txt'
+      exit 1
+    }
+    test -f out/macos.txt || {
+      echo '[ERROR] missing out/macos.txt'
+      exit 1
+    }
+    test -f out/release.txt || {
+      echo '[ERROR] missing out/release.txt'
+      exit 1
+    }
+    grep -F 'prepare stage artifact' out/prepare.txt || {
+      echo '[ERROR] prepare artifact mismatch'
+      exit 1
+    }
+    grep -F 'linux build artifact' out/linux.txt || {
+      echo '[ERROR] linux artifact mismatch'
+      exit 1
+    }
+    grep -F 'macos build artifact' out/macos.txt || {
+      echo '[ERROR] macos artifact mismatch'
+      exit 1
+    }
+    grep -F 'release bundle' out/release.txt || {
+      echo '[ERROR] release artifact mismatch'
+      exit 1
+    }
+
+

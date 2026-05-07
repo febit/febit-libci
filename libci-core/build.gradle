@@ -1,0 +1,42 @@
+plugins {
+  alias libs.plugins.xbib.jflex
+}
+
+description = 'Febit LibCI Core'
+
+jflex {
+  skel = file("src/main/jflex/skeleton.tmpl")
+}
+
+codegenModule {
+  module "org.febit.libci.core.LibciVersion"
+}
+
+tasks.named("sourcesJar") {
+  mustRunAfter 'generateJflex'
+}
+
+tasks.named("licenseMain") {
+  mustRunAfter 'generateJflex'
+}
+
+dependencies {
+  api('org.febit:febit-lang') {
+    exclude group: 'org.yaml', module: 'snakeyaml'
+  }
+
+  api 'org.springframework:spring-core'
+  api 'commons-codec:commons-codec'
+  api 'org.apache.commons:commons-compress'
+  api 'org.apache.commons:commons-text'
+
+  api 'org.eclipse.jgit:org.eclipse.jgit'
+  compileOnly libs.jgit.sshd
+
+  testImplementation libs.jgit.sshd
+  testImplementation libs.jgit.jsch
+  testImplementation libs.jgit.junit
+  testImplementation libs.jgit.junit.http
+  testImplementation libs.jgit.junit.ssh
+  testImplementation libs.eddsa
+}

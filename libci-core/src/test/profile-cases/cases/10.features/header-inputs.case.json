@@ -1,0 +1,66 @@
+{
+  "variables": {},
+  "workflow": {
+    "auto_cancel": {
+      "on_new_commit": "conservative",
+      "on_job_failure": "none"
+    },
+    "rules": []
+  },
+  "stages": [
+    ".pre",
+    "unit-test",
+    ".post"
+  ],
+  "jobs": {
+    "scan-website": {
+      "id": "scan-website",
+      "stage": "unit-test",
+      "image": {
+        "name": "alpine:latest"
+      },
+      "services": [],
+      "tags": [],
+      "inherit": {
+        "default": true,
+        "variables": true
+      },
+      "timeout": "never",
+      "when": "on_success",
+      "allow_failure": {
+        "value": false,
+        "exit_codes": []
+      },
+      "retry": {
+        "max": 0,
+        "when": [
+          "always"
+        ],
+        "exit_codes": []
+      },
+      "id_tokens": {},
+      "before_script": [],
+      "script": [
+        "./scan-website test",
+        "a",
+        "b",
+        "c",
+        "1",
+        "v1.2",
+        "2",
+        "true",
+        "true - 1",
+        "true"
+      ],
+      "after_script": [
+        "a",
+        "b",
+        "c"
+      ],
+      "hooks": {},
+      "interruptible": false,
+      "variables": {},
+      "rules": []
+    }
+  }
+}

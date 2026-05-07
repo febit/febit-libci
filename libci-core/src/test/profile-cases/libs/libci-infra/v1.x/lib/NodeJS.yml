@@ -1,0 +1,5 @@
+.libci-nodejs:
+  image: febit-libci/node:24
+  lib: |
+    # Infra Library for NodeJS
+    ...

@@ -1,0 +1,11 @@
+.libci-gradle:
+  image: febit-libci/jdk:lts-17
+  lib: |
+    # Infra Library for Gradle
+    ...
+
+.libci-maven:
+  image: febit-libci/jdk:lts-17
+  lib: |
+    # Infra Library for Maven
+    ...

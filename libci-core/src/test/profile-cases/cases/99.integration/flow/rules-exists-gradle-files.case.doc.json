@@ -1,0 +1,135 @@
+{
+  "stages": [
+    "check",
+    "verify"
+  ],
+  ".rules-exists-reporting-job": {
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+    ]
+  },
+  "root-gradle-file-exists": {
+    "extends": ".rules-exists-reporting-job",
+    "stage": "check",
+    "rules": [
+      {
+        "exists": [
+          "build.gradle"
+        ]
+      }
+    ],
+    "script": "mark 'root-gradle-file-exists:ran'\nmark 'matched:build.gradle'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+    ]
+  },
+  "nested-gradle-file-exists": {
+    "extends": ".rules-exists-reporting-job",
+    "stage": "check",
+    "rules": [
+      {
+        "exists": [
+          "gradle/wrapper/gradle-wrapper.properties"
+        ]
+      }
+    ],
+    "script": "mark 'nested-gradle-file-exists:ran'\nmark 'matched:gradle/wrapper/gradle-wrapper.properties'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+    ]
+  },
+  "multiple-gradle-files-exist": {
+    "extends": ".rules-exists-reporting-job",
+    "stage": "check",
+    "rules": [
+      {
+        "exists": [
+          "build.gradle",
+          "gradle/wrapper/gradle-wrapper.properties"
+        ]
+      }
+    ],
+    "script": "mark 'multiple-gradle-files-exist:ran'\nmark 'matched:build.gradle'\nmark 'matched:gradle/wrapper/gradle-wrapper.properties'\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+    ]
+  },
+  "missing-gradle-file-falls-through": {
+    "extends": ".rules-exists-reporting-job",
+    "stage": "check",
+    "rules": [
+      {
+        "exists": [
+          "gradle/not-found.properties"
+        ]
+      },
+      {
+        "when": "never"
+      }
+    ],
+    "script": "mark 'unexpected-execution'\nexit 1\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+    ]
+  },
+  "mixed-gradle-files-fall-through": {
+    "extends": ".rules-exists-reporting-job",
+    "stage": "check",
+    "rules": [
+      {
+        "exists": [
+          "build.gradle",
+          "gradle/not-found.properties"
+        ]
+      },
+      {
+        "when": "never"
+      }
+    ],
+    "script": "mark 'unexpected-execution'\nexit 1\n",
+    "artifacts": {
+      "when": "always",
+      "paths": [
+        "reports/"
+      ]
+    },
+    "before_script": [
+      "mkdir -p reports\n\nmark() {\n  printf '%s\\n' \"$1\" >> \"reports/${CI_JOB_NAME}.log\"\n}\n"
+    ]
+  },
+  "verify-rules-exists-gradle-files": {
+    "stage": "verify",
+    "when": "always",
+    "script": "assert_exists() {\n  file=\"$1\"\n  test -f \"$file\" || {\n    echo \"[ERROR] missing expected file: $file\"\n    exit 1\n  }\n}\n\nassert_absent() {\n  file=\"$1\"\n  if [ -e \"$file\" ]; then\n    echo \"[ERROR] unexpected file present: $file\"\n    exit 1\n  fi\n}\n\nassert_contains() {\n  file=\"$1\"\n  expected=\"$2\"\n  grep -F \"$expected\" \"$file\" >/dev/null || {\n    echo \"[ERROR] expected '$expected' in $file\"\n    exit 1\n  }\n}\n\nassert_exists reports/root-gradle-file-exists.log\nassert_exists reports/nested-gradle-file-exists.log\nassert_exists reports/multiple-gradle-files-exist.log\n\nassert_absent reports/missing-gradle-file-falls-through.log\nassert_absent reports/mixed-gradle-files-fall-through.log\n\nassert_contains reports/root-gradle-file-exists.log 'root-gradle-file-exists:ran'\nassert_contains reports/root-gradle-file-exists.log 'matched:build.gradle'\nassert_contains reports/nested-gradle-file-exists.log 'nested-gradle-file-exists:ran'\nassert_contains reports/nested-gradle-file-exists.log 'matched:gradle/wrapper/gradle-wrapper.properties'\nassert_contains reports/multiple-gradle-files-exist.log 'multiple-gradle-files-exist:ran'\nassert_contains reports/multiple-gradle-files-exist.log 'matched:build.gradle'\nassert_contains reports/multiple-gradle-files-exist.log 'matched:gradle/wrapper/gradle-wrapper.properties'\n"
+  }
+}
