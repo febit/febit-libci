@@ -26,30 +26,10 @@ import java.time.temporal.ChronoUnit;
 
 import static org.febit.libci.core.predefined.Predefined.CI_JOB_STARTED_AT;
 import static org.febit.libci.core.predefined.Predefined.CI_JOB_STATUS;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_IID;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_MATRIX_IID;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_SLUG;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_IID;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_SLUG;
 import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_STARTED_AT;
 
 @UtilityClass
 public class JobRuntimePredefined {
-
-    public static void beforeSchedule(VarsHeap<?> vars, JobExecution exec) {
-        var stage = exec.stage();
-        vars.withPhase(VarDefinedPhase.PERSISTED_PIPELINE)
-                .direct(LIBCI_STAGE_IID, String.valueOf(stage.iid()))
-                .direct(LIBCI_STAGE_SLUG, stage.slug());
-
-        var job = exec.job();
-        var view = vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
-                .direct(LIBCI_JOB_IID, String.valueOf(job.iid()))
-                .direct(LIBCI_JOB_SLUG, job.slug())
-                .direct(LIBCI_JOB_MATRIX_IID, String.valueOf(job.matrixIid()))
-                .direct(CI_JOB_STATUS, CiJobStatus.PENDING.value());
-        view.directMulti(job.matrixVars());
-    }
 
     public static void beforeStart(VarsHeap<?> vars, JobExecution exec) {
         vars.withPhase(VarDefinedPhase.PERSISTED_JOB)

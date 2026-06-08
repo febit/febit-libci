@@ -48,8 +48,6 @@ class JobPlanner {
     private JobSpec getSpec() { return execution.expandedSpec() }
 
     Closure plan() {
-        collectVarsBeforeSchedule()
-
         def earlyExit = buildEarlyExitAction()
         if (earlyExit != null) {
             return earlyExit
@@ -81,26 +79,6 @@ class JobPlanner {
                 return buildTerminalAction(decision)
             default:
                 return null
-        }
-    }
-
-    private void collectVarsBeforeSchedule() {
-        echo '[JOB] Collecting variables for job scheduling...'
-        def target = vars
-
-        def spec = execution.unexpandedSpec()
-        JobPredefined.persisted(target, spec)
-        JobRuntimePredefined.beforeSchedule(target, execution)
-
-        def inheritPolicy = spec.inherit().variables()
-        if (inheritPolicy.kind().isAll()) {
-            target.imports(ctx.vars.pipeline)
-        } else if (inheritPolicy.kind().isNone()) {
-            // No pipeline defined variables will be inherited, skip importing.
-        } else {
-            ctx.vars.pipeline.entries()
-                .findAll { inheritPolicy.isAllowed(it.name()) }
-                .each { target.imports(it) }
         }
     }
 

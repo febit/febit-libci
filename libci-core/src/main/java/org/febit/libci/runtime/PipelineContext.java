@@ -48,8 +48,8 @@ public class PipelineContext implements Serializable {
     @Getter
     private final Clock clock;
 
-    public static PipelineContext create(PipelineSpec spec, VarsHeap<?> varsTmpl, @Nullable Clock clock) {
-        var stages = spec.stages();
+    public static PipelineContext create(PipelinePlan pipeline, VarsHeap<?> baseVars, @Nullable Clock clock) {
+        var stages = pipeline.spec().stages();
         var stageStates = new ArrayList<StageState>(stages.size());
         for (int i = 0; i < stages.size(); i++) {
             stageStates.add(
@@ -57,13 +57,13 @@ public class PipelineContext implements Serializable {
             );
         }
 
-        var groupedByStage = spec.jobs().values().stream()
+        var groupedByStage = pipeline.spec().jobs().values().stream()
                 .collect(Collectors.groupingBy(JobSpec::stage));
 
         var jobStates = new ArrayList<List<JobState>>(stages.size());
         for (var stage : stageStates) {
             var jobs = groupedByStage.get(stage.name());
-            var states = JobState.ofJobs(stage, jobs, varsTmpl);
+            var states = JobState.ofJobs(pipeline, stage, jobs, baseVars);
             jobStates.add(states);
         }
 
@@ -72,7 +72,7 @@ public class PipelineContext implements Serializable {
                 .jobs(jobStates)
                 .build();
         return new PipelineContext(
-                spec, states,
+                pipeline.spec(), states,
                 nvl(clock, Clock.systemDefaultZone())
         );
     }

@@ -186,7 +186,7 @@ class JobExecutionTest {
     }
 
     @Test
-    void expandUsesMatrixVarsCollectedBeforeSchedule() {
+    void expandUsesMatrixVars() {
         var job = newJob(
                 "build",
                 "build",
@@ -211,7 +211,6 @@ class JobExecutionTest {
         var vars = state.vars();
 
         JobPredefined.persisted(vars, exec.unexpandedSpec());
-        JobRuntimePredefined.beforeSchedule(vars, exec);
         exec.expand();
 
         assertEquals(Map.of("OS", "linux", "ARCH", "amd64"), state.matrixVars());

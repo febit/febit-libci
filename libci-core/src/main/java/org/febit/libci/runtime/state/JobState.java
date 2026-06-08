@@ -19,10 +19,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import org.febit.libci.core.VarsHeap;
+import org.febit.libci.core.predefined.JobPredefined;
 import org.febit.libci.core.spec.CiJobStatus;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.JobSpec.RetryWhen;
 import org.febit.libci.core.util.Immutables;
+import org.febit.libci.core.variable.VarDefinedPhase;
+import org.febit.libci.runtime.PipelinePlan;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
@@ -33,6 +36,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+
+import static org.febit.libci.core.predefined.Predefined.CI_JOB_STATUS;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_IID;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_MATRIX_IID;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_SLUG;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_IID;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_SLUG;
 
 @lombok.Builder(
         builderClassName = "Builder"
@@ -66,11 +76,35 @@ public class JobState implements State {
     private final AtomicReference<Status> statusRef = new AtomicReference<>(Status.UNSTARTED);
     private final AtomicReference<Result> resultRef = new AtomicReference<>(Result.NONE);
 
-    public static List<JobState> ofJobs(StageState stage, List<JobSpec> jobs, VarsHeap<?> varsTmpl) {
+    private static VarsHeap<?> inheritedVars(
+            VarsHeap<?> baseVars, PipelinePlan pipeline, StageState stage, JobSpec spec) {
+        var inherited = baseVars.snapshot();
+
+        var inheritPolicy = spec.inherit().variables();
+        if (inheritPolicy.kind().isAll()) {
+            inherited.imports(pipeline.pipelineVars());
+        } else if (inheritPolicy.kind().isNone()) {
+            // No pipeline defined variables will be inherited, skip importing.
+        } else {
+            pipeline.pipelineVars().entries().stream()
+                    .filter(e -> inheritPolicy.isAllowed(e.name()))
+                    .forEach(inherited::imports);
+        }
+
+        JobPredefined.persisted(inherited, spec);
+        inherited.withPhase(VarDefinedPhase.PERSISTED_PIPELINE)
+                .direct(LIBCI_STAGE_IID, String.valueOf(stage.iid()))
+                .direct(LIBCI_STAGE_SLUG, stage.slug());
+        return inherited;
+    }
+
+    public static List<JobState> ofJobs(
+            PipelinePlan pipeline, StageState stage, List<JobSpec> jobs, VarsHeap<?> baseVars) {
         var size = jobs.size();
         var states = new ArrayList<JobState>(size);
         var iid = 0;
         for (JobSpec spec : jobs) {
+            var inheritedVars = inheritedVars(baseVars, pipeline, stage, spec);
             var matrixList = new ArrayList<Map<String, String>>();
             var parallel = spec.parallel();
             if (parallel != null) {
@@ -84,17 +118,28 @@ public class JobState implements State {
                 matrixList.add(Map.of());
             }
             for (var matrix : matrixList) {
-                int iid1 = iid++;
+                var slug = StateSlugs.job(stage.slug(), iid, spec.name());
+                var vars = inheritedVars.snapshot();
+                vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
+                        .direct(LIBCI_JOB_IID, String.valueOf(iid))
+                        .direct(LIBCI_JOB_SLUG, slug)
+                        .direct(LIBCI_JOB_MATRIX_IID, String.valueOf(matrixIid))
+                        .direct(CI_JOB_STATUS, CiJobStatus.PENDING.value())
+                        .directMulti(matrix);
                 states.add(builder()
-                        .iid(iid1)
-                        .slug(StateSlugs.job(stage.slug(), iid1, spec.name()))
+                        .iid(iid)
+                        .slug(slug)
                         .name(spec.name())
                         .stageIid(stage.iid())
                         .meta(Meta.from(spec))
-                        .matrixIid(matrixIid == 0 ? 0 : matrixIid++)
+                        .matrixIid(matrixIid)
                         .matrixVars(matrix)
-                        .vars(varsTmpl.snapshot())
+                        .vars(vars)
                         .build());
+                iid++;
+                if (matrixIid != 0) {
+                    matrixIid++;
+                }
             }
         }
         return List.copyOf(states);

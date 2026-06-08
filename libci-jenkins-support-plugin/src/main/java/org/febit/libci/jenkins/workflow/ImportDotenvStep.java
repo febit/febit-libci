@@ -62,7 +62,7 @@ public class ImportDotenvStep extends Step implements Serializable {
 
         @Override
         public String getDisplayName() {
-            return "Libci Import Dotenv";
+            return "LibCI Import Dotenv";
         }
 
         @Override

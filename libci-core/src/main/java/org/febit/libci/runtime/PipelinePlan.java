@@ -24,8 +24,8 @@ public record PipelinePlan(
         VarsHeap<?> pipelineVars
 ) implements Serializable {
 
-    public PipelineContext createContext(VarsHeap<?> varsTmpl) {
-        return PipelineContext.create(spec, varsTmpl, null);
+    public PipelineContext createContext(VarsHeap<?> baseVars) {
+        return PipelineContext.create(this, baseVars, null);
     }
 
 }
