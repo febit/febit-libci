@@ -104,7 +104,7 @@ public class PipelineResolveStep extends Step {
 
         @Override
         public String getDisplayName() {
-            return "Libci Pipeline Resolve";
+            return "LibCI Pipeline Resolve";
         }
 
         @Override
