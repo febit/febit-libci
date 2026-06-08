@@ -15,7 +15,6 @@
  */
 package org.febit.libci.core;
 
-import lombok.Getter;
 import org.febit.libci.core.dotenv.DotenvEntry;
 import org.febit.libci.core.predefined.Predefined;
 import org.febit.libci.core.spec.VariablesSpec;
@@ -196,10 +195,10 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
     }
 
     record Entry(
-            @Getter VarDefinedPhase phase,
-            @Getter String name,
-            @Nullable @Getter String pattern,
-            @Getter String expanded
+            VarDefinedPhase phase,
+            String name,
+            @Nullable String pattern,
+            String expanded
     ) implements Serializable {
 
         public boolean isInternal() {

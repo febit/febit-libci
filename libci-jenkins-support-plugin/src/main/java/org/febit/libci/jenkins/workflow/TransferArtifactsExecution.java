@@ -53,7 +53,6 @@ public class TransferArtifactsExecution extends SynchronousStepExecution<Object>
     }
 
     @Override
-    @SuppressWarnings("resource")
     protected Object run() throws Exception {
         var logger = logger();
         var workspace = getContext().get(FilePath.class);
