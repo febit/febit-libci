@@ -171,35 +171,6 @@ public record JobSpec(
 
     @Getter
     @RequiredArgsConstructor
-    public enum EnvAction {
-        START("start",
-                "Indicates that the job starts the environment."
-                        + " The deployment is created after the job starts."
-        ),
-        PREPARE("prepare",
-                "Indicates that the job is only preparing the environment."
-                        + " It does not trigger deployments."
-        ),
-        STOP("stop",
-                "Indicates that the job stops an environment."
-        ),
-        VERIFY("verify",
-                "Indicates that the job is only verifying the environment. "
-                        + "It does not trigger deployments."
-        ),
-        ACCESS("access",
-                "Indicates that the job is only accessing the environment."
-                        + " It does not trigger deployments."
-        ),
-        ;
-
-        @JsonValue
-        private final String value;
-        private final String description;
-    }
-
-    @Getter
-    @RequiredArgsConstructor
     public enum CachePolicy {
 
         PULL("pull"),
@@ -239,11 +210,54 @@ public record JobSpec(
 
     @Getter
     @RequiredArgsConstructor
+    public enum EnvAction {
+        START("start",
+                "Indicates that the job starts the environment."
+                        + " The deployment is created after the job starts."
+        ),
+        PREPARE("prepare",
+                "Indicates that the job is only preparing the environment."
+                        + " It does not trigger deployments."
+        ),
+        STOP("stop",
+                "Indicates that the job stops an environment."
+        ),
+        VERIFY("verify",
+                "Indicates that the job is only verifying the environment. "
+                        + "It does not trigger deployments."
+        ),
+        ACCESS("access",
+                "Indicates that the job is only accessing the environment."
+                        + " It does not trigger deployments."
+        ),
+        ;
+
+        @JsonValue
+        private final String value;
+        private final String description;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
     public enum ImagePullPolicy {
 
         ALWAYS("always"),
         IF_NOT_PRESENT("if-not-present"),
         NEVER("never"),
+        ;
+
+        @JsonValue
+        private final String value;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum ReleaseAssetLinkType {
+
+        OTHER("other"),
+        RUNBOOK("runbook"),
+        IMAGE("image"),
+        PACKAGE("package"),
         ;
 
         @JsonValue
@@ -342,6 +356,18 @@ public record JobSpec(
 
     @Getter
     @RequiredArgsConstructor
+    public enum TriggerStrategy {
+
+        DEPEND("depend"),
+        MIRROR("mirror"),
+        ;
+
+        @JsonValue
+        private final String value;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
     public enum When {
 
         ON_SUCCESS("on_success"),
@@ -389,14 +415,14 @@ public record JobSpec(
             @lombok.NonNull List<Integer> exitCodes
     ) implements ISpec {
 
-        public AllowFailure {
-            exitCodes = Immutables.of(exitCodes);
-        }
-
         public static final AllowFailure FALSE = AllowFailure.builder()
                 .value(false)
                 .exitCodes(List.of())
                 .build();
+
+        public AllowFailure {
+            exitCodes = Immutables.of(exitCodes);
+        }
 
         public static class Builder {
 
@@ -476,11 +502,11 @@ public record JobSpec(
             @lombok.NonNull List<String> files
     ) implements ISpec {
 
+        public static final CacheKey DEFAULT = CacheKey.builder().value("default").build();
+
         public CacheKey {
             files = Immutables.of(files);
         }
-
-        public static final CacheKey DEFAULT = CacheKey.builder().value("default").build();
 
         public static class Builder {
 
@@ -562,11 +588,11 @@ public record JobSpec(
             List<String> preGetSourcesScript
     ) implements ISpec {
 
+        public static final Hooks NONE = Hooks.builder().build();
+
         public Hooks {
             preGetSourcesScript = Immutables.ofNullable(preGetSourcesScript);
         }
-
-        public static final Hooks NONE = Hooks.builder().build();
     }
 
     @Jacksonized
@@ -852,20 +878,6 @@ public record JobSpec(
         }
     }
 
-    @Getter
-    @RequiredArgsConstructor
-    public enum ReleaseAssetLinkType {
-
-        OTHER("other"),
-        RUNBOOK("runbook"),
-        IMAGE("image"),
-        PACKAGE("package"),
-        ;
-
-        @JsonValue
-        private final String value;
-    }
-
     @Jacksonized
     @lombok.Builder(
             builderClassName = "Builder"
@@ -885,8 +897,91 @@ public record JobSpec(
     ) implements ISpec {
     }
 
+    @Jacksonized
+    @lombok.Builder(
+            builderClassName = "Builder"
+    )
     @Expandable(phase = ExpandPhase.NESTED)
-    public static class Secrets extends LinkedHashMap<String, Secret> {
+    public record Retry(
+            @lombok.NonNull Integer max,
+            @lombok.NonNull List<RetryWhen> when,
+            @lombok.NonNull List<Integer> exitCodes
+    ) implements ISpec {
+
+        public Retry {
+            when = Immutables.of(when);
+            exitCodes = Immutables.of(exitCodes);
+        }
+
+        @NoArgsConstructor(access = AccessLevel.PRIVATE)
+        public static class Defaults {
+            public static final Integer MAX = 0;
+            public static final List<RetryWhen> WHEN = List.of(RetryWhen.ALWAYS);
+            public static final List<Integer> EXIT_CODES = List.of();
+        }
+
+        public static class Builder {
+
+            @JsonCreator
+            public Builder() {
+                max(Defaults.MAX);
+                when(Defaults.WHEN);
+                exitCodes(Defaults.EXIT_CODES);
+            }
+
+            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+            public Builder(Integer max) {
+                this();
+                max(max);
+            }
+        }
+    }
+
+    @Jacksonized
+    @lombok.Builder(
+            builderClassName = "Builder"
+    )
+    @Expandable(phase = ExpandPhase.NESTED)
+    public record Rule(
+            @JsonProperty("if")
+            @Expandable(phase = ExpandPhase.NONE)
+            @Nullable String if0,
+
+            @lombok.NonNull RuleChangesSpec changes,
+            @lombok.NonNull RuleExistsSpec exists,
+            @lombok.NonNull When when,
+            @lombok.NonNull AllowFailure allowFailure,
+            @Nullable List<Need> needs,
+            @Nullable VariablesSpec<JobRuleVariable> variables,
+            @Nullable Boolean interruptible
+    ) implements ISpec, IRule {
+
+        public Rule {
+            needs = Immutables.ofNullable(needs);
+        }
+
+        @NoArgsConstructor(access = AccessLevel.PRIVATE)
+        public static class Defaults {
+            public static final RuleChangesSpec CHANGES = RuleChangesSpec.EMPTY;
+            public static final RuleExistsSpec EXISTS = RuleExistsSpec.EMPTY;
+            public static final When WHEN = When.ON_SUCCESS;
+            public static final AllowFailure ALLOW_FAILURE = AllowFailure.FALSE;
+            public static final List<Need> NEEDS = List.of();
+        }
+
+        public static class Builder {
+
+            @JsonCreator
+            public Builder() {
+                variables(VariablesSpec.create());
+
+                changes(Defaults.CHANGES);
+                exists(Defaults.EXISTS);
+                when(Defaults.WHEN);
+                allowFailure(Defaults.ALLOW_FAILURE);
+                needs(Defaults.NEEDS);
+            }
+        }
     }
 
     @Jacksonized
@@ -903,6 +998,64 @@ public record JobSpec(
             @Expandable(phase = ExpandPhase.SCHEDULE)
             String token
     ) implements ISpec {
+    }
+
+    @Jacksonized
+    @lombok.Builder(
+            builderClassName = "Builder"
+    )
+    @Expandable(phase = ExpandPhase.NESTED)
+    public record SecretAzureKeyVault(
+            @Nullable
+            @Expandable(phase = ExpandPhase.SCHEDULE)
+            String name,
+            @Nullable
+            @Expandable(phase = ExpandPhase.SCHEDULE)
+            String version
+    ) implements ISpec {
+
+        public static class Builder {
+
+            @JsonCreator
+            public Builder() {
+                // Default empty
+            }
+
+            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+            public Builder(String name) {
+                this();
+                name(name);
+            }
+        }
+    }
+
+    @Jacksonized
+    @lombok.Builder(
+            builderClassName = "Builder"
+    )
+    @Expandable(phase = ExpandPhase.NESTED)
+    public record SecretGcpSecretManager(
+            @Nullable
+            @Expandable(phase = ExpandPhase.SCHEDULE)
+            String name,
+            @Nullable
+            @Expandable(phase = ExpandPhase.SCHEDULE)
+            String version
+    ) implements ISpec {
+
+        public static class Builder {
+
+            @JsonCreator
+            public Builder() {
+                // Default empty
+            }
+
+            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+            public Builder(String name) {
+                this();
+                name(name);
+            }
+        }
     }
 
     @Jacksonized
@@ -953,33 +1106,8 @@ public record JobSpec(
     ) implements ISpec {
     }
 
-    @Jacksonized
-    @lombok.Builder(
-            builderClassName = "Builder"
-    )
     @Expandable(phase = ExpandPhase.NESTED)
-    public record SecretGcpSecretManager(
-            @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
-            String name,
-            @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
-            String version
-    ) implements ISpec {
-
-        public static class Builder {
-
-            @JsonCreator
-            public Builder() {
-                // Default empty
-            }
-
-            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-            public Builder(String name) {
-                this();
-                name(name);
-            }
-        }
+    public static class Secrets extends LinkedHashMap<String, Secret> {
     }
 
     @Jacksonized
@@ -987,40 +1115,22 @@ public record JobSpec(
             builderClassName = "Builder"
     )
     @Expandable(phase = ExpandPhase.NESTED)
-    public record SecretAzureKeyVault(
-            @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
-            String name,
-            @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
-            String version
+    public record Service(
+            @Expandable(phase = ExpandPhase.RUN)
+            @lombok.NonNull String name,
+            @Nullable List<String> alias,
+            @Expandable(phase = ExpandPhase.COMMAND)
+            @Nullable List<String> entrypoint,
+            @Expandable(phase = ExpandPhase.COMMAND)
+            @Nullable List<String> command
     ) implements ISpec {
 
-        public static class Builder {
-
-            @JsonCreator
-            public Builder() {
-                // Default empty
-            }
-
-            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-            public Builder(String name) {
-                this();
-                name(name);
-            }
+        public Service {
+            alias = Immutables.ofNullable(alias);
+            entrypoint = Immutables.ofNullable(entrypoint);
+            command = Immutables.ofNullable(command);
         }
-    }
 
-    @Getter
-    @RequiredArgsConstructor
-    public enum TriggerStrategy {
-
-        DEPEND("depend"),
-        MIRROR("mirror"),
-        ;
-
-        @JsonValue
-        private final String value;
     }
 
     @Jacksonized
@@ -1123,113 +1233,4 @@ public record JobSpec(
         }
     }
 
-    @Jacksonized
-    @lombok.Builder(
-            builderClassName = "Builder"
-    )
-    @Expandable(phase = ExpandPhase.NESTED)
-    public record Retry(
-            @lombok.NonNull Integer max,
-            @lombok.NonNull List<RetryWhen> when,
-            @lombok.NonNull List<Integer> exitCodes
-    ) implements ISpec {
-
-        public Retry {
-            when = Immutables.of(when);
-            exitCodes = Immutables.of(exitCodes);
-        }
-
-        @NoArgsConstructor(access = AccessLevel.PRIVATE)
-        public static class Defaults {
-            public static final Integer MAX = 0;
-            public static final List<RetryWhen> WHEN = List.of(RetryWhen.ALWAYS);
-            public static final List<Integer> EXIT_CODES = List.of();
-        }
-
-        public static class Builder {
-
-            @JsonCreator
-            public Builder() {
-                max(Defaults.MAX);
-                when(Defaults.WHEN);
-                exitCodes(Defaults.EXIT_CODES);
-            }
-
-            @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-            public Builder(Integer max) {
-                this();
-                max(max);
-            }
-        }
-    }
-
-    @Jacksonized
-    @lombok.Builder(
-            builderClassName = "Builder"
-    )
-    @Expandable(phase = ExpandPhase.NESTED)
-    public record Rule(
-            @JsonProperty("if")
-            @Expandable(phase = ExpandPhase.NONE)
-            @Nullable String if0,
-
-            @lombok.NonNull RuleChangesSpec changes,
-            @lombok.NonNull RuleExistsSpec exists,
-            @lombok.NonNull When when,
-            @lombok.NonNull AllowFailure allowFailure,
-            @Nullable List<Need> needs,
-            @Nullable VariablesSpec<JobRuleVariable> variables,
-            @Nullable Boolean interruptible
-    ) implements ISpec, IRule {
-
-        public Rule {
-            needs = Immutables.ofNullable(needs);
-        }
-
-        @NoArgsConstructor(access = AccessLevel.PRIVATE)
-        public static class Defaults {
-            public static final RuleChangesSpec CHANGES = RuleChangesSpec.EMPTY;
-            public static final RuleExistsSpec EXISTS = RuleExistsSpec.EMPTY;
-            public static final When WHEN = When.ON_SUCCESS;
-            public static final AllowFailure ALLOW_FAILURE = AllowFailure.FALSE;
-            public static final List<Need> NEEDS = List.of();
-        }
-
-        public static class Builder {
-
-            @JsonCreator
-            public Builder() {
-                variables(VariablesSpec.create());
-
-                changes(Defaults.CHANGES);
-                exists(Defaults.EXISTS);
-                when(Defaults.WHEN);
-                allowFailure(Defaults.ALLOW_FAILURE);
-                needs(Defaults.NEEDS);
-            }
-        }
-    }
-
-    @Jacksonized
-    @lombok.Builder(
-            builderClassName = "Builder"
-    )
-    @Expandable(phase = ExpandPhase.NESTED)
-    public record Service(
-            @Expandable(phase = ExpandPhase.RUN)
-            @lombok.NonNull String name,
-            @Nullable List<String> alias,
-            @Expandable(phase = ExpandPhase.COMMAND)
-            @Nullable List<String> entrypoint,
-            @Expandable(phase = ExpandPhase.COMMAND)
-            @Nullable List<String> command
-    ) implements ISpec {
-
-        public Service {
-            alias = Immutables.ofNullable(alias);
-            entrypoint = Immutables.ofNullable(entrypoint);
-            command = Immutables.ofNullable(command);
-        }
-
-    }
 }
