@@ -15,6 +15,7 @@
  */
 package org.febit.libci.core.spec;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -79,6 +80,9 @@ public record JobSpec(
         @Nullable PeriodDuration startIn,
         @lombok.NonNull Hooks hooks,
         @lombok.NonNull Boolean interruptible,
+
+        // Ref: https://docs.gitlab.com/ci/yaml/#run
+        @Nullable List<Func> run,
 
         @JsonDeserialize(contentAs = JobVariable.class)
         @lombok.NonNull VariablesSpec<IVariable> variables,
@@ -1131,6 +1135,30 @@ public record JobSpec(
             command = Immutables.ofNullable(command);
         }
 
+    }
+
+    @Jacksonized
+    @lombok.Builder(
+            builderClassName = "Builder"
+    )
+    @Expandable(phase = ExpandPhase.NESTED)
+    public record Func(
+            @Expandable(phase = ExpandPhase.COMMAND)
+            @lombok.NonNull String name,
+            @Nullable
+            @Expandable(phase = ExpandPhase.COMMAND)
+            String script,
+            @Nullable
+            @Expandable(phase = ExpandPhase.COMMAND)
+            @JsonAlias("step")
+            String func,
+            @Nullable
+            @Expandable(phase = ExpandPhase.COMMAND)
+            Map<String, String> inputs,
+            @Nullable
+            @Expandable(phase = ExpandPhase.COMMAND)
+            Map<String, String> env
+    ) implements ISpec {
     }
 
     @Jacksonized
