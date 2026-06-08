@@ -15,7 +15,7 @@
   ],
   "jobs": {
     "retry-on-any-failure": {
-      "id": "retry-on-any-failure",
+      "name": "retry-on-any-failure",
       "stage": "retry-check",
       "image": {
         "name": "alpine:latest"
@@ -68,7 +68,7 @@
       "rules": []
     },
     "retry-on-script-failure": {
-      "id": "retry-on-script-failure",
+      "name": "retry-on-script-failure",
       "stage": "retry-check",
       "image": {
         "name": "alpine:latest"
@@ -124,7 +124,7 @@
       "rules": []
     },
     "retry-on-timeout": {
-      "id": "retry-on-timeout",
+      "name": "retry-on-timeout",
       "stage": "retry-check",
       "image": {
         "name": "alpine:latest"
@@ -172,7 +172,7 @@
       "rules": []
     },
     "verify-retry-behavior": {
-      "id": "verify-retry-behavior",
+      "name": "verify-retry-behavior",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

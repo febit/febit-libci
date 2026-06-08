@@ -26,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JobSpecTest {
 
-    private static String jobYaml(String id, String body) {
+    private static String jobYaml(String name, String body) {
         return ("""
-                id: %s
+                name: %s
                 image: alpine:latest
                 services: []
                 tags: []
@@ -41,7 +41,7 @@ class JobSpecTest {
                 interruptible: false
                 rules: []
                 %s
-                """).formatted(id, body);
+                """).formatted(name, body);
     }
 
     @Test

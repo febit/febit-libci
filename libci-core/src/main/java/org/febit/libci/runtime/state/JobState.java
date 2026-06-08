@@ -87,8 +87,8 @@ public class JobState implements State {
                 int iid1 = iid++;
                 states.add(builder()
                         .iid(iid1)
-                        .slug(StateSlugs.job(stage.slug(), iid1, spec.id()))
-                        .name(spec.id())
+                        .slug(StateSlugs.job(stage.slug(), iid1, spec.name()))
+                        .name(spec.name())
                         .stageIid(stage.iid())
                         .meta(Meta.from(spec))
                         .matrixIid(matrixIid == 0 ? 0 : matrixIid++)

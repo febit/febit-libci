@@ -24,7 +24,7 @@
   ],
   "jobs": {
     "print-current-env": {
-      "id": "print-current-env",
+      "name": "print-current-env",
       "stage": "inspect",
       "image": {
         "name": "alpine:latest"
@@ -72,7 +72,7 @@
       "rules": []
     },
     "verify-env-print": {
-      "id": "verify-env-print",
+      "name": "verify-env-print",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

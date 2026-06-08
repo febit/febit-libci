@@ -232,7 +232,7 @@ class JobExecutionTest {
         var job = newJob(retryMax, retryWhens);
         var profile = newProfile(job);
 
-        return newExec(profile, job.id());
+        return newExec(profile, job.name());
     }
 
     private static JobExecution newExec(Profile profile, String jobName) {
@@ -242,7 +242,7 @@ class JobExecutionTest {
                 .findFirst()
                 .orElse(null);
         if (state == null) {
-            throw new IllegalStateException("Job not found in context states, jobId: " + jobName);
+            throw new IllegalStateException("Job not found in context states, job name: " + jobName);
         }
         return new JobExecution(context, state);
     }
@@ -263,7 +263,7 @@ class JobExecutionTest {
     private static Profile newProfile(List<String> stages, JobSpec... jobs) {
         var jobMapping = new TreeMap<String, JobSpec>();
         for (var job : jobs) {
-            jobMapping.put(job.id(), job);
+            jobMapping.put(job.name(), job);
         }
         return new Profile(
                 VariablesSpec.create(),
@@ -275,7 +275,7 @@ class JobExecutionTest {
 
     private static JobSpec newJob(int retryMax, List<JobSpec.RetryWhen> retryWhens) {
         return JobSpec.builder()
-                .id("build")
+                .name("build")
                 .stage("build")
                 .image(new JobSpec.Image("alpine", null, null, null, null))
                 .services(List.of())
@@ -293,16 +293,16 @@ class JobExecutionTest {
     }
 
     private static JobSpec newJob(
-            String id,
+            String name,
             String stage,
             List<JobSpec.Need> needs,
             List<String> dependencies
     ) {
-        return newJob(id, stage, needs, dependencies, null, List.of("echo build"));
+        return newJob(name, stage, needs, dependencies, null, List.of("echo build"));
     }
 
     private static JobSpec newJob(
-            String id,
+            String name,
             String stage,
             List<JobSpec.Need> needs,
             List<String> dependencies,
@@ -310,7 +310,7 @@ class JobExecutionTest {
             List<String> script
     ) {
         return JobSpec.builder()
-                .id(id)
+                .name(name)
                 .stage(stage)
                 .image(new JobSpec.Image("alpine", null, null, null, null))
                 .parallel(parallel)

@@ -16,7 +16,7 @@
   ],
   "jobs": {
     "consume-dotenv": {
-      "id": "consume-dotenv",
+      "name": "consume-dotenv",
       "stage": "consume",
       "image": {
         "name": "alpine:latest"
@@ -70,7 +70,7 @@
       ]
     },
     "export-dotenv": {
-      "id": "export-dotenv",
+      "name": "export-dotenv",
       "stage": "export",
       "image": {
         "name": "alpine:latest"
@@ -123,7 +123,7 @@
       "rules": []
     },
     "verify-dotenv-flow": {
-      "id": "verify-dotenv-flow",
+      "name": "verify-dotenv-flow",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

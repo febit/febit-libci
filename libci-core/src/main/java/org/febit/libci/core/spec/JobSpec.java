@@ -53,7 +53,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 @Expandable(phase = ExpandPhase.NESTED)
 public record JobSpec(
 
-        @lombok.NonNull String id,
+        @lombok.NonNull String name,
         @lombok.NonNull String stage,
         @lombok.NonNull Image image,
         @lombok.NonNull List<JobSpec.Service> services,

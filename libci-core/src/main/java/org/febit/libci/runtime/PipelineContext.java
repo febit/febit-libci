@@ -104,7 +104,7 @@ public class PipelineContext implements Serializable {
         }
 
         /**
-         * Get stage state by stage id.
+         * Get stage state by stage.
          *
          * @param job job state
          * @return stage state

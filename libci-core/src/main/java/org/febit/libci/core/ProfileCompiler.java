@@ -160,8 +160,8 @@ public class ProfileCompiler {
         return SpecMapper.toBean(raw, JobSpec.Inherit.class);
     }
 
-    private void job(String id, @Nullable Object raw) {
-        var data = copyRawJob(id, raw);
+    private void job(String name, @Nullable Object raw) {
+        var data = copyRawJob(name, raw);
 
         var inherit = jobInherit(data.get(Keywords.INHERIT));
         DocumentUtils.inherit(data, this.defaults.get(), inherit.default0());
@@ -173,23 +173,23 @@ public class ProfileCompiler {
             DocumentUtils.inherit(data, jobDefaultsFallback(), InheritPolicy.all());
         }
 
-        data.put("id", id);
+        data.put("name", name);
         var job = SpecMapper.toBean(data, JobSpec.class);
         if (!resolvedStages.get().contains(job.stage())) {
-            throw new ProfileException("Job '" + id + "' references undefined stage: " + job.stage());
+            throw new ProfileException("Job '" + name + "' references undefined stage: " + job.stage());
         }
-        builder.job(id, job);
+        builder.job(name, job);
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> copyRawJob(String id, @Nullable Object raw) {
+    private Map<String, Object> copyRawJob(String name, @Nullable Object raw) {
         if (raw == null) {
             return new LinkedHashMap<>();
         }
         if (raw instanceof Map<?, ?> map) {
             return DocumentUtils.copy((Map<String, Object>) map);
         }
-        throw new ProfileException("Expected job '" + id + "' to be a map, but got: " + raw.getClass());
+        throw new ProfileException("Expected job '" + name + "' to be a map, but got: " + raw.getClass());
     }
 
 }

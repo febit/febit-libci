@@ -17,7 +17,7 @@
   ],
   "jobs": {
     "build-foundation": {
-      "id": "build-foundation",
+      "name": "build-foundation",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -76,7 +76,7 @@
       "rules": []
     },
     "build-needs-cross-stage-multi": {
-      "id": "build-needs-cross-stage-multi",
+      "name": "build-needs-cross-stage-multi",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -143,7 +143,7 @@
       ]
     },
     "build-needs-cross-stage-single": {
-      "id": "build-needs-cross-stage-single",
+      "name": "build-needs-cross-stage-single",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -207,7 +207,7 @@
       ]
     },
     "build-needs-same-stage-single": {
-      "id": "build-needs-same-stage-single",
+      "name": "build-needs-same-stage-single",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -271,7 +271,7 @@
       ]
     },
     "observe-dependencies-multi": {
-      "id": "observe-dependencies-multi",
+      "name": "observe-dependencies-multi",
       "stage": "observe",
       "image": {
         "name": "alpine:latest"
@@ -334,7 +334,7 @@
       ]
     },
     "observe-dependencies-single": {
-      "id": "observe-dependencies-single",
+      "name": "observe-dependencies-single",
       "stage": "observe",
       "image": {
         "name": "alpine:latest"
@@ -396,7 +396,7 @@
       ]
     },
     "observe-needs-and-dependencies": {
-      "id": "observe-needs-and-dependencies",
+      "name": "observe-needs-and-dependencies",
       "stage": "observe",
       "image": {
         "name": "alpine:latest"
@@ -467,7 +467,7 @@
       ]
     },
     "observe-needs-mixed": {
-      "id": "observe-needs-mixed",
+      "name": "observe-needs-mixed",
       "stage": "observe",
       "image": {
         "name": "alpine:latest"
@@ -534,7 +534,7 @@
       ]
     },
     "prepare-cache": {
-      "id": "prepare-cache",
+      "name": "prepare-cache",
       "stage": "prepare",
       "image": {
         "name": "alpine:latest"
@@ -593,7 +593,7 @@
       "rules": []
     },
     "prepare-env": {
-      "id": "prepare-env",
+      "name": "prepare-env",
       "stage": "prepare",
       "image": {
         "name": "alpine:latest"
@@ -652,7 +652,7 @@
       "rules": []
     },
     "verify-needs-dependencies-flow": {
-      "id": "verify-needs-dependencies-flow",
+      "name": "verify-needs-dependencies-flow",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

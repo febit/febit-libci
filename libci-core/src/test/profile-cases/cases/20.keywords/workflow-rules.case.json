@@ -63,7 +63,7 @@
   ],
   "jobs": {
     "deploy-approval": {
-      "id": "deploy-approval",
+      "name": "deploy-approval",
       "stage": "deploy",
       "image": {
         "name": "alpine:latest"
@@ -101,7 +101,7 @@
       "rules": []
     },
     "deploy-delayed": {
-      "id": "deploy-delayed",
+      "name": "deploy-delayed",
       "stage": "deploy",
       "image": {
         "name": "alpine:latest"
@@ -139,7 +139,7 @@
       "rules": []
     },
     "scan": {
-      "id": "scan",
+      "name": "scan",
       "stage": "test",
       "image": {
         "name": "alpine:latest"

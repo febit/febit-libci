@@ -329,7 +329,7 @@ public class JobExecution implements Serializable {
                 return ScheduleResult.failed("Pipeline-based dependency is not supported yet: " + need);
             }
             if (isEmpty(need.job())) {
-                return ScheduleResult.failed("Job dependency must specify job id: " + need);
+                return ScheduleResult.failed("Job dependency must specify job name: " + need);
             }
             return null;
         }

@@ -16,7 +16,7 @@
   ],
   "jobs": {
     "Say-Hello": {
-      "id": "Say-Hello",
+      "name": "Say-Hello",
       "stage": "test",
       "image": {
         "name": "alpine:latest"

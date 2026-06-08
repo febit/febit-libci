@@ -14,7 +14,7 @@
   ],
   "jobs": {
     "shorthand-keywords": {
-      "id": "shorthand-keywords",
+      "name": "shorthand-keywords",
       "stage": "deploy",
       "image": {
         "name": "alpine:latest"

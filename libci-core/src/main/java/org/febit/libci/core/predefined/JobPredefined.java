@@ -41,7 +41,7 @@ public class JobPredefined {
 
     public static void persisted(VarsHeap<?> vars, JobSpec job) {
         vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
-                .direct(CI_JOB_NAME, job.id())
+                .direct(CI_JOB_NAME, job.name())
                 .direct(CI_JOB_STAGE, job.stage())
                 .direct(CI_JOB_TIMEOUT, job.timeout().getRaw())
                 .direct(CI_JOB_URL, "")

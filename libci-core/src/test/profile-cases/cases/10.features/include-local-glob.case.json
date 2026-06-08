@@ -14,7 +14,7 @@
   ],
   "jobs": {
     "test-include-local-glob": {
-      "id": "test-include-local-glob",
+      "name": "test-include-local-glob",
       "stage": "test",
       "image": {
         "name": "eclipse-temurin:21-jre"

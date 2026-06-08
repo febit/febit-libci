@@ -17,7 +17,7 @@
   ],
   "jobs": {
     "run-always-after-failure": {
-      "id": "run-always-after-failure",
+      "name": "run-always-after-failure",
       "stage": "failure-follow-up",
       "image": {
         "name": "alpine:latest"
@@ -67,7 +67,7 @@
       "rules": []
     },
     "run-always-before-failure": {
-      "id": "run-always-before-failure",
+      "name": "run-always-before-failure",
       "stage": "success-path",
       "image": {
         "name": "alpine:latest"
@@ -117,7 +117,7 @@
       "rules": []
     },
     "run-on-failure-after-failure": {
-      "id": "run-on-failure-after-failure",
+      "name": "run-on-failure-after-failure",
       "stage": "failure-follow-up",
       "image": {
         "name": "alpine:latest"
@@ -167,7 +167,7 @@
       "rules": []
     },
     "run-on-success-before-failure": {
-      "id": "run-on-success-before-failure",
+      "name": "run-on-success-before-failure",
       "stage": "success-path",
       "image": {
         "name": "alpine:latest"
@@ -217,7 +217,7 @@
       "rules": []
     },
     "skip-on-failure-before-failure": {
-      "id": "skip-on-failure-before-failure",
+      "name": "skip-on-failure-before-failure",
       "stage": "success-path",
       "image": {
         "name": "alpine:latest"
@@ -267,7 +267,7 @@
       "rules": []
     },
     "skip-on-success-after-failure": {
-      "id": "skip-on-success-after-failure",
+      "name": "skip-on-success-after-failure",
       "stage": "failure-follow-up",
       "image": {
         "name": "alpine:latest"
@@ -317,7 +317,7 @@
       "rules": []
     },
     "success-anchor": {
-      "id": "success-anchor",
+      "name": "success-anchor",
       "stage": "success-path",
       "image": {
         "name": "alpine:latest"
@@ -367,7 +367,7 @@
       "rules": []
     },
     "trigger-pipeline-failure": {
-      "id": "trigger-pipeline-failure",
+      "name": "trigger-pipeline-failure",
       "stage": "failure-trigger",
       "image": {
         "name": "alpine:latest"
@@ -417,7 +417,7 @@
       "rules": []
     },
     "verify-when-job-scheduling": {
-      "id": "verify-when-job-scheduling",
+      "name": "verify-when-job-scheduling",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

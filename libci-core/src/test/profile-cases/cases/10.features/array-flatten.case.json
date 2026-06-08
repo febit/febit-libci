@@ -21,7 +21,7 @@
   ],
   "jobs": {
     "build": {
-      "id": "build",
+      "name": "build",
       "stage": ".pre",
       "image": {
         "name": "alpine:latest"

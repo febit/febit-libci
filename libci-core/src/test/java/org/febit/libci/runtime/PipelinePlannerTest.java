@@ -90,11 +90,11 @@ class PipelinePlannerTest {
         assertNotEquals(state.slug(), state.name());
         assertEquals(0, state.matrixIid());
         assertTrue(state.matrixVars().isEmpty());
-        assertEquals("build", exec.unexpandedSpec().id());
+        assertEquals("build", exec.unexpandedSpec().name());
 
         exec.expand();
 
-        assertEquals("build", exec.expandedSpec().id());
+        assertEquals("build", exec.expandedSpec().name());
     }
 
     @Test
@@ -227,7 +227,7 @@ class PipelinePlannerTest {
     private static Profile newProfile(JobSpec... jobs) {
         var jobMapping = new TreeMap<String, JobSpec>();
         for (var job : jobs) {
-            jobMapping.put(job.id(), job);
+            jobMapping.put(job.name(), job);
         }
         return new Profile(
                 VariablesSpec.create(),
@@ -251,13 +251,13 @@ class PipelinePlannerTest {
                 .build();
     }
 
-    private static JobSpec newJob(String id, List<JobSpec.Rule> rules) {
-        return newJob(id, rules, null);
+    private static JobSpec newJob(String name, List<JobSpec.Rule> rules) {
+        return newJob(name, rules, null);
     }
 
-    private static JobSpec newJob(String id, List<JobSpec.Rule> rules, JobSpec.Parallel parallel) {
+    private static JobSpec newJob(String name, List<JobSpec.Rule> rules, JobSpec.Parallel parallel) {
         return JobSpec.builder()
-                .id(id)
+                .name(name)
                 .stage("build")
                 .image(new JobSpec.Image("alpine", null, null, null, null))
                 .parallel(parallel)

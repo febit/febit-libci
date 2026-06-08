@@ -16,7 +16,7 @@
   ],
   "jobs": {
     "build-output": {
-      "id": "build-output",
+      "name": "build-output",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -64,7 +64,7 @@
       "rules": []
     },
     "package-with-structured-needs": {
-      "id": "package-with-structured-needs",
+      "name": "package-with-structured-needs",
       "stage": "package",
       "image": {
         "name": "alpine:latest"
@@ -114,7 +114,7 @@
       ]
     },
     "test-with-needs": {
-      "id": "test-with-needs",
+      "name": "test-with-needs",
       "stage": "test",
       "image": {
         "name": "alpine:latest"

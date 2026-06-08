@@ -15,7 +15,7 @@
   ],
   "jobs": {
     "allow-failure-boolean": {
-      "id": "allow-failure-boolean",
+      "name": "allow-failure-boolean",
       "stage": "exercise",
       "image": {
         "name": "alpine:latest"
@@ -68,7 +68,7 @@
       "rules": []
     },
     "allow-failure-by-exit-code": {
-      "id": "allow-failure-by-exit-code",
+      "name": "allow-failure-by-exit-code",
       "stage": "exercise",
       "image": {
         "name": "alpine:latest"
@@ -122,7 +122,7 @@
       "rules": []
     },
     "not-allowed-by-exit-code": {
-      "id": "not-allowed-by-exit-code",
+      "name": "not-allowed-by-exit-code",
       "stage": "exercise",
       "image": {
         "name": "alpine:latest"
@@ -176,7 +176,7 @@
       "rules": []
     },
     "verify-allow-failure-behavior": {
-      "id": "verify-allow-failure-behavior",
+      "name": "verify-allow-failure-behavior",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

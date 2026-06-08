@@ -15,7 +15,7 @@
   ],
   "jobs": {
     "missing-gradle-file-falls-through": {
-      "id": "missing-gradle-file-falls-through",
+      "name": "missing-gradle-file-falls-through",
       "stage": "check",
       "image": {
         "name": "alpine:latest"
@@ -98,7 +98,7 @@
       ]
     },
     "mixed-gradle-files-fall-through": {
-      "id": "mixed-gradle-files-fall-through",
+      "name": "mixed-gradle-files-fall-through",
       "stage": "check",
       "image": {
         "name": "alpine:latest"
@@ -182,7 +182,7 @@
       ]
     },
     "multiple-gradle-files-exist": {
-      "id": "multiple-gradle-files-exist",
+      "name": "multiple-gradle-files-exist",
       "stage": "check",
       "image": {
         "name": "alpine:latest"
@@ -251,7 +251,7 @@
       ]
     },
     "nested-gradle-file-exists": {
-      "id": "nested-gradle-file-exists",
+      "name": "nested-gradle-file-exists",
       "stage": "check",
       "image": {
         "name": "alpine:latest"
@@ -319,7 +319,7 @@
       ]
     },
     "root-gradle-file-exists": {
-      "id": "root-gradle-file-exists",
+      "name": "root-gradle-file-exists",
       "stage": "check",
       "image": {
         "name": "alpine:latest"
@@ -387,7 +387,7 @@
       ]
     },
     "verify-rules-exists-gradle-files": {
-      "id": "verify-rules-exists-gradle-files",
+      "name": "verify-rules-exists-gradle-files",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

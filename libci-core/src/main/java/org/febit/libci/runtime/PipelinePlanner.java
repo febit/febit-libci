@@ -88,7 +88,7 @@ public class PipelinePlanner {
         profile.jobs().values().stream()
                 .map(this::establish)
                 .flatMap(Optional::stream)
-                .sorted(Comparator.comparing(JobSpec::id))
+                .sorted(Comparator.comparing(JobSpec::name))
                 .forEach(establishedJobs::add);
 
         var groupedByStage = establishedJobs.stream()
@@ -102,7 +102,7 @@ public class PipelinePlanner {
         var specs = PipelineSpec.builder()
                 .workflow(profile.workflow())
                 .stages(effectiveStages)
-                .jobs(Maps.mapping(establishedJobs, JobSpec::id))
+                .jobs(Maps.mapping(establishedJobs, JobSpec::name))
                 .build();
 
         pipelineVars.seal();

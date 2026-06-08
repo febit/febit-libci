@@ -14,7 +14,7 @@
   ],
   "jobs": {
     "test-defaults": {
-      "id": "test-defaults",
+      "name": "test-defaults",
       "stage": "test",
       "image": {
         "name": "alpine:latest"
@@ -60,7 +60,7 @@
       "rules": []
     },
     "test-overrides": {
-      "id": "test-overrides",
+      "name": "test-overrides",
       "stage": "test",
       "image": {
         "name": "alpine:latest"

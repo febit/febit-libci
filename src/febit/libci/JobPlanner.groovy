@@ -175,7 +175,7 @@ class JobPlanner {
                 def retry = execution.retry()
                 echo """\
 ==== JOB EXECUTION SUMMARY =====
-  ID:     ${spec.id()}
+  Name:   ${spec.name()}
   Stage:  ${spec.stage()}
   Slug:   ${state.slug()}
   Code:   ${result.code()}

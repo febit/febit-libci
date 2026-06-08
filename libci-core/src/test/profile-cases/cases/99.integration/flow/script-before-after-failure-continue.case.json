@@ -15,7 +15,7 @@
   ],
   "jobs": {
     "main-script-fails-but-after-runs": {
-      "id": "main-script-fails-but-after-runs",
+      "name": "main-script-fails-but-after-runs",
       "stage": "exercise",
       "image": {
         "name": "alpine:latest"
@@ -67,7 +67,7 @@
       "rules": []
     },
     "verify-before-after-failure": {
-      "id": "verify-before-after-failure",
+      "name": "verify-before-after-failure",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

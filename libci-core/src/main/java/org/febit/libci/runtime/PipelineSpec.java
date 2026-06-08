@@ -42,12 +42,12 @@ public record PipelineSpec(
     }
 
     /**
-     * Get job spec by id.
+     * Get job spec by name.
      *
-     * @param id job spec id
+     * @param name job spec name
      * @return job spec
      */
-    public JobSpec job(String id) {
-        return jobs.get(id);
+    public JobSpec job(String name) {
+        return jobs.get(name);
     }
 }

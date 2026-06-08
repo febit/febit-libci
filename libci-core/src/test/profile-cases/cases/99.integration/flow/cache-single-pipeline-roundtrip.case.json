@@ -19,7 +19,7 @@
   ],
   "jobs": {
     "cache-clear-initial": {
-      "id": "cache-clear-initial",
+      "name": "cache-clear-initial",
       "stage": "clear",
       "image": {
         "name": "alpine:latest"
@@ -81,7 +81,7 @@
       "rules": []
     },
     "cache-clear-second": {
-      "id": "cache-clear-second",
+      "name": "cache-clear-second",
       "stage": "clear-again",
       "image": {
         "name": "alpine:latest"
@@ -143,7 +143,7 @@
       "rules": []
     },
     "cache-inspect-empty": {
-      "id": "cache-inspect-empty",
+      "name": "cache-inspect-empty",
       "stage": "inspect-empty",
       "image": {
         "name": "alpine:latest"
@@ -205,7 +205,7 @@
       "rules": []
     },
     "cache-inspect-hit": {
-      "id": "cache-inspect-hit",
+      "name": "cache-inspect-hit",
       "stage": "inspect",
       "image": {
         "name": "alpine:latest"
@@ -267,7 +267,7 @@
       "rules": []
     },
     "cache-produce-payload": {
-      "id": "cache-produce-payload",
+      "name": "cache-produce-payload",
       "stage": "produce",
       "image": {
         "name": "alpine:latest"
@@ -329,7 +329,7 @@
       "rules": []
     },
     "verify-cache-roundtrip": {
-      "id": "verify-cache-roundtrip",
+      "name": "verify-cache-roundtrip",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

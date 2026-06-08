@@ -17,7 +17,7 @@
   ],
   "jobs": {
     "build-linux": {
-      "id": "build-linux",
+      "name": "build-linux",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -65,7 +65,7 @@
       "rules": []
     },
     "build-macos": {
-      "id": "build-macos",
+      "name": "build-macos",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -113,7 +113,7 @@
       "rules": []
     },
     "package-release": {
-      "id": "package-release",
+      "name": "package-release",
       "stage": "package",
       "image": {
         "name": "alpine:latest"
@@ -172,7 +172,7 @@
       ]
     },
     "prepare-artifacts": {
-      "id": "prepare-artifacts",
+      "name": "prepare-artifacts",
       "stage": "prepare",
       "image": {
         "name": "alpine:latest"
@@ -220,7 +220,7 @@
       "rules": []
     },
     "verify-artifacts-flow": {
-      "id": "verify-artifacts-flow",
+      "name": "verify-artifacts-flow",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

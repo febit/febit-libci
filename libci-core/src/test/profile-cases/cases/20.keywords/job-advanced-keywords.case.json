@@ -15,7 +15,7 @@
   ],
   "jobs": {
     "advanced-job": {
-      "id": "advanced-job",
+      "name": "advanced-job",
       "stage": "build",
       "image": {
         "name": "eclipse-temurin:21",
@@ -117,7 +117,7 @@
       "rules": []
     },
     "release-job": {
-      "id": "release-job",
+      "name": "release-job",
       "stage": "deploy",
       "image": {
         "name": "alpine:latest"

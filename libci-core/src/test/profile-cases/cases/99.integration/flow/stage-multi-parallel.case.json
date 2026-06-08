@@ -17,7 +17,7 @@
   ],
   "jobs": {
     "lint-shell": {
-      "id": "lint-shell",
+      "name": "lint-shell",
       "stage": "test",
       "image": {
         "name": "alpine:latest"
@@ -65,7 +65,7 @@
       "rules": []
     },
     "package-bundle": {
-      "id": "package-bundle",
+      "name": "package-bundle",
       "stage": "package",
       "image": {
         "name": "alpine:latest"
@@ -124,7 +124,7 @@
       ]
     },
     "prepare-workspace": {
-      "id": "prepare-workspace",
+      "name": "prepare-workspace",
       "stage": "prepare",
       "image": {
         "name": "alpine:latest"
@@ -172,7 +172,7 @@
       "rules": []
     },
     "unit-linux": {
-      "id": "unit-linux",
+      "name": "unit-linux",
       "stage": "test",
       "image": {
         "name": "alpine:latest"
@@ -220,7 +220,7 @@
       "rules": []
     },
     "unit-macos": {
-      "id": "unit-macos",
+      "name": "unit-macos",
       "stage": "test",
       "image": {
         "name": "alpine:latest"
@@ -268,7 +268,7 @@
       "rules": []
     },
     "verify-multi-stage-flow": {
-      "id": "verify-multi-stage-flow",
+      "name": "verify-multi-stage-flow",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"

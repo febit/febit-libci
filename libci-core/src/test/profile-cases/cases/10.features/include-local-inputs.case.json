@@ -15,7 +15,7 @@
   ],
   "jobs": {
     "build": {
-      "id": "build",
+      "name": "build",
       "stage": "build",
       "image": {
         "name": "eclipse-temurin:21-jre"
@@ -67,7 +67,7 @@
       "rules": []
     },
     "deploy-from-include": {
-      "id": "deploy-from-include",
+      "name": "deploy-from-include",
       "stage": "release",
       "image": {
         "name": "alpine:latest"

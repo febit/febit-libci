@@ -14,7 +14,7 @@
   ],
   "jobs": {
     "inherit-all": {
-      "id": "inherit-all",
+      "name": "inherit-all",
       "stage": "test",
       "image": {
         "name": "alpine:3.20"
@@ -68,7 +68,7 @@
       "rules": []
     },
     "inherit-none": {
-      "id": "inherit-none",
+      "name": "inherit-none",
       "stage": "test",
       "image": {
         "name": "alpine:latest"
@@ -104,7 +104,7 @@
       "rules": []
     },
     "inherit-only": {
-      "id": "inherit-only",
+      "name": "inherit-only",
       "stage": "test",
       "image": {
         "name": "alpine:3.20"

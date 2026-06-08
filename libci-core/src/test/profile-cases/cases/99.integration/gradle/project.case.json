@@ -52,7 +52,7 @@
   ],
   "jobs": {
     "build-packages": {
-      "id": "build-packages",
+      "name": "build-packages",
       "stage": "build",
       "image": {
         "name": "febit-libci/jdk:lts-17"
@@ -131,7 +131,7 @@
       "rules": []
     },
     "check-sonar": {
-      "id": "check-sonar",
+      "name": "check-sonar",
       "stage": "build",
       "image": {
         "name": "febit-libci/jdk:lts-17"

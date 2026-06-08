@@ -28,19 +28,19 @@ class StateSlugs {
         return seq < 10 ? "0" + seq : String.valueOf(seq);
     }
 
-    public static String job(String stageSlug, int iid, String id) {
+    public static String job(String stageSlug, int iid, String name) {
         var slug = stageSlug
                 + "_" + seq(iid)
-                + "_" + SlugUtils.resolve(id);
+                + "_" + SlugUtils.resolve(name);
         return slug.length() > MAX_SIZE_JOB
                 ? slug.substring(0, MAX_SIZE_JOB)
                 : slug;
     }
 
     public static String stage(int iid, String name) {
-        var id = seq(iid) + "_" + SlugUtils.resolve(name);
-        return id.length() > MAX_SIZE_STAGE
-                ? id.substring(0, MAX_SIZE_STAGE)
-                : id;
+        var slug = seq(iid) + "_" + SlugUtils.resolve(name);
+        return slug.length() > MAX_SIZE_STAGE
+                ? slug.substring(0, MAX_SIZE_STAGE)
+                : slug;
     }
 }

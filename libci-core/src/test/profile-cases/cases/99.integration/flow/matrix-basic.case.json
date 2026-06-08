@@ -15,7 +15,7 @@
   ],
   "jobs": {
     "build-matrix": {
-      "id": "build-matrix",
+      "name": "build-matrix",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -87,7 +87,7 @@
       "rules": []
     },
     "build-plain": {
-      "id": "build-plain",
+      "name": "build-plain",
       "stage": "build",
       "image": {
         "name": "alpine:latest"
@@ -137,7 +137,7 @@
       "rules": []
     },
     "verify-matrix": {
-      "id": "verify-matrix",
+      "name": "verify-matrix",
       "stage": "verify",
       "image": {
         "name": "alpine:latest"
