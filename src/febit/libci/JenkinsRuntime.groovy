@@ -3,7 +3,7 @@ package febit.libci
 import org.febit.libci.core.spec.ArtifactsSpec
 import org.febit.libci.jenkins.workflow.DotenvImportResult
 import org.febit.libci.jenkins.workflow.TransferArtifactsResult
-import org.febit.libci.runtime.PipelinePlan
+import org.febit.libci.runtime.plan.PipelinePlan
 
 /**
  * Bridge for Jenkins Pipeline steps used by LibCI Groovy orchestration.

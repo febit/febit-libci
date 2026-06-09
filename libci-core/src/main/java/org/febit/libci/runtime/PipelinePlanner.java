@@ -15,152 +15,250 @@
  */
 package org.febit.libci.runtime;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.febit.lang.util.Maps;
-import org.febit.libci.core.Profile;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.predefined.JobPredefined;
-import org.febit.libci.core.rule.RuleEvaluator;
-import org.febit.libci.core.rule.WorkspaceApi;
+import org.febit.libci.core.spec.CiJobStatus;
+import org.febit.libci.core.spec.ExpandPhase;
 import org.febit.libci.core.spec.JobSpec;
-import org.febit.libci.core.spec.WorkflowSpec;
+import org.febit.libci.core.spec.support.SlugUtils;
 import org.febit.libci.core.variable.VarDefinedPhase;
-import org.febit.libci.core.variable.VarsHeapImpl;
-import org.jspecify.annotations.Nullable;
+import org.febit.libci.core.variable.VarExpander;
+import org.febit.libci.runtime.plan.JobDependency;
+import org.febit.libci.runtime.plan.JobPlan;
+import org.febit.libci.runtime.plan.JobRelation;
+import org.febit.libci.runtime.plan.PipelinePlan;
+import org.febit.libci.runtime.plan.StagePlan;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.febit.libci.core.predefined.Predefined.CI_PIPELINE_NAME;
-import static org.febit.libci.core.util.Defaults.nvl;
+import static org.febit.libci.core.predefined.Predefined.CI_JOB_STATUS;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_IID;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_MATRIX_IID;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_SLUG;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_IID;
+import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_SLUG;
 
 @Slf4j
+@RequiredArgsConstructor(staticName = "create")
 public class PipelinePlanner {
+    private static final int SLUG_MAX_SIZE = 48;
 
-    private final Profile profile;
-    private final RuleEvaluator ruleEvaluator;
+    private final PipelineSpec pipeline;
+    private final VarsHeap<?> baseVars;
 
-    private final VarsHeap<?> varsForWorkflowRules;
-    private final VarsHeap<?> varsForJobRules;
+    private final List<StagePlan> stages = new ArrayList<>();
+    private final List<JobPlan> jobs = new ArrayList<>();
+    private final List<JobRelation> relations = new ArrayList<>();
 
-    @lombok.Builder(
-            builderClassName = "Builder"
-    )
-    private PipelinePlanner(
-            Profile profile,
-            VarsHeap<?> inputVars,
-            @Nullable WorkspaceApi workspaceApi
-    ) {
-        this.profile = profile;
-        this.varsForWorkflowRules = inputVars.snapshot()
-                .set(VarDefinedPhase.DEFINED_PROFILE, profile.variables())
-                .seal();
-        this.varsForJobRules = varsForWorkflowRules.snapshot();
-        this.ruleEvaluator = RuleEvaluator.create(
-                nvl(workspaceApi, WorkspaceApi::ofUnsupported)
-        );
+    private static String slug(int iid, String name) {
+        var seq = (iid < 10 ? "0" + iid : String.valueOf(iid));
+        var slug = seq + "_" + SlugUtils.resolve(name);
+        return slug.length() > SLUG_MAX_SIZE
+                ? slug.substring(0, SLUG_MAX_SIZE)
+                : slug;
     }
 
     public PipelinePlan plan() {
-        var workflowRule = selectWorkflowRule();
+        processStages();
+        processJobs();
+        processRelations();
 
-        var pipelineVars = VarsHeapImpl.create();
-        pipelineVars.set(VarDefinedPhase.DEFINED_PROFILE, profile.variables());
-        pipelineVars.withPhase(VarDefinedPhase.DEFINED_WORKFLOW)
-                .direct(CI_PIPELINE_NAME, profile.workflow().name())
-                .set(workflowRule.variables());
-
-        // Return empty context, if workflow is not allowed to run.
-        if (!workflowRule.when().isAlways()) {
-            return new PipelinePlan(
-                    PipelineSpec.empty(profile.workflow()),
-                    pipelineVars
-            );
-        }
-
-        varsForJobRules
-                .set(VarDefinedPhase.DEFINED_WORKFLOW, workflowRule.variables())
-                .seal();
-
-        var establishedJobs = new ArrayList<JobSpec>();
-        profile.jobs().values().stream()
-                .map(this::establish)
-                .flatMap(Optional::stream)
-                .sorted(Comparator.comparing(JobSpec::name))
-                .forEach(establishedJobs::add);
-
-        var groupedByStage = establishedJobs.stream()
-                .map(JobSpec::stage)
-                .collect(Collectors.toSet());
-
-        var effectiveStages = profile.stages().stream()
-                .filter(groupedByStage::contains)
-                .toList();
-
-        var specs = PipelineSpec.builder()
-                .workflow(profile.workflow())
-                .stages(effectiveStages)
-                .jobs(Maps.mapping(establishedJobs, JobSpec::name))
+        return PipelinePlan.builder()
+                .spec(pipeline)
+                .stages(List.copyOf(stages))
+                .jobs(List.copyOf(jobs))
+                .relations(relations)
                 .build();
-
-        pipelineVars.seal();
-        return new PipelinePlan(
-                specs,
-                pipelineVars
-        );
     }
 
-    private WorkflowSpec.Rule selectWorkflowRule() {
-        var rules = profile.workflow().rules();
-        if (rules.isEmpty()) {
-            return WorkflowSpec.Rule.ALWAYS;
+    private void processStages() {
+        var names = pipeline.stages();
+        for (int i = 0; i < names.size(); i++) {
+            var name = names.get(i);
+            var stage = StagePlan.builder()
+                    .iid(i)
+                    .name(name)
+                    .slug(slug(i, name))
+                    .build();
+            stages.add(stage);
         }
-        return rules.stream()
-                .filter(r -> ruleEvaluator.matches(r, varsForWorkflowRules))
-                .findFirst()
-                .orElse(WorkflowSpec.Rule.NEVER);
     }
 
-    private Optional<JobSpec> establish(JobSpec job) {
-        if (job.rules().isEmpty()) {
-            // No rule limit, returns without changes.
-            return Optional.of(job);
+    private void processJobs() {
+        var groupedByStage = pipeline.jobs().values().stream()
+                .collect(Collectors.groupingBy(JobSpec::stage));
+        for (var stage : stages) {
+            var specs = groupedByStage.get(stage.name());
+            for (var spec : specs) {
+                processJob(stage, spec);
+            }
         }
+    }
 
-        VarsHeap<?> vars;
+    private void processJob(StagePlan stage, JobSpec spec) {
+        var matrixList = JobSpec.Parallel.expand(spec.parallel());
+        var matrixIid = matrixList.size() == 1 && matrixList.getFirst().isEmpty()
+                ? 0 : 1;
+        var inheritedVars = inheritedVarsForJob(stage, spec);
+        for (var matrix : matrixList) {
+            var iid = jobs.size();
+            var slug = slug(iid, spec.name());
 
-        var inheritPolicy = job.inherit().variables();
+            var vars = inheritedVars.snapshot();
+            vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
+                    .direct(LIBCI_JOB_IID, String.valueOf(iid))
+                    .direct(LIBCI_JOB_SLUG, slug)
+                    .direct(LIBCI_JOB_MATRIX_IID, String.valueOf(matrixIid))
+                    .direct(CI_JOB_STATUS, CiJobStatus.PENDING.value())
+                    .directMulti(matrix);
+            vars.seal();
+
+            var dependencies = resolveJobDependencies(spec, vars);
+            var plan = JobPlan.builder()
+                    .iid(iid)
+                    .stageIid(stage.iid())
+                    .matrixIid(matrixIid)
+                    .name(spec.name())
+                    .slug(slug)
+                    .spec(spec)
+                    .vars(vars)
+                    .matrixVars(matrix)
+                    .dependencies(dependencies)
+                    .build();
+            jobs.add(plan);
+            if (matrixIid != 0) {
+                matrixIid++;
+            }
+        }
+    }
+
+    private VarsHeap<?> inheritedVarsForJob(StagePlan stage, JobSpec spec) {
+        var inherited = baseVars.snapshot();
+        var inheritPolicy = spec.inherit().variables();
         if (inheritPolicy.kind().isAll()) {
-            vars = varsForJobRules.snapshot();
+            inherited.imports(pipeline.pipelineVars());
+        } else if (!inheritPolicy.kind().isNone()) {
+            pipeline.pipelineVars().entries().stream()
+                    .filter(e -> inheritPolicy.isAllowed(e.name()))
+                    .forEach(inherited::imports);
         } else {
-            vars = VarsHeapImpl.create();
-            vars.imports(varsForJobRules,
-                    e -> e.isNotPipelineDefined()
-                            || inheritPolicy.isAllowed(e.name())
-            );
+            // No pipeline defined variables will be inherited, skip importing.
         }
 
-        JobPredefined.persisted(vars, job);
-        // XXX: un-expanded job deployment is used for rules evaluation.
-        JobPredefined.deployment(vars, job);
-        // XXX: un-expanded variables are used for rules evaluation
-        vars.setAsDirect(VarDefinedPhase.DEFINED_JOB, job.variables());
+        JobPredefined.persisted(inherited, spec);
+        inherited.withPhase(VarDefinedPhase.PERSISTED_PIPELINE)
+                .direct(LIBCI_STAGE_IID, String.valueOf(stage.iid()))
+                .direct(LIBCI_STAGE_SLUG, stage.slug());
+        return inherited;
+    }
 
-        var rule = job.rules().stream()
-                .filter(r -> ruleEvaluator.matches(r, vars))
-                .findFirst()
-                .orElse(null);
+    private List<JobDependency> resolveJobDependencies(JobSpec spec, VarsHeap<?> vars) {
+        var expander = VarExpander.of(vars, ExpandPhase.PLAN);
+        var needs = expander.expandNullable(spec.needs());
+        var deps = expander.expandNullable(spec.dependencies());
 
-        if (rule == null
-                || rule.when().isNever()) {
-            return Optional.empty();
+        var result = new ArrayList<JobDependency>();
+        if (deps != null) {
+            deps.stream()
+                    .map(JobDependency::ofDependenciesSpec)
+                    .forEach(result::add);
+        }
+        if (needs != null) {
+            needs.stream()
+                    .map(JobDependency::of)
+                    .forEach(result::add);
+        }
+        return List.copyOf(result);
+    }
+
+    private void processRelations() {
+        jobs.forEach(this::resolveRelation);
+        validateRelationsDAG();
+    }
+
+    private void resolveRelation(JobPlan job) {
+        for (var dep : job.dependencies()) {
+            var scope = dep.scope();
+            if (scope == JobDependency.Scope.PROJECT
+                    || scope == JobDependency.Scope.PIPELINE) {
+                throw new IllegalArgumentException(
+                        "Unsupported dependency scope in plan: " + scope
+                                + " for job " + job.slug());
+            }
+            var maxStageIid = job.stageIid() - 1;
+            if (scope == JobDependency.Scope.SAME_OR_EARLIER_STAGE) {
+                maxStageIid = job.stageIid();
+            }
+            var name = dep.job();
+            var matrixList = JobSpec.Parallel.expand(dep.parallel());
+            var hasMatrix = matrixList.size() != 1 || !matrixList.getFirst().isEmpty();
+            var matchedAny = false;
+            for (var pred : jobs) {
+                if (pred.stageIid() > maxStageIid) {
+                    continue;
+                }
+                if (!pred.name().equals(name)) {
+                    continue;
+                }
+                if (hasMatrix && !matrixList.contains(pred.matrixVars())) {
+                    continue;
+                }
+                relations.add(JobRelation.builder()
+                        .job(job.iid())
+                        .dependedOn(pred.iid())
+                        .optional(dep.optional())
+                        .artifacts(dep.artifacts())
+                        .build());
+                matchedAny = true;
+            }
+            if (!matchedAny && !dep.optional()) {
+                throw new IllegalArgumentException(
+                        "Required dependency not planned: " + dep);
+            }
+        }
+    }
+
+    private void validateRelationsDAG() {
+        if (relations.isEmpty()) {
+            return;
+        }
+        var total = jobs.size();
+        // Build adjacency list and indegree array
+        var indegree = new int[total];
+        var successors = new ArrayList<List<Integer>>(total);
+        for (int i = 0; i < total; i++) {
+            successors.add(new ArrayList<>());
+        }
+        for (var rel : relations) {
+            successors.get(rel.dependedOn()).add(rel.job());
+            indegree[rel.job()]++;
         }
 
-        // Merge the job with the rule.
-        return Optional.of(
-                job.merge(rule)
-        );
+        var queue = new ArrayDeque<Integer>();
+        for (int i = 0; i < total; i++) {
+            if (indegree[i] == 0) {
+                queue.addLast(i);
+            }
+        }
+        int processed = 0;
+        while (!queue.isEmpty()) {
+            int node = queue.removeFirst();
+            processed++;
+            for (var succ : successors.get(node)) {
+                if (--indegree[succ] == 0) {
+                    queue.addLast(succ);
+                }
+            }
+        }
+        if (processed != total) {
+            throw new IllegalArgumentException(
+                    "Pipeline plan contains a dependency cycle; " + processed
+                            + "/" + total + " nodes processed");
+        }
     }
 }

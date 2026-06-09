@@ -13,19 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.febit.libci.runtime;
+@NullMarked
+package org.febit.libci.runtime.plan;
 
-import org.febit.libci.core.VarsHeap;
-
-import java.io.Serializable;
-
-public record PipelinePlan(
-        PipelineSpec spec,
-        VarsHeap<?> pipelineVars
-) implements Serializable {
-
-    public PipelineContext createContext(VarsHeap<?> baseVars) {
-        return PipelineContext.create(this, baseVars, null);
-    }
-
-}
+import org.jspecify.annotations.NullMarked;

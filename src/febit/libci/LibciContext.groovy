@@ -128,7 +128,6 @@ class LibciContext {
 
     static class VarHeaps {
         final VarsHeap predefined = VarsHeapImpl.create()
-        final VarsHeap pipeline = VarsHeapImpl.create()
         final Map<String, List<DotenvEntry>> dotenv = Collections.synchronizedMap(new LinkedHashMap<>())
     }
 

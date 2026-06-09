@@ -2,6 +2,7 @@ package febit.libci
 
 import org.febit.libci.runtime.JobExecution
 import org.febit.libci.runtime.PipelineContext
+import org.febit.libci.runtime.plan.PipelinePlan
 import org.febit.libci.runtime.state.JobState
 import org.febit.libci.runtime.state.StageState
 
@@ -10,9 +11,9 @@ class PipelineRunner {
     private final LibciContext ctx
     private final PipelineContext pipe
 
-    PipelineRunner(LibciContext ctx, PipelineContext pipe) {
+    PipelineRunner(LibciContext ctx, PipelinePlan plan) {
         this.ctx = ctx
-        this.pipe = pipe
+        this.pipe = PipelineContext.create(plan)
     }
 
     void run() {
@@ -59,7 +60,7 @@ ${plans.collectMany { it.summary() }.join('\n')}
     private StagePlan planStage(StageState stage) {
         List<JobPlan> plans = []
         for (def job : pipe.states().jobsOf(stage)) {
-            def label = "${stage.name()}: ${job.name()}" as String
+            def label = "${stage.plan().name()}: ${job.plan().name()}" as String
             def planner = new JobPlanner(ctx, new JobExecution(pipe, job))
             def plan = planner.plan()
             plans.add(new JobPlan(
@@ -97,7 +98,7 @@ ${plans.collectMany { it.summary() }.join('\n')}
 
     private void runStageInParallel(StagePlan stage) {
         def branches = stage.jobPlans.collectEntries {
-            ['job_' + it.state.slug(), it.action]
+            ['job_' + it.state.plan().slug(), it.action]
         }
         branches['failFast'] = false
         ctx.runtime.parallel(branches)
@@ -141,11 +142,11 @@ ${plans.collectMany { it.summary() }.join('\n')}
 
         List<Object> summary() {
             if (jobPlans.isEmpty()) {
-                return ["[${state.name()}] no jobs"]
+                return ["[${state.plan().name()}] no jobs"]
             }
-            def lines = ["[${state.name()}] ${jobPlans.size()} job(s):"]
+            def lines = ["[${state.plan().name()}] ${jobPlans.size()} job(s):"]
             lines.addAll(jobPlans.collect {
-                "  ${it.state.iid() + 1}. ${it.state.name()}"
+                "  ${it.state.plan().iid() + 1}. ${it.state.plan().name()}"
             })
             return lines
         }

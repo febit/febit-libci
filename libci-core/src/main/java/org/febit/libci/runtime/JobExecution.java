@@ -18,6 +18,7 @@ package org.febit.libci.runtime;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.febit.libci.core.predefined.JobPredefined;
 import org.febit.libci.core.predefined.Predefined;
 import org.febit.libci.core.spec.CiJobStatus;
@@ -26,6 +27,8 @@ import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.util.Computed;
 import org.febit.libci.core.variable.VarDefinedPhase;
 import org.febit.libci.core.variable.VarExpander;
+import org.febit.libci.runtime.plan.JobDependency;
+import org.febit.libci.runtime.plan.JobRelation;
 import org.febit.libci.runtime.state.JobState;
 import org.febit.libci.runtime.state.StageState;
 import org.jspecify.annotations.Nullable;
@@ -37,9 +40,9 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.febit.libci.core.util.Defaults.nvl;
 
+@Slf4j
 @Accessors(fluent = true)
 @RequiredArgsConstructor
 public class JobExecution implements Serializable {
@@ -56,14 +59,12 @@ public class JobExecution implements Serializable {
 
     private final Computed<JobSpec> expandedSpecRef = Computed.of();
 
-    private final Computed<List<String>> artifactDependenciesRef = Computed.of();
-
     public JobSpec expandedSpec() {
         return expandedSpecRef.get();
     }
 
     public JobSpec unexpandedSpec() {
-        return context.spec().job(job.name());
+        return job.plan().spec();
     }
 
     public StageState stage() {
@@ -147,8 +148,12 @@ public class JobExecution implements Serializable {
         return allowFailure.exitCodes().contains(code);
     }
 
-    public @Nullable List<String> artifactDependencies() {
-        return artifactDependenciesRef.get();
+    public List<String> artifactDependencies() {
+        return context.plan().relationsOfJob(job.plan().iid()).stream()
+                .filter(JobRelation::artifacts)
+                .map(JobRelation::dependedOn)
+                .map(iid -> context.plan().job(iid).slug())
+                .toList();
     }
 
     public synchronized ScheduleCtrl prepareSchedule() {
@@ -219,30 +224,29 @@ public class JobExecution implements Serializable {
         }
 
         private Decider createDecider() {
-            var when = unexpandedSpec().when();
-            var firstCheck = when(when);
-            if (firstCheck != null && firstCheck.decision().isTerminal()) {
-                return () -> firstCheck;
-            }
-
-            var depJobs = new ArrayList<JobStateDependency>();
-            var dependencies = job.dependencies();
-            for (var need : dependencies) {
-                var terminal = collectDependJobs(need, depJobs);
-                if (terminal != null) {
-                    return () -> terminal;
+            for (var dependency : job.plan().dependencies()) {
+                var invalid = validateSupported(dependency);
+                if (invalid != null) {
+                    return () -> invalid;
                 }
             }
-            artifactDependenciesRef.set(
-                    depJobs.stream()
-                            .filter(d -> d.dependency().artifacts())
-                            .map(d -> d.state().slug())
-                            .toList()
-            );
-            if (!depJobs.isEmpty()) {
-                return () -> decideByDependJobs(depJobs, when);
+            var when = unexpandedSpec().when();
+            var fastWhenCheck = when(when);
+            if (fastWhenCheck != null && fastWhenCheck.decision().isTerminal()) {
+                return () -> fastWhenCheck;
             }
-            if (firstCheck == null) {
+
+            var depStates = new ArrayList<JobStateDependency>();
+            var relations = context.plan().relationsOfJob(job.plan().iid());
+            for (var rel : relations) {
+                var dependedPlan = context.plan().job(rel.dependedOn());
+                var state = context.states().of(dependedPlan);
+                depStates.add(new JobStateDependency(state, rel.optional()));
+            }
+            if (!depStates.isEmpty()) {
+                return () -> decideByDependJobs(depStates, when);
+            }
+            if (fastWhenCheck == null) {
                 return ScheduleResult::ready;
             }
             return () -> nvl(when(when), ScheduleResult::ready);
@@ -250,59 +254,15 @@ public class JobExecution implements Serializable {
 
         private record JobStateDependency(
                 JobState state,
-                JobDependency dependency
+                boolean optional
         ) implements Serializable {
         }
 
-        private @Nullable ScheduleResult collectDependJobs(JobDependency dependency, List<JobStateDependency> deps) {
-            var invalid = validateNeed(dependency);
-            if (invalid != null) {
-                return invalid;
-            }
-
-            var stageOffset = switch (dependency.kind()) {
-                case EARLIER_STAGE -> 0;
-                case SAME_OR_EARLIER_STAGE -> 1;
-                case CROSS_PROJECT, PIPELINE ->
-                        throw new IllegalArgumentException("Unsupported dependency kind: " + dependency.kind());
-            };
-
-            var name = requireNonNull(dependency.job());
-            var stateStream = context.states().findJobsBeforeStage(job.stageIid() + stageOffset)
-                    .filter(s -> s.name().equals(name));
-
-            var matrixList = JobSpec.Parallel.expand(dependency.parallel());
-            var hasMatrix = !(matrixList.size() == 1 && matrixList.getFirst().isEmpty());
-            if (hasMatrix) {
-                stateStream = stateStream.filter(s -> matrixList.contains(s.matrixVars()));
-            }
-
-            var states = stateStream.toList();
-            if (!states.isEmpty()) {
-                states.stream()
-                        .map(s -> new JobStateDependency(s, dependency))
-                        .forEach(deps::add);
-                return null;
-            }
-            if (dependency.optional()) {
-                // Optional dependency is not planned, ignored.
-                return null;
-            }
-            return ScheduleResult.failed("Job dependency not planned: " + dependency);
-        }
-
-        private @Nullable ScheduleResult validateNeed(JobDependency dependency) {
-            if (isNotEmpty(dependency.project())) {
-                return ScheduleResult.failed("Cross-project dependency is not supported yet: " + dependency);
-            }
-            if (isNotEmpty(dependency.ref())) {
-                return ScheduleResult.failed("Ref-based dependency is not supported yet: " + dependency);
-            }
-            if (isNotEmpty(dependency.pipeline())) {
-                return ScheduleResult.failed("Pipeline-based dependency is not supported yet: " + dependency);
-            }
-            if (isEmpty(dependency.job())) {
-                return ScheduleResult.failed("Job dependency must specify job name: " + dependency);
+        private @Nullable ScheduleResult validateSupported(JobDependency dependency) {
+            var scope = dependency.scope();
+            if (scope == JobDependency.Scope.PROJECT
+                    || scope == JobDependency.Scope.PIPELINE) {
+                return ScheduleResult.failed("Unsupported dependency scope: " + scope);
             }
             return null;
         }
@@ -311,11 +271,15 @@ public class JobExecution implements Serializable {
             for (var dep : deps) {
                 var state = dep.state;
                 if (!state.status().isArchived()) {
-                    return ScheduleResult.pending("Waiting for dependent job to complete: " + state.name());
+                    return ScheduleResult.pending("Waiting for dependent job to complete: " + state.plan().name());
                 }
-                // TODO: allow failure?
                 if (state.result().isFailed()) {
-                    return ScheduleResult.canceled("Dependent job failed: " + state.name());
+                    if (!dep.optional()) {
+                        return ScheduleResult.canceled(
+                                "Dependent job failed, and it's not optional: " + state.plan().name());
+                    } else {
+                        log.debug("Dependent job failed, but it's optional, continue scheduling: {}", state.plan().name());
+                    }
                 }
             }
             return requireNonNull(nvl(

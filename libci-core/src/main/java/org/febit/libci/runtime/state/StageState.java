@@ -16,29 +16,25 @@
 package org.febit.libci.runtime.state;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import org.febit.libci.runtime.PipelineContext;
+import org.febit.libci.runtime.plan.StagePlan;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-@lombok.Builder(
-        builderClassName = "Builder"
-)
 @Accessors(fluent = true)
+@RequiredArgsConstructor(staticName = "of")
 public class StageState implements State {
-
-    @Getter
-    private final int iid;
-    @Getter
-    private final String name;
-    @Getter
-    private final String slug;
 
     private final AtomicBoolean failed = new AtomicBoolean(false);
     private final AtomicReference<@Nullable Instant> startedAt = new AtomicReference<>(null);
+
+    @Getter
+    private final StagePlan plan;
 
     public void onStarted(PipelineContext context) {
         this.startedAt.compareAndSet(null, context.clock().instant());
@@ -47,14 +43,6 @@ public class StageState implements State {
     @Nullable
     public Instant startedAt() {
         return this.startedAt.get();
-    }
-
-    public static StageState of(int iid, String stage) {
-        return builder()
-                .slug(StateSlugs.stage(iid, stage))
-                .iid(iid)
-                .name(stage)
-                .build();
     }
 
     public boolean isFailed() {

@@ -33,8 +33,9 @@ import org.febit.libci.core.predefined.Predefined;
 import org.febit.libci.core.resource.loader.GenericPathResourceLoader;
 import org.febit.libci.core.resource.loader.JgitRepositoryResourceLoader;
 import org.febit.libci.core.resource.source.PathSource;
-import org.febit.libci.runtime.PipelinePlan;
+import org.febit.libci.runtime.PipelineEvaluator;
 import org.febit.libci.runtime.PipelinePlanner;
+import org.febit.libci.runtime.plan.PipelinePlan;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
@@ -110,12 +111,14 @@ public class PipelineResolveExecution extends SynchronousStepExecution<PipelineP
         }
 
         logger.println("[PLAN] Planning pipeline execution...");
-        return PipelinePlanner.builder()
+        var workspaceApi = new JenkinsWorkspaceApi(workspace);
+        var spec = PipelineEvaluator.builder()
                 .profile(profile)
-                .inputVars(inputVars)
-                .workspaceApi(new JenkinsWorkspaceApi(workspace))
+                .baseVars(inputVars)
+                .workspaceApi(workspaceApi)
                 .build()
-                .plan();
+                .evaluate();
+        return PipelinePlanner.create(spec, inputVars).plan();
     }
 
     private ProfileDocument loadDocument(

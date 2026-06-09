@@ -18,20 +18,18 @@ package org.febit.libci.runtime;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
-import org.febit.libci.core.VarsHeap;
-import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.util.Immutables;
+import org.febit.libci.runtime.plan.JobPlan;
+import org.febit.libci.runtime.plan.PipelinePlan;
+import org.febit.libci.runtime.plan.StagePlan;
 import org.febit.libci.runtime.state.JobState;
 import org.febit.libci.runtime.state.StageState;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.time.Clock;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.febit.libci.core.util.Defaults.nvl;
@@ -43,38 +41,24 @@ public class PipelineContext implements Serializable {
     private final AtomicBoolean failed = new AtomicBoolean(false);
 
     @Getter
-    private final PipelineSpec spec;
+    private final PipelinePlan plan;
     @Getter
     private final States states;
     @Getter
     private final Clock clock;
 
-    public static PipelineContext create(PipelinePlan pipeline, VarsHeap<?> baseVars, @Nullable Clock clock) {
-        var stages = pipeline.spec().stages();
-        var stageStates = new ArrayList<StageState>(stages.size());
-        for (int i = 0; i < stages.size(); i++) {
-            stageStates.add(
-                    StageState.of(i, stages.get(i))
-            );
-        }
+    public PipelineSpec spec() {
+        return plan.spec();
+    }
 
-        var groupedByStage = pipeline.spec().jobs().values().stream()
-                .collect(Collectors.groupingBy(JobSpec::stage));
+    public static PipelineContext create(PipelinePlan pipeline) {
+        return create(pipeline, null);
+    }
 
-        var nextJobIid = new AtomicInteger(0);
-        var jobStates = new ArrayList<List<JobState>>(stages.size());
-        for (var stage : stageStates) {
-            var jobs = groupedByStage.get(stage.name());
-            var states = JobState.ofJobs(pipeline, stage, jobs, baseVars, nextJobIid);
-            jobStates.add(states);
-        }
-
-        var states = PipelineContext.States.builder()
-                .stages(stageStates)
-                .jobs(jobStates)
-                .build();
+    public static PipelineContext create(PipelinePlan pipeline, @Nullable Clock clock) {
+        var states = States.create(pipeline);
         return new PipelineContext(
-                pipeline.spec(), states,
+                pipeline, states,
                 nvl(clock, Clock.systemDefaultZone())
         );
     }
@@ -83,19 +67,24 @@ public class PipelineContext implements Serializable {
         return this.failed.get();
     }
 
-    @lombok.Builder(
-            builderClassName = "Builder"
-    )
     public record States(
             List<StageState> stages,
-            List<List<JobState>> jobs
+            List<JobState> jobs
     ) implements Serializable {
 
         public States {
             stages = Immutables.of(stages);
-            jobs = Immutables.of(jobs.stream()
-                    .map(Immutables::of)
-                    .toList());
+            jobs = Immutables.of(jobs);
+        }
+
+        public static States create(PipelinePlan pipeline) {
+            var stages = pipeline.stages().stream()
+                    .map(StageState::of)
+                    .toList();
+            var jobs = pipeline.jobs().stream()
+                    .map(JobState::of)
+                    .toList();
+            return new States(stages, jobs);
         }
 
         public Stream<JobState> findJobsBeforeStage(int stageIid) {
@@ -105,6 +94,14 @@ public class PipelineContext implements Serializable {
                     .flatMap(s -> jobsOf(s).stream());
         }
 
+        public StageState of(StagePlan plan) {
+            return stages.get(plan.iid());
+        }
+
+        public JobState of(JobPlan plan) {
+            return jobs.get(plan.iid());
+        }
+
         /**
          * Get stage state by stage.
          *
@@ -112,7 +109,7 @@ public class PipelineContext implements Serializable {
          * @return stage state
          */
         public StageState stageOf(JobState job) {
-            return stages.get(job.stageIid());
+            return stages.get(job.plan().stageIid());
         }
 
         /**
@@ -122,7 +119,10 @@ public class PipelineContext implements Serializable {
          * @return job states of stage
          */
         public List<JobState> jobsOf(StageState stage) {
-            return jobs.get(stage.iid());
+            var stageIid = stage.plan().iid();
+            return jobs.stream()
+                    .filter(j -> j.plan().stageIid() == stageIid)
+                    .toList();
         }
     }
 

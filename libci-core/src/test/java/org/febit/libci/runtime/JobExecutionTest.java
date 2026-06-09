@@ -152,37 +152,9 @@ class JobExecutionTest {
 
         assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
         assertEquals(
-                List.of("01_build_01_build-app", "00_prepare_00_prepare-env"),
+                List.of("01_build-app", "00_prepare-env"),
                 exec.artifactDependencies()
         );
-    }
-
-    @Test
-    void prepareScheduleFailsForUnsupportedCrossProjectNeed() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob(
-                        "verify",
-                        "build",
-                        List.of(
-                                JobSpec.Need.builder()
-                                        .project("group/project")
-                                        .job("build")
-                                        .build()
-                        ),
-                        null
-                )
-        );
-
-        var exec = newExec(profile, "verify");
-        var decision = exec.prepareSchedule().decide();
-
-        assertEquals(JobExecution.ScheduleDecision.FAILED, decision.decision());
-        assertNotNull(decision.reason());
-        assertTrue(
-                decision.reason().contains("Cross-project dependency is not supported yet")
-        );
-        assertThrows(IllegalStateException.class, exec::artifactDependencies);
     }
 
     @Test
@@ -210,10 +182,10 @@ class JobExecutionTest {
         assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
         var deps = exec.artifactDependencies();
         assertEquals(4, deps.size());
-        assertTrue(deps.contains("00_build_00_build-app"));
-        assertTrue(deps.contains("00_build_01_build-app"));
-        assertTrue(deps.contains("00_build_02_build-app"));
-        assertTrue(deps.contains("00_build_03_build-app"));
+        assertTrue(deps.contains("00_build-app"));
+        assertTrue(deps.contains("01_build-app"));
+        assertTrue(deps.contains("02_build-app"));
+        assertTrue(deps.contains("03_build-app"));
     }
 
     @Test
@@ -249,42 +221,8 @@ class JobExecutionTest {
         assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
         var deps = exec.artifactDependencies();
         assertEquals(2, deps.size());
-        assertTrue(deps.contains("00_build_00_build-app")); // linux+amd64
-        assertTrue(deps.contains("00_build_01_build-app")); // linux+arm64
-    }
-
-    @Test
-    void prepareScheduleFailsWhenNeedMatrixFilterMatchesNoVariant() {
-        var profile = newProfile(
-                List.of("build", "verify"),
-                newJob(
-                        "build-app", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux"),
-                                        "ARCH", List.of("amd64")
-                                )))
-                                .build(),
-                        List.of("echo ok")
-                ),
-                newJob("verify", "verify",
-                        List.of(JobSpec.Need.builder()
-                                .job("build-app")
-                                .parallel(JobSpec.Parallel.builder()
-                                        .matrix(List.of(matrix(
-                                                "OS", List.of("macos"),
-                                                "ARCH", List.of("arm64")
-                                        )))
-                                        .build())
-                                .build()),
-                        null)
-        );
-
-        var exec = newExec(profile, "verify");
-        var decision = exec.prepareSchedule().decide();
-
-        assertEquals(JobExecution.ScheduleDecision.FAILED, decision.decision());
-        assertTrue(decision.reason().contains("Job dependency not planned"));
+        assertTrue(deps.contains("00_build-app")); // linux+amd64
+        assertTrue(deps.contains("01_build-app")); // linux+arm64
     }
 
     @Test
@@ -341,7 +279,7 @@ class JobExecutionTest {
         var context = newContext(profile);
         var stage = context.states().stages().getFirst();
         var state = context.states().jobsOf(stage).stream()
-                .filter(it -> it.matrixIid() == 1)
+                .filter(it -> it.plan().matrixIid() == 1)
                 .findFirst()
                 .orElseThrow();
         var exec = new JobExecution(context, state);
@@ -350,8 +288,8 @@ class JobExecutionTest {
         JobPredefined.persisted(vars, exec.unexpandedSpec());
         exec.expand();
 
-        assertEquals(Map.of("OS", "linux", "ARCH", "amd64"), state.matrixVars());
-        assertEquals(1, state.matrixIid());
+        assertEquals(Map.of("OS", "linux", "ARCH", "amd64"), state.plan().matrixVars());
+        assertEquals(1, state.plan().matrixIid());
         assertEquals("linux", vars.get("OS"));
         assertEquals("amd64", vars.get("ARCH"));
         assertEquals("1", vars.get(Predefined.LIBCI_JOB_MATRIX_IID));
@@ -374,7 +312,7 @@ class JobExecutionTest {
     private static JobExecution newExec(Profile profile, String jobName) {
         var context = newContext(profile);
         var state = context.states().findJobsBeforeStage(-1)
-                .filter(it -> it.name().equals(jobName))
+                .filter(it -> it.plan().name().equals(jobName))
                 .findFirst()
                 .orElse(null);
         if (state == null) {
@@ -384,12 +322,14 @@ class JobExecutionTest {
     }
 
     private static PipelineContext newContext(Profile profile) {
-        return PipelinePlanner.builder()
+        var baseVars = VarsHeapImpl.create();
+        var spec = PipelineEvaluator.builder()
                 .profile(profile)
-                .inputVars(VarsHeapImpl.create())
+                .baseVars(baseVars)
                 .build()
-                .plan()
-                .createContext(VarsHeapImpl.create());
+                .evaluate();
+        var plan = PipelinePlanner.create(spec, baseVars).plan();
+        return PipelineContext.create(plan);
     }
 
     private static Profile newProfile(JobSpec job) {

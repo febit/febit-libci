@@ -3,8 +3,7 @@ package febit.libci
 import org.apache.commons.lang.StringUtils
 import org.febit.libci.core.variable.VarDefinedPhase
 import org.febit.libci.core.variable.VarsHeapImpl
-import org.febit.libci.runtime.PipelineContext
-import org.febit.libci.runtime.PipelinePlan
+import org.febit.libci.runtime.plan.PipelinePlan
 
 import static febit.libci.LibciContext.__LIBCI_CRED_VAR_
 import static febit.libci.LibciContext.isDebugEnabled
@@ -58,26 +57,16 @@ class LibciPlanner {
             ctx.vars.predefined.seal()
 
             def plan = resolve()
-            def context = createContext(plan)
-            new PipelineRunner(ctx, context).run()
+            new PipelineRunner(ctx, plan).run()
         }
-    }
-
-    private PipelineContext createContext(PipelinePlan plan) {
-        def varsTmpl = VarsHeapImpl.create()
-        ctx.collectEnvVars(varsTmpl)
-        ctx.vars.predefined.entries()
-            .findAll { !it.runtimeEnv }
-            .each { varsTmpl.imports(it) }
-        plan.createContext(varsTmpl)
     }
 
     private PipelinePlan resolve() {
-        PipelinePlan plan = null
+        PipelinePlan result = null
         ctx.stage('Resolve Pipeline') {
-            plan = resolve0()
+            result = resolve0()
         }
-        return plan
+        return result
     }
 
     private PipelinePlan resolve0() {
@@ -102,7 +91,6 @@ class LibciPlanner {
             ],
         )
 
-        ctx.vars.pipeline.imports(plan.pipelineVars()).seal()
         return plan
     }
 

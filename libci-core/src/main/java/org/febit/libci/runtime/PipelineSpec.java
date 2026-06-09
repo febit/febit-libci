@@ -15,9 +15,11 @@
  */
 package org.febit.libci.runtime;
 
+import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
 import org.febit.libci.core.util.Immutables;
+import org.febit.libci.core.variable.VarsHeapImpl;
 
 import java.io.Serializable;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.Map;
 )
 public record PipelineSpec(
         WorkflowSpec workflow,
+        VarsHeap<?> pipelineVars,
         List<String> stages,
         Map<String, JobSpec> jobs
 ) implements Serializable {
@@ -35,10 +38,18 @@ public record PipelineSpec(
     public PipelineSpec {
         stages = Immutables.of(stages);
         jobs = Immutables.of(jobs);
+        pipelineVars = pipelineVars.sealed()
+                ? pipelineVars
+                : pipelineVars.snapshot().seal();
     }
 
     public static PipelineSpec empty(WorkflowSpec workflow) {
-        return new PipelineSpec(workflow, List.of(), Map.of());
+        return new PipelineSpec(
+                workflow,
+                VarsHeapImpl.create(),
+                List.of(),
+                Map.of()
+        );
     }
 
     /**

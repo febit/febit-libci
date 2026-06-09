@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.febit.libci.runtime;
+package org.febit.libci.runtime.plan;
 
 import org.febit.libci.core.spec.JobSpec;
 import org.jspecify.annotations.Nullable;
@@ -26,7 +26,7 @@ import static org.febit.libci.core.util.Defaults.nvl;
         builderClassName = "Builder"
 )
 public record JobDependency(
-        Kind kind,
+        Scope scope,
         @Nullable String job,
         @Nullable String project,
         @Nullable String ref,
@@ -36,16 +36,16 @@ public record JobDependency(
         boolean artifacts
 ) implements Serializable {
 
-    public enum Kind {
+    public enum Scope {
         EARLIER_STAGE,
         SAME_OR_EARLIER_STAGE,
-        CROSS_PROJECT,
+        PROJECT,
         PIPELINE,
     }
 
     public static JobDependency ofDependenciesSpec(String job) {
         return builder()
-                .kind(Kind.EARLIER_STAGE)
+                .scope(Scope.EARLIER_STAGE)
                 .job(job)
                 .optional(false)
                 .artifacts(true)
@@ -62,14 +62,14 @@ public record JobDependency(
             if (need.project() != null || need.ref() != null) {
                 throw new IllegalArgumentException("project and pipeline cannot be specified at the same time");
             }
-            builder.kind(Kind.PIPELINE)
+            builder.scope(Scope.PIPELINE)
                     .pipeline(need.pipeline());
         } else if (need.project() != null) {
-            builder.kind(Kind.CROSS_PROJECT)
+            builder.scope(Scope.PROJECT)
                     .project(need.project())
                     .ref(need.ref());
         } else {
-            builder.kind(Kind.SAME_OR_EARLIER_STAGE);
+            builder.scope(Scope.SAME_OR_EARLIER_STAGE);
         }
         return builder.build();
     }

@@ -155,7 +155,7 @@ class JobPlanner {
 ==== JOB EXECUTION SUMMARY =====
   Name:   ${spec.name()}
   Stage:  ${spec.stage()}
-  Slug:   ${state.slug()}
+  Slug:   ${state.plan().slug()}
   Code:   ${result.code()}
   Is OK:  ${execution.isExitCodeAllowed()}
   Result: ${result.kind()}
@@ -394,7 +394,7 @@ ${script}\
         private final String overlayWork
 
         Dirs(JobExecution execution) {
-            def ws = execution.stage().iid() + '_' + execution.job().iid()
+            def ws = execution.stage().plan().iid() + '_' + execution.job().plan().iid()
             this.artifacts = "${ctx.dirs.artifactBase}/${ws}"
             this.overlayBase = "${ctx.dirs.overlayRoot}/${ws}"
             this.overlayDiff = "${overlayBase}/diff"
@@ -694,7 +694,7 @@ Environment Variables:
             if (result.fileCount() == 0) {
                 return
             }
-            ctx.vars.dotenv.put(state.slug(), result.entries())
+            ctx.vars.dotenv.put(state.plan().slug(), result.entries())
         }
 
         private void transferArtifacts() {
@@ -718,7 +718,7 @@ Environment Variables:
                 artifacts: artifacts,
                 debugEnabled: isDebugEnabled(vars),
             )
-            ctx.dirs.artifacts.put(state.slug(), targetDir)
+            ctx.dirs.artifacts.put(state.plan().slug(), targetDir)
         }
     }
 }
