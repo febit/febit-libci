@@ -178,11 +178,148 @@ class JobExecutionTest {
         var decision = exec.prepareSchedule().decide();
 
         assertEquals(JobExecution.ScheduleDecision.FAILED, decision.decision());
-        assertEquals(
-                "Cross-project dependency is not supported yet: Need[project=group/project, ref=null, pipeline=null, job=build, parallel=null, artifacts=null, optional=null]",
-                decision.reason()
+        assertNotNull(decision.reason());
+        assertTrue(
+                decision.reason().contains("Cross-project dependency is not supported yet")
         );
         assertThrows(IllegalStateException.class, exec::artifactDependencies);
+    }
+
+    @Test
+    void prepareScheduleCollectsAllMatrixVariantsWhenNeedsMatrixJob() {
+        var profile = newProfile(
+                List.of("build", "verify"),
+                newJob(
+                        "build-app", "build", null, null,
+                        JobSpec.Parallel.builder()
+                                .matrix(List.of(matrix(
+                                        "OS", List.of("linux", "macos"),
+                                        "ARCH", List.of("amd64", "arm64")
+                                )))
+                                .build(),
+                        List.of("echo $OS-$ARCH")
+                ),
+                newJob("verify", "verify",
+                        List.of(JobSpec.Need.builder().job("build-app").build()),
+                        null)
+        );
+
+        var exec = newExec(profile, "verify");
+        var decision = exec.prepareSchedule().decide();
+
+        assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
+        var deps = exec.artifactDependencies();
+        assertEquals(4, deps.size());
+        assertTrue(deps.contains("00_build_00_build-app"));
+        assertTrue(deps.contains("00_build_01_build-app"));
+        assertTrue(deps.contains("00_build_02_build-app"));
+        assertTrue(deps.contains("00_build_03_build-app"));
+    }
+
+    @Test
+    void prepareScheduleFiltersMatrixVariantsWhenNeedHasParallel() {
+        var profile = newProfile(
+                List.of("build", "verify"),
+                newJob(
+                        "build-app", "build", null, null,
+                        JobSpec.Parallel.builder()
+                                .matrix(List.of(matrix(
+                                        "OS", List.of("linux", "macos"),
+                                        "ARCH", List.of("amd64", "arm64")
+                                )))
+                                .build(),
+                        List.of("echo $OS-$ARCH")
+                ),
+                newJob("verify", "verify",
+                        List.of(JobSpec.Need.builder()
+                                .job("build-app")
+                                .parallel(JobSpec.Parallel.builder()
+                                        .matrix(List.of(matrix(
+                                                "OS", List.of("linux"),
+                                                "ARCH", List.of("amd64", "arm64")
+                                        )))
+                                        .build())
+                                .build()),
+                        null)
+        );
+
+        var exec = newExec(profile, "verify");
+        var decision = exec.prepareSchedule().decide();
+
+        assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
+        var deps = exec.artifactDependencies();
+        assertEquals(2, deps.size());
+        assertTrue(deps.contains("00_build_00_build-app")); // linux+amd64
+        assertTrue(deps.contains("00_build_01_build-app")); // linux+arm64
+    }
+
+    @Test
+    void prepareScheduleFailsWhenNeedMatrixFilterMatchesNoVariant() {
+        var profile = newProfile(
+                List.of("build", "verify"),
+                newJob(
+                        "build-app", "build", null, null,
+                        JobSpec.Parallel.builder()
+                                .matrix(List.of(matrix(
+                                        "OS", List.of("linux"),
+                                        "ARCH", List.of("amd64")
+                                )))
+                                .build(),
+                        List.of("echo ok")
+                ),
+                newJob("verify", "verify",
+                        List.of(JobSpec.Need.builder()
+                                .job("build-app")
+                                .parallel(JobSpec.Parallel.builder()
+                                        .matrix(List.of(matrix(
+                                                "OS", List.of("macos"),
+                                                "ARCH", List.of("arm64")
+                                        )))
+                                        .build())
+                                .build()),
+                        null)
+        );
+
+        var exec = newExec(profile, "verify");
+        var decision = exec.prepareSchedule().decide();
+
+        assertEquals(JobExecution.ScheduleDecision.FAILED, decision.decision());
+        assertTrue(decision.reason().contains("Job dependency not planned"));
+    }
+
+    @Test
+    void prepareScheduleSkipsOptionalNeedWhenMatrixFilterMatchesNoVariant() {
+        var profile = newProfile(
+                List.of("build", "verify"),
+                newJob(
+                        "build-app", "build", null, null,
+                        JobSpec.Parallel.builder()
+                                .matrix(List.of(matrix(
+                                        "OS", List.of("linux"),
+                                        "ARCH", List.of("amd64")
+                                )))
+                                .build(),
+                        List.of("echo ok")
+                ),
+                newJob("verify", "verify",
+                        List.of(JobSpec.Need.builder()
+                                .job("build-app")
+                                .optional(true)
+                                .parallel(JobSpec.Parallel.builder()
+                                        .matrix(List.of(matrix(
+                                                "OS", List.of("macos"),
+                                                "ARCH", List.of("arm64")
+                                        )))
+                                        .build())
+                                .build()),
+                        null)
+        );
+
+        var exec = newExec(profile, "verify");
+        var decision = exec.prepareSchedule().decide();
+
+        assertEquals(JobExecution.ScheduleDecision.READY, decision.decision());
+        assertTrue(exec.artifactDependencies().isEmpty());
     }
 
     @Test

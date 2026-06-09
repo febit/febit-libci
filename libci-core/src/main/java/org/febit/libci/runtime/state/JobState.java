@@ -21,21 +21,21 @@ import lombok.experimental.Accessors;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.predefined.JobPredefined;
 import org.febit.libci.core.spec.CiJobStatus;
+import org.febit.libci.core.spec.ExpandPhase;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.JobSpec.RetryWhen;
-import org.febit.libci.core.util.Immutables;
 import org.febit.libci.core.variable.VarDefinedPhase;
+import org.febit.libci.core.variable.VarExpander;
+import org.febit.libci.runtime.JobDependency;
 import org.febit.libci.runtime.PipelinePlan;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import static org.febit.libci.core.predefined.Predefined.CI_JOB_STATUS;
 import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_IID;
@@ -68,6 +68,9 @@ public class JobState implements State {
     @Getter
     @lombok.NonNull
     private final Map<String, String> matrixVars;
+    @Getter
+    @lombok.NonNull
+    private final List<JobDependency> dependencies;
 
     @Getter
     @lombok.NonNull
@@ -103,20 +106,11 @@ public class JobState implements State {
         var size = jobs.size();
         var states = new ArrayList<JobState>(size);
         var iid = 0;
-        for (JobSpec spec : jobs) {
+        for (var spec : jobs) {
             var inheritedVars = inheritedVars(baseVars, pipeline, stage, spec);
-            var matrixList = new ArrayList<Map<String, String>>();
-            var parallel = spec.parallel();
-            if (parallel != null) {
-                for (var matrix : parallel.matrix()) {
-                    expandMatrix(List.copyOf(matrix.entrySet()), 0, new LinkedHashMap<>(), matrixList::add);
-                }
-            }
-            var matrixIid = 1;
-            if (matrixList.isEmpty()) {
-                matrixIid = 0;
-                matrixList.add(Map.of());
-            }
+            var matrixList = JobSpec.Parallel.expand(spec.parallel());
+            var matrixIid = matrixList.size() == 1 && matrixList.getFirst().isEmpty()
+                    ? 0 : 1;
             for (var matrix : matrixList) {
                 var slug = StateSlugs.job(stage.slug(), iid, spec.name());
                 var vars = inheritedVars.snapshot();
@@ -126,6 +120,7 @@ public class JobState implements State {
                         .direct(LIBCI_JOB_MATRIX_IID, String.valueOf(matrixIid))
                         .direct(CI_JOB_STATUS, CiJobStatus.PENDING.value())
                         .directMulti(matrix);
+                var dependencies = resolveDependencies(spec, vars);
                 states.add(builder()
                         .iid(iid)
                         .slug(slug)
@@ -135,6 +130,7 @@ public class JobState implements State {
                         .matrixIid(matrixIid)
                         .matrixVars(matrix)
                         .vars(vars)
+                        .dependencies(dependencies)
                         .build());
                 iid++;
                 if (matrixIid != 0) {
@@ -145,28 +141,23 @@ public class JobState implements State {
         return List.copyOf(states);
     }
 
-    private static void expandMatrix(
-            List<Map.Entry<String, List<String>>> dimensions,
-            int index,
-            LinkedHashMap<String, String> current,
-            Consumer<Map<String, String>> consumer
-    ) {
-        if (index >= dimensions.size()) {
-            consumer.accept(Immutables.of(current));
-            return;
-        }
+    private static List<JobDependency> resolveDependencies(JobSpec spec, VarsHeap<?> vars) {
+        var expander = VarExpander.of(vars, ExpandPhase.PLAN);
+        var needs = expander.expandNullable(spec.needs());
+        var deps = expander.expandNullable(spec.dependencies());
 
-        var dimension = dimensions.get(index);
-        var values = dimension.getValue();
-        if (values.isEmpty()) {
-            return;
+        var result = new ArrayList<JobDependency>();
+        if (deps != null) {
+            deps.stream()
+                    .map(JobDependency::ofDependenciesSpec)
+                    .forEach(result::add);
         }
-
-        for (var value : values) {
-            current.put(dimension.getKey(), value);
-            expandMatrix(dimensions, index + 1, current, consumer);
+        if (needs != null) {
+            needs.stream()
+                    .map(JobDependency::of)
+                    .forEach(result::add);
         }
-        current.remove(dimension.getKey());
+        return List.copyOf(result);
     }
 
     public synchronized CiJobStatus ciJobStatus() {

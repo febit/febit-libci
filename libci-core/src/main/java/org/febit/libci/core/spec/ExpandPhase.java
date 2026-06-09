@@ -26,7 +26,7 @@ public enum ExpandPhase {
     NESTED("Should expand nested variables."),
 
     PARSE("Expansion is made by profile parser."),
-    SCHEDULE("Expansion is made by pipeline scheduler."),
+    PLAN("Expansion is made by pipeline planner."),
     RUN("Expansion is made by pipeline runner."),
     COMMAND("Expansion is made by command/script executor."),
     ;

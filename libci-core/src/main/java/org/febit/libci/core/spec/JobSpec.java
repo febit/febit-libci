@@ -35,11 +35,11 @@ import org.febit.libci.core.util.Immutables;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import java.util.function.Consumer;
 
 /**
  * Job specification.
@@ -91,11 +91,11 @@ public record JobSpec(
         // Ref: https://docs.gitlab.com/ci/yaml/#coverage
         @Nullable String coverage,
         // Ref: https://docs.gitlab.com/ci/yaml/#resource_group
-        @Expandable(phase = ExpandPhase.SCHEDULE)
+        @Expandable(phase = ExpandPhase.PLAN)
         @Nullable String resourceGroup,
         // Ref: https://docs.gitlab.com/ci/yaml/#manual_confirmation
 
-        @Expandable(phase = ExpandPhase.SCHEDULE)
+        @Expandable(phase = ExpandPhase.PLAN)
         @Nullable String manualConfirmation,
         @Nullable ArtifactsSpec artifacts,
         @Nullable Cache cache,
@@ -114,7 +114,7 @@ public record JobSpec(
 
         @Nullable List<Need> needs,
         // Ref: https://docs.gitlab.com/ci/yaml/#dependencies
-        @Expandable(phase = ExpandPhase.SCHEDULE)
+        @Expandable(phase = ExpandPhase.PLAN)
         @Nullable List<String> dependencies
 
 ) implements ISpec {
@@ -741,16 +741,16 @@ public record JobSpec(
     @Expandable(phase = ExpandPhase.NESTED)
     public record Need(
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String project,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String ref,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String pipeline,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String job,
             @Nullable
             Parallel parallel,
@@ -759,13 +759,6 @@ public record JobSpec(
             @Nullable
             Boolean optional
     ) implements ISpec {
-
-        public boolean shouldFetchJobArtifacts() {
-            return (artifacts == null || artifacts)
-                    && isEmpty(project)
-                    && isEmpty(ref)
-                    && isEmpty(pipeline);
-        }
 
         public static class Builder {
 
@@ -792,6 +785,48 @@ public record JobSpec(
 
         public Parallel {
             matrix = Immutables.of(matrix);
+        }
+
+        public static List<Map<String, String>> expand(@Nullable Parallel parallel) {
+            if (parallel == null) {
+                return List.of(Map.of());
+            }
+            return parallel.expandMatrix();
+        }
+
+        public List<Map<String, String>> expandMatrix() {
+            var list = new ArrayList<Map<String, String>>();
+            for (var matrix : matrix()) {
+                expandMatrix(List.copyOf(matrix.entrySet()), 0, new LinkedHashMap<>(), list::add);
+            }
+            if (list.isEmpty()) {
+                list.add(Map.of());
+            }
+            return List.copyOf(list);
+        }
+
+        private static void expandMatrix(
+                List<Map.Entry<String, List<String>>> dimensions,
+                int index,
+                LinkedHashMap<String, String> current,
+                Consumer<Map<String, String>> consumer
+        ) {
+            if (index >= dimensions.size()) {
+                consumer.accept(Immutables.of(current));
+                return;
+            }
+
+            var dimension = dimensions.get(index);
+            var values = dimension.getValue();
+            if (values.isEmpty()) {
+                return;
+            }
+
+            for (var value : values) {
+                current.put(dimension.getKey(), value);
+                expandMatrix(dimensions, index + 1, current, consumer);
+            }
+            current.remove(dimension.getKey());
         }
     }
 
@@ -999,7 +1034,7 @@ public record JobSpec(
             @Nullable SecretAzureKeyVault azureKeyVault,
             @Nullable Boolean file,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String token
     ) implements ISpec {
     }
@@ -1011,10 +1046,10 @@ public record JobSpec(
     @Expandable(phase = ExpandPhase.NESTED)
     public record SecretAzureKeyVault(
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String name,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String version
     ) implements ISpec {
 
@@ -1040,10 +1075,10 @@ public record JobSpec(
     @Expandable(phase = ExpandPhase.NESTED)
     public record SecretGcpSecretManager(
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String name,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String version
     ) implements ISpec {
 
@@ -1069,14 +1104,14 @@ public record JobSpec(
     @Expandable(phase = ExpandPhase.NESTED)
     public record SecretVault(
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String secret,
             @Nullable SecretVaultEngine engine,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String path,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String field
     ) implements ISpec {
 
@@ -1102,10 +1137,10 @@ public record JobSpec(
     @Expandable(phase = ExpandPhase.NESTED)
     public record SecretVaultEngine(
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String name,
             @Nullable
-            @Expandable(phase = ExpandPhase.SCHEDULE)
+            @Expandable(phase = ExpandPhase.PLAN)
             String path
     ) implements ISpec {
     }
