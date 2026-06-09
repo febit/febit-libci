@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.febit.libci.core.predefined.Predefined.CI_JOB_STATUS;
@@ -102,16 +103,21 @@ public class JobState implements State {
     }
 
     public static List<JobState> ofJobs(
-            PipelinePlan pipeline, StageState stage, List<JobSpec> jobs, VarsHeap<?> baseVars) {
+            PipelinePlan pipeline,
+            StageState stage,
+            List<JobSpec> jobs,
+            VarsHeap<?> baseVars,
+            AtomicInteger nextJobIid
+    ) {
         var size = jobs.size();
         var states = new ArrayList<JobState>(size);
-        var iid = 0;
         for (var spec : jobs) {
             var inheritedVars = inheritedVars(baseVars, pipeline, stage, spec);
             var matrixList = JobSpec.Parallel.expand(spec.parallel());
             var matrixIid = matrixList.size() == 1 && matrixList.getFirst().isEmpty()
                     ? 0 : 1;
             for (var matrix : matrixList) {
+                var iid = nextJobIid.getAndIncrement();
                 var slug = StateSlugs.job(stage.slug(), iid, spec.name());
                 var vars = inheritedVars.snapshot();
                 vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
@@ -132,7 +138,6 @@ public class JobState implements State {
                         .vars(vars)
                         .dependencies(dependencies)
                         .build());
-                iid++;
                 if (matrixIid != 0) {
                     matrixIid++;
                 }

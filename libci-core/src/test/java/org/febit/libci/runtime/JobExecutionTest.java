@@ -152,7 +152,7 @@ class JobExecutionTest {
 
         assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
         assertEquals(
-                List.of("01_build_00_build-app", "00_prepare_00_prepare-env"),
+                List.of("01_build_01_build-app", "00_prepare_00_prepare-env"),
                 exec.artifactDependencies()
         );
     }

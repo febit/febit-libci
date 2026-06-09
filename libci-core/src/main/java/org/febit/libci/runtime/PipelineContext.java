@@ -30,6 +30,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,10 +61,11 @@ public class PipelineContext implements Serializable {
         var groupedByStage = pipeline.spec().jobs().values().stream()
                 .collect(Collectors.groupingBy(JobSpec::stage));
 
+        var nextJobIid = new AtomicInteger(0);
         var jobStates = new ArrayList<List<JobState>>(stages.size());
         for (var stage : stageStates) {
             var jobs = groupedByStage.get(stage.name());
-            var states = JobState.ofJobs(pipeline, stage, jobs, baseVars);
+            var states = JobState.ofJobs(pipeline, stage, jobs, baseVars, nextJobIid);
             jobStates.add(states);
         }
 
