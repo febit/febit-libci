@@ -25,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -135,8 +136,18 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
         return me();
     }
 
+    default void exportExpanded(Map<String, String> target) {
+        entries().forEach(e -> target.put(e.name(), e.expanded()));
+    }
+
+    default Map<String, String> exportExpanded() {
+        var map = LinkedHashMap.<String, String>newLinkedHashMap(entries().size());
+        exportExpanded(map);
+        return map;
+    }
+
     default String jsonify(boolean pretty) {
-        return SpecMapper.jsonify(entries(), pretty);
+        return SpecMapper.jsonify(exportExpanded(), pretty);
     }
 
     @FunctionalInterface
