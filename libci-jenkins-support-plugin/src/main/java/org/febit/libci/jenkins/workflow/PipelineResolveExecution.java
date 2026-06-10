@@ -116,7 +116,6 @@ public class PipelineResolveExecution extends SynchronousStepExecution<PipelineP
                 .profile(profile)
                 .baseVars(inputVars)
                 .workspaceApi(workspaceApi)
-                .build()
                 .evaluate();
         return PipelinePlanner.create(spec, inputVars).plan();
     }

@@ -326,7 +326,6 @@ class JobExecutionTest {
         var spec = PipelineEvaluator.builder()
                 .profile(profile)
                 .baseVars(baseVars)
-                .build()
                 .evaluate();
         var plan = PipelinePlanner.create(spec, baseVars).plan();
         return PipelineContext.create(plan);

@@ -609,7 +609,6 @@ class PipelinePlannerTest {
         var spec = PipelineEvaluator.builder()
                 .profile(profile)
                 .baseVars(baseVars)
-                .build()
                 .evaluate();
         return PipelinePlanner.create(spec, baseVars).plan();
     }

@@ -147,7 +147,6 @@ class PipelineEvaluatorTest {
                 .profile(profile)
                 .baseVars(baseVars)
                 .workspaceApi(workspaceApi)
-                .build()
                 .evaluate();
         var plan = PipelinePlanner.create(spec, baseVars).plan();
         var context = PipelineContext.create(plan);
@@ -223,7 +222,6 @@ class PipelineEvaluatorTest {
         var spec = PipelineEvaluator.builder()
                 .profile(profile)
                 .baseVars(baseVars)
-                .build()
                 .evaluate();
         var plan = PipelinePlanner.create(spec, baseVars).plan();
         return PipelineContext.create(plan);

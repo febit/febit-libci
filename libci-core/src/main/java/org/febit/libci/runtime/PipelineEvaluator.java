@@ -63,6 +63,13 @@ public class PipelineEvaluator {
         );
     }
 
+    public static class Builder {
+
+        public PipelineSpec evaluate() {
+            return build().evaluate();
+        }
+    }
+
     public PipelineSpec evaluate() {
         var workflowRule = selectWorkflowRule();
 
