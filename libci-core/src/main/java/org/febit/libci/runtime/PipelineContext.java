@@ -95,11 +95,11 @@ public class PipelineContext implements Serializable {
         }
 
         public StageState of(StagePlan plan) {
-            return stages.get(plan.iid());
+            return stages.get(plan.iid() - 1);
         }
 
         public JobState of(JobPlan plan) {
-            return jobs.get(plan.iid());
+            return jobs.get(plan.iid() - 1);
         }
 
         /**
@@ -109,7 +109,7 @@ public class PipelineContext implements Serializable {
          * @return stage state
          */
         public StageState stageOf(JobState job) {
-            return stages.get(job.plan().stageIid());
+            return stages.get(job.plan().stageIid() - 1);
         }
 
         /**

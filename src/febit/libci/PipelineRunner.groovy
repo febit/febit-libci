@@ -146,7 +146,7 @@ ${plans.collectMany { it.summary() }.join('\n')}
             }
             def lines = ["[${state.plan().name()}] ${jobPlans.size()} job(s):"]
             lines.addAll(jobPlans.collect {
-                "  ${it.state.plan().iid() + 1}. ${it.state.plan().name()}"
+                "  ${it.state.plan().iid()}. ${it.state.plan().name()}"
             })
             return lines
         }

@@ -49,14 +49,14 @@ class PipelinePlannerTest {
 
         assertEquals(3, plan.stages().size());
         assertEquals("prepare", plan.stages().getFirst().name());
-        assertEquals(0, plan.stages().getFirst().iid());
-        assertEquals("00_prepare", plan.stages().getFirst().slug());
+        assertEquals(1, plan.stages().getFirst().iid());
+        assertEquals("01_prepare", plan.stages().getFirst().slug());
         assertEquals("build", plan.stages().get(1).name());
-        assertEquals(1, plan.stages().get(1).iid());
-        assertEquals("01_build", plan.stages().get(1).slug());
+        assertEquals(2, plan.stages().get(1).iid());
+        assertEquals("02_build", plan.stages().get(1).slug());
         assertEquals("verify", plan.stages().get(2).name());
-        assertEquals(2, plan.stages().get(2).iid());
-        assertEquals("02_verify", plan.stages().get(2).slug());
+        assertEquals(3, plan.stages().get(2).iid());
+        assertEquals("03_verify", plan.stages().get(2).slug());
     }
 
     @Test
@@ -72,21 +72,21 @@ class PipelinePlannerTest {
         var plan = plan(profile);
 
         assertEquals(4, plan.jobs().size());
-        assertEquals(0, plan.jobs().getFirst().iid());
+        assertEquals(1, plan.jobs().getFirst().iid());
         assertEquals("prepare-env", plan.jobs().getFirst().name());
-        assertEquals(0, plan.jobs().getFirst().stageIid());
+        assertEquals(1, plan.jobs().getFirst().stageIid());
 
-        assertEquals(1, plan.jobs().get(1).iid());
+        assertEquals(2, plan.jobs().get(1).iid());
         assertEquals("build-app", plan.jobs().get(1).name());
-        assertEquals(1, plan.jobs().get(1).stageIid());
+        assertEquals(2, plan.jobs().get(1).stageIid());
 
-        assertEquals(2, plan.jobs().get(2).iid());
+        assertEquals(3, plan.jobs().get(2).iid());
         assertEquals("build-lib", plan.jobs().get(2).name());
-        assertEquals(1, plan.jobs().get(2).stageIid());
+        assertEquals(2, plan.jobs().get(2).stageIid());
 
-        assertEquals(3, plan.jobs().get(3).iid());
+        assertEquals(4, plan.jobs().get(3).iid());
         assertEquals("verify", plan.jobs().get(3).name());
-        assertEquals(2, plan.jobs().get(3).stageIid());
+        assertEquals(3, plan.jobs().get(3).stageIid());
     }
 
     @Test
@@ -99,8 +99,8 @@ class PipelinePlannerTest {
 
         var plan = plan(profile);
 
-        assertEquals("00_build-app", plan.jobs().get(0).slug());
-        assertEquals("01_build-lib", plan.jobs().get(1).slug());
+        assertEquals("01_build-app", plan.jobs().get(0).slug());
+        assertEquals("02_build-lib", plan.jobs().get(1).slug());
     }
 
     @Test
@@ -135,19 +135,19 @@ class PipelinePlannerTest {
         var plan = plan(profile);
 
         assertEquals(4, plan.jobs().size());
-        assertEquals(0, plan.jobs().getFirst().iid());
+        assertEquals(1, plan.jobs().getFirst().iid());
         assertEquals(1, plan.jobs().getFirst().matrixIid());
         assertEquals(Map.of("OS", "linux", "ARCH", "amd64"), plan.jobs().getFirst().matrixVars());
 
-        assertEquals(1, plan.jobs().get(1).iid());
+        assertEquals(2, plan.jobs().get(1).iid());
         assertEquals(2, plan.jobs().get(1).matrixIid());
         assertEquals(Map.of("OS", "linux", "ARCH", "arm64"), plan.jobs().get(1).matrixVars());
 
-        assertEquals(2, plan.jobs().get(2).iid());
+        assertEquals(3, plan.jobs().get(2).iid());
         assertEquals(3, plan.jobs().get(2).matrixIid());
         assertEquals(Map.of("OS", "macos", "ARCH", "amd64"), plan.jobs().get(2).matrixVars());
 
-        assertEquals(3, plan.jobs().get(3).iid());
+        assertEquals(4, plan.jobs().get(3).iid());
         assertEquals(4, plan.jobs().get(3).matrixIid());
         assertEquals(Map.of("OS", "macos", "ARCH", "arm64"), plan.jobs().get(3).matrixVars());
     }
@@ -180,8 +180,8 @@ class PipelinePlannerTest {
 
         assertEquals(1, plan.relations().size());
         var rel = plan.relations().getFirst();
-        assertEquals(1, rel.job());           // build-app
-        assertEquals(0, rel.dependedOn());    // prepare-env
+        assertEquals(2, rel.job());           // build-app
+        assertEquals(1, rel.dependedOn());    // prepare-env
         assertFalse(rel.optional());
         assertTrue(rel.artifacts());           // dependencies spec always requests artifacts
     }
@@ -212,10 +212,10 @@ class PipelinePlannerTest {
         var plan = plan(profile);
 
         // verify depends on build-app and prepare-env
-        var verifyRels = plan.relationsOfJob(2);
+        var verifyRels = plan.relationsOfJob(3);
         assertEquals(2, verifyRels.size());
+        assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 2));
         assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 1));
-        assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 0));
     }
 
     // ---------- Relations from needs spec ----------
@@ -237,8 +237,8 @@ class PipelinePlannerTest {
 
         assertEquals(1, plan.relations().size());
         var rel = plan.relations().getFirst();
-        assertEquals(1, rel.job());           // build-lib
-        assertEquals(0, rel.dependedOn());    // build-app
+        assertEquals(2, rel.job());           // build-lib
+        assertEquals(1, rel.dependedOn());    // build-app
         assertFalse(rel.optional());
         assertTrue(rel.artifacts());          // needs default artifacts=true
     }
@@ -259,8 +259,8 @@ class PipelinePlannerTest {
 
         assertEquals(1, plan.relations().size());
         var rel = plan.relations().getFirst();
-        assertEquals(1, rel.job());
-        assertEquals(0, rel.dependedOn());
+        assertEquals(2, rel.job());
+        assertEquals(1, rel.dependedOn());
     }
 
     @Test
@@ -319,7 +319,7 @@ class PipelinePlannerTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported dependency scope in plan")
                 .hasMessageContaining("PROJECT")
-                .hasMessageContaining("00_verify");
+                .hasMessageContaining("01_verify");
     }
 
     @Test
@@ -338,7 +338,7 @@ class PipelinePlannerTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported dependency scope in plan")
                 .hasMessageContaining("PIPELINE")
-                .hasMessageContaining("00_verify");
+                .hasMessageContaining("01_verify");
     }
 
     @Test
@@ -471,7 +471,7 @@ class PipelinePlannerTest {
 
         assertEquals(4, rels.size());
         for (int i = 0; i < 4; i++) {
-            int finalI = i;
+            int finalI = i + 1;
             assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == finalI));
         }
     }
@@ -507,8 +507,8 @@ class PipelinePlannerTest {
 
         assertEquals(2, rels.size());
         // linux+amd64 → iid 0, linux+arm64 → iid 1
-        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 0));
         assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1));
+        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2));
     }
 
     @Test
@@ -565,8 +565,8 @@ class PipelinePlannerTest {
         var rels = plan.relationsOfJob(verify.iid());
 
         assertEquals(2, rels.size());
-        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 0 && r.artifacts()));
         assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1 && r.artifacts()));
+        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2 && r.artifacts()));
     }
 
     // ---------- Job with dependency name not matching any job ----------

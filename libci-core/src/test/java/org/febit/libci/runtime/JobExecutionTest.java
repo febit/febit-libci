@@ -152,7 +152,7 @@ class JobExecutionTest {
 
         assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
         assertEquals(
-                List.of("01_build-app", "00_prepare-env"),
+                List.of("02_build-app", "01_prepare-env"),
                 exec.artifactDependencies()
         );
     }
@@ -182,10 +182,10 @@ class JobExecutionTest {
         assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
         var deps = exec.artifactDependencies();
         assertEquals(4, deps.size());
-        assertTrue(deps.contains("00_build-app"));
         assertTrue(deps.contains("01_build-app"));
         assertTrue(deps.contains("02_build-app"));
         assertTrue(deps.contains("03_build-app"));
+        assertTrue(deps.contains("04_build-app"));
     }
 
     @Test
@@ -221,8 +221,8 @@ class JobExecutionTest {
         assertEquals(JobExecution.ScheduleDecision.PENDING, decision.decision());
         var deps = exec.artifactDependencies();
         assertEquals(2, deps.size());
-        assertTrue(deps.contains("00_build-app")); // linux+amd64
-        assertTrue(deps.contains("01_build-app")); // linux+arm64
+        assertTrue(deps.contains("01_build-app")); // linux+amd64
+        assertTrue(deps.contains("02_build-app")); // linux+arm64
     }
 
     @Test

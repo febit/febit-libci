@@ -37,11 +37,11 @@ public record PipelinePlan(
     }
 
     public StagePlan stage(int iid) {
-        return stages.get(iid);
+        return stages.get(iid - 1);
     }
 
     public JobPlan job(int iid) {
-        return jobs.get(iid);
+        return jobs.get(iid - 1);
     }
 
     public List<JobRelation> relationsOfJob(int iid) {

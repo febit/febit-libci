@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -179,9 +180,9 @@ class PipelineEvaluatorTest {
         var states = context.states().jobsOf(stage);
 
         assertEquals(4, states.size());
-        assertEquals(List.of(0, 1, 2, 3), states.stream().map(JobState::plan).map(JobPlan::iid).toList());
+        assertEquals(List.of(1, 2, 3, 4), states.stream().map(JobState::plan).map(JobPlan::iid).toList());
         assertTrue(states.stream().allMatch(state -> "build".equals(state.plan().name())));
-        assertEquals(Set.of(1, 2, 3, 4), states.stream().map(state -> state.plan().matrixIid()).collect(java.util.stream.Collectors.toSet()));
+        assertEquals(Set.of(1, 2, 3, 4), states.stream().map(state -> state.plan().matrixIid()).collect(Collectors.toSet()));
         assertEquals(Set.of(
                 Map.of("OS", "linux", "ARCH", "amd64"),
                 Map.of("OS", "linux", "ARCH", "arm64"),

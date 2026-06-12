@@ -80,10 +80,12 @@ public class PipelinePlanner {
         var names = pipeline.stages();
         for (int i = 0; i < names.size(); i++) {
             var name = names.get(i);
+            // Stage IID starts with 1, NOT ZERO!!
+            var iid = i + 1;
             var stage = StagePlan.builder()
-                    .iid(i)
+                    .iid(iid)
                     .name(name)
-                    .slug(slug(i, name))
+                    .slug(slug(iid, name))
                     .build();
             stages.add(stage);
         }
@@ -106,7 +108,8 @@ public class PipelinePlanner {
                 ? 0 : 1;
         var inheritedVars = inheritedVarsForJob(stage, spec);
         for (var matrix : matrixList) {
-            var iid = jobs.size();
+            // Job IID starts with 1, NOT ZERO!!
+            var iid = jobs.size() + 1;
             var slug = slug(iid, spec.name());
 
             var vars = inheritedVars.snapshot();
@@ -236,8 +239,8 @@ public class PipelinePlanner {
             successors.add(new ArrayList<>());
         }
         for (var rel : relations) {
-            successors.get(rel.dependedOn()).add(rel.job());
-            indegree[rel.job()]++;
+            successors.get(rel.dependedOn() - 1).add(rel.job() - 1);
+            indegree[rel.job() - 1]++;
         }
 
         var queue = new ArrayDeque<Integer>();
