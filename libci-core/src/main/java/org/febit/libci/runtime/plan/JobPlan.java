@@ -30,6 +30,7 @@ public record JobPlan(
         int iid,
         int stageIid,
         int matrixIid,
+        int matrixTotal,
         @lombok.NonNull String name,
         @lombok.NonNull String slug,
         @lombok.NonNull JobSpec spec,

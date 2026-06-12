@@ -123,6 +123,7 @@ public class PipelinePlanner {
                     .iid(iid)
                     .stageIid(stage.iid())
                     .matrixIid(matrixIid)
+                    .matrixTotal(matrixList.size())
                     .name(spec.name())
                     .slug(slug)
                     .spec(spec)
