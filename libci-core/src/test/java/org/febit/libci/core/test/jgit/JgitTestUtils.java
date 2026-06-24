@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @UtilityClass
 public class JgitTestUtils {
 
-    public static final String MAIN = "main";
+    public static final String MAIN = "refs/heads/main";
 
     private static final AtomicLong SEQ = new AtomicLong(0);
     private static final File TMP_DIR = new File("build/tmp/jgit-unit-tests").getAbsoluteFile();

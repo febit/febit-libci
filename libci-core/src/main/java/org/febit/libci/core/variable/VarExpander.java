@@ -17,6 +17,7 @@ package org.febit.libci.core.variable;
 
 import lombok.RequiredArgsConstructor;
 import org.febit.lang.UncheckedException;
+import org.febit.lang.jackson.JacksonTypes;
 import org.febit.lang.util.Lists;
 import org.febit.libci.core.VarSupplier;
 import org.febit.libci.core.spec.ExpandPhase;
@@ -36,8 +37,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.febit.lang.util.JacksonUtils.TYPES;
-
 @RequiredArgsConstructor(staticName = "of")
 public class VarExpander {
     private static final Map<Class<?>, List<PropertyDescription>> TYPE_PROPERTIES = new ConcurrentHashMap<>();
@@ -48,7 +47,7 @@ public class VarExpander {
     private final ExpandPhase phase;
 
     public static BeanDescription introspect(Class<?> type) {
-        var javaType = TYPES.constructType(type);
+        var javaType = JacksonTypes.FACTORY.constructType(type);
         return SpecMapper.CLASS_INTROSPECTOR.introspectForSerialization(
                 javaType,
                 SpecMapper.CLASS_INTROSPECTOR.introspectClassAnnotations(javaType)

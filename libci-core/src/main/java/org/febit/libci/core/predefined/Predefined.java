@@ -18,7 +18,7 @@ package org.febit.libci.core.predefined;
 import lombok.experimental.UtilityClass;
 
 /**
- * <a href="https://docs.gitlab.com/ci/variables/predefined_variables/">...</a>
+ * <a href="https://docs.gitlab.com/ci/variables/predefined_variables/">predefined_variables</a>
  */
 @UtilityClass
 public class Predefined {
@@ -125,6 +125,7 @@ public class Predefined {
     public static final String CI_PROJECT_PATH_SLUG = "CI_PROJECT_PATH_SLUG";
     public static final String CI_PROJECT_REPOSITORY_LANGUAGES = "CI_PROJECT_REPOSITORY_LANGUAGES";
     public static final String CI_PROJECT_ROOT_NAMESPACE = "CI_PROJECT_ROOT_NAMESPACE";
+    public static final String CI_PROJECT_ROOT_NAMESPACE_SLUG = "CI_PROJECT_ROOT_NAMESPACE_SLUG";
     public static final String CI_PROJECT_TITLE = "CI_PROJECT_TITLE";
     public static final String CI_PROJECT_TOPICS = "CI_PROJECT_TOPICS";
     public static final String CI_PROJECT_URL = "CI_PROJECT_URL";

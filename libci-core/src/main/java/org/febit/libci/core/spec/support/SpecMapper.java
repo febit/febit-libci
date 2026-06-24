@@ -17,8 +17,9 @@ package org.febit.libci.core.spec.support;
 
 import lombok.experimental.UtilityClass;
 import org.febit.lang.PeriodDuration;
-import org.febit.lang.util.JacksonUtils;
-import org.febit.lang.util.JacksonWrapper;
+import org.febit.lang.jackson.JacksonCodec;
+import org.febit.lang.jackson.JacksonCodecImpl;
+import org.febit.lang.jackson.JacksonStandard;
 import org.febit.libci.core.document.yaml.YamlUtils;
 import org.febit.libci.core.spec.ISpec;
 import org.febit.libci.core.spec.support.jackson.HandlerInstantiatorImpl;
@@ -37,20 +38,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
-import static org.febit.lang.util.JacksonUtils.TYPES;
+import static org.febit.lang.jackson.JacksonTypes.FACTORY;
 
 @UtilityClass
 public class SpecMapper {
 
-    public static final JacksonWrapper JACKSON;
-    public static final JacksonWrapper JACKSON_PRETTY;
+    public static final JacksonCodec JACKSON;
+    public static final JacksonCodec JACKSON_PRETTY;
     public static final ClassIntrospector CLASS_INTROSPECTOR;
 
-    private static final JavaType TYPE_STRING_LIST = TYPES.constructCollectionLikeType(
+    private static final JavaType TYPE_STRING_LIST = FACTORY.constructCollectionLikeType(
             ArrayList.class, String.class);
 
     static {
-        var builder = JacksonUtils.standard(JsonMapper.builder())
+        var builder = JacksonStandard.standard(JsonMapper.builder())
                 .propertyNamingStrategy(new SnakeCaseStrategy())
                 .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
                 .handlerInstantiator(HandlerInstantiatorImpl.INSTANCE)
@@ -61,8 +62,8 @@ public class SpecMapper {
         var mapper = builder.build();
         CLASS_INTROSPECTOR = mapper.deserializationConfig().classIntrospectorInstance();
 
-        JACKSON = JacksonUtils.wrap(mapper);
-        JACKSON_PRETTY = JacksonUtils.wrap(builder
+        JACKSON = JacksonCodecImpl.of(mapper);
+        JACKSON_PRETTY = JacksonCodecImpl.of(builder
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .build()
         );

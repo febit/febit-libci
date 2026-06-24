@@ -19,7 +19,7 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.agents.ControllerToAgentFileCallable;
-import org.febit.lang.util.JacksonUtils;
+import org.febit.lang.jackson.JacksonUtils;
 import org.febit.libci.core.dotenv.DotenvEntry;
 import org.febit.libci.core.dotenv.DotenvParser;
 import org.febit.libci.extern.RelPathUtils;

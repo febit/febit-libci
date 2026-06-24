@@ -30,7 +30,7 @@ dependencies {
   api 'org.apache.commons:commons-compress'
   api 'org.apache.commons:commons-text'
 
-  api 'org.eclipse.jgit:org.eclipse.jgit'
+  api libs.jgit.core
   compileOnly libs.jgit.sshd
 
   testImplementation libs.jgit.sshd

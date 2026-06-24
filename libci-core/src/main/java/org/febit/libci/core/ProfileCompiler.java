@@ -18,6 +18,7 @@ package org.febit.libci.core;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.febit.lang.jackson.JacksonTypes;
 import org.febit.lang.util.Logs;
 import org.febit.libci.core.document.DocumentUtils;
 import org.febit.libci.core.exception.ProfileException;
@@ -41,13 +42,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.febit.lang.util.JacksonUtils.TYPES;
 
 @Slf4j
 @RequiredArgsConstructor(staticName = "create")
 public class ProfileCompiler {
 
-    private static final JavaType TYPE_GENERIC_VARS = TYPES.constructParametricType(
+    private static final JavaType TYPE_GENERIC_VARS = JacksonTypes.FACTORY.constructParametricType(
             VariablesSpec.class, GenericVariable.class);
 
     private final ProfileDocument doc;

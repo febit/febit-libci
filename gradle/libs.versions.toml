@@ -1,25 +1,24 @@
 [versions]
 hierynomus-license = "0.16.1"
 
-febit-devkit = '1.6.1'
-febit-commons = "4.0.2"
+febit-devkit = '1.6.2'
+febit-commons = "4.1.0"
 mina-sshd = "2.17.1"
 groovy-cps = "1.31"
-jpi2 = "0.57.0"
+jpi2 = "0.58.0-rc.1"
 eddsa = "0.3.0"
 
 xbib-jflex = "3.0.2"
 
-# Ref: https://github.com/jenkinsci/jenkins/blob/jenkins-2.555.1/bom/pom.xml
-# Ref: https://github.com/jenkinsci/jenkins/blob/jenkins-2.561/bom/pom.xml
-jenkins-bom = "2.561"
-spring = "7.0.7"
+# Ref: https://github.com/jenkinsci/jenkins/blob/jenkins-2.568/bom/pom.xml
+jenkins-bom = "2.568"
+spring = "7.0.8"
 
 # Ref: https://github.com/jenkinsci/git-client-plugin/blob/git-client-6.6.0/pom.xml
 jgit = "7.6.0.202603022253-r"
 
 # Ref: https://repo.jenkins-ci.org/artifactory/public/io/jenkins/tools/bom/bom-weekly/
-jenkins-tools-bom = "6364.v16b_76a_4023c7"
+jenkins-tools-bom = "6607.v3ed3d8ddfed8"
 
 [libraries]
 febit-commons-deps = { module = "org.febit:febit-commons-dependencies", version.ref = "febit-commons" }
