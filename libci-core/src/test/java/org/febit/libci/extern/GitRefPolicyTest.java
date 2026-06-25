@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class GitRefPolicyTest {
 
     @Test
-    void testIsProtected() {
+    void checkProtected() {
         assertTrue(isProtected("master"));
         assertTrue(isProtected("main"));
         assertTrue(isProtected("dev"));

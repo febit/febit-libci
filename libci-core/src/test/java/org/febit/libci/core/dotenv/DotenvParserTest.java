@@ -15,6 +15,7 @@
  */
 package org.febit.libci.core.dotenv;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -200,5 +201,158 @@ class DotenvParserTest {
                 .isInstanceOf(DotenvFormatException.class)
                 .hasMessageContaining("Unclosed single quote");
 
+        assertThatThrownBy(() -> DotenvParser.parse("""
+                KEY1="value with spaces and
+                """))
+                .isInstanceOf(DotenvFormatException.class)
+                .hasMessageContaining("Unclosed double quote");
+    }
+
+    @Test
+    void parseNull() {
+        assertThat(DotenvParser.parse((String) null))
+                .isEmpty();
+    }
+
+    @Test
+    void unexpectedTrailingCharInQuotedValue() {
+        assertThatThrownBy(() -> DotenvParser.parse("KEY1=\"value1\" extra"))
+                .isInstanceOf(DotenvFormatException.class)
+                .hasMessageContaining("Unexpected trailing char");
+    }
+
+    @Test
+    void unexpectedTrailingCharInSingleQuotedValue() {
+        assertThatThrownBy(() -> DotenvParser.parse("KEY1='value1' extra"))
+                .isInstanceOf(DotenvFormatException.class)
+                .hasMessageContaining("Unexpected trailing char");
+    }
+
+    @Test
+    void exportWithSpacesAndQuotes() {
+        assertThat(DotenvParser.parse("""
+                export   KEY1  =  "value1"
+                """))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "value1")
+                ));
+    }
+
+    @Test
+    void multiLineWithBackslashContinuation() {
+        assertThat(DotenvParser.parse("""
+                KEY1="line1\\
+                line2"
+                """))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "line1line2")
+                ));
+    }
+
+    @Test
+    void valueWithTabs() {
+        assertThat(DotenvParser.parse("""
+                KEY1=\tvalue\twith\ttabs\t
+                """))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "value\twith\ttabs")
+                ));
+    }
+
+    @Test
+    void emptyKeyWithValue() {
+        assertThatThrownBy(() -> DotenvParser.parse("=value"))
+                .isInstanceOf(DotenvFormatException.class);
+    }
+
+    @Test
+    void exportWithEmptyKey() {
+        assertThatThrownBy(() -> DotenvParser.parse("export =value"))
+                .isInstanceOf(DotenvFormatException.class);
+    }
+
+    @Test
+    void blankLinesBetweenEntries() {
+        assertThat(DotenvParser.parse("""
+                KEY1=value1
+
+
+                KEY2=value2
+                """))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "value1"),
+                        new DotenvEntry("KEY2", "value2")
+                ));
+    }
+
+    @Test
+    void valueWithEqualsSign() {
+        assertThat(DotenvParser.parse("KEY1=val=ue"))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "val=ue")
+                ));
+    }
+
+    @Test
+    void doubleQuoteInsideSingleQuote() {
+        assertThat(DotenvParser.parse("""
+                KEY1='"double quoted" inside single quotes'
+                """))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "\"double quoted\" inside single quotes")
+                ));
+    }
+
+    @Test
+    void singleQuoteInsideDoubleQuote() {
+        assertThat(DotenvParser.parse("""
+                KEY1="'single quoted' inside double quotes"
+                """))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "'single quoted' inside double quotes")
+                ));
+    }
+
+    @Test
+    void valueOnlyWhitespace() {
+        assertThat(DotenvParser.parse("KEY1=   \t  "))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "")
+                ));
+    }
+
+    @Test
+    void dosLineEndings() {
+        assertThat(DotenvParser.parse("KEY1=value1\r\nKEY2=value2\r\n"))
+                .isEqualTo(List.of(
+                        new DotenvEntry("KEY1", "value1"),
+                        new DotenvEntry("KEY2", "value2")
+                ));
+    }
+
+    @Nested
+    class ErrorCases {
+
+        @Test
+        void illegalEscapeInDoubleQuote() {
+            assertThatThrownBy(() -> DotenvParser.parse("KEY1=\"value\\z\""))
+                    .isInstanceOf(DotenvFormatException.class)
+                    .hasMessageContaining("Illegal escaped");
+        }
+
+        @Test
+        void illegalEscapeInSingleQuote() {
+            assertThatThrownBy(() -> DotenvParser.parse("KEY1='value\\z'"))
+                    .isInstanceOf(DotenvFormatException.class)
+                    .hasMessageContaining("Illegal escaped");
+        }
+
+        @Test
+        void incompleteEntry() {
+            assertThat(DotenvParser.parse("KEY1"))
+                    .isEqualTo(List.of(
+                            new DotenvEntry("KEY1", "")
+                    ));
+        }
     }
 }

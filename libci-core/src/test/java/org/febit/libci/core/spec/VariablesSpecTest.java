@@ -13,25 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.febit.libci.core.variable;
+package org.febit.libci.core.spec;
 
+import org.febit.libci.core.spec.variable.GenericVariable;
 import org.junit.jupiter.api.Test;
+
+import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class VarDefinedPhaseTest {
+class VariablesSpecTest {
 
     @Test
-    void canOverride() {
-        assertTrue(VarDefinedPhase.LIBCI_CONST.canOverride(VarDefinedPhase.PERSISTED_JOB));
-        assertTrue(VarDefinedPhase.PERSISTED_JOB.canOverride(VarDefinedPhase.LIBCI_CONST));
-
-        assertTrue(VarDefinedPhase.CUSTOM.canOverride(VarDefinedPhase.DEFINED_JOB));
-        assertFalse(VarDefinedPhase.DEFINED_JOB.canOverride(VarDefinedPhase.CUSTOM));
-
-        assertTrue(VarDefinedPhase.UNDEFINED.canOverride(VarDefinedPhase.UNDEFINED));
-        assertTrue(VarDefinedPhase.RUNTIME_ENV.canOverride(VarDefinedPhase.UNDEFINED));
-        assertFalse(VarDefinedPhase.UNDEFINED.canOverride(VarDefinedPhase.RUNTIME_ENV));
+    void createReturnsEmpty() {
+        var spec = VariablesSpec.create();
+        assertTrue(spec.isEmpty());
     }
 
+    @Test
+    void isLinkedHashMap() {
+        assertInstanceOf(LinkedHashMap.class, VariablesSpec.create());
+    }
+
+    @Test
+    void createIsMutable() {
+        var spec = VariablesSpec.<GenericVariable>create();
+        assertDoesNotThrow(() -> spec.put("KEY", new GenericVariable("val", true, null, null)));
+    }
 }

@@ -32,7 +32,7 @@ class InputFormatTest {
 
     @Test
     @SuppressWarnings("ConstantValue")
-    void testIsNullOrEmpty() {
+    void checkIsNullOrEmpty() {
         assertTrue(isNullOrEmpty(null));
         assertTrue(isNullOrEmpty(""));
         assertFalse(isNullOrEmpty(" "));
@@ -41,7 +41,7 @@ class InputFormatTest {
     }
 
     @Test
-    void testUndefined() {
+    void convertUndefined() {
         assertNull(undefined(null));
         assertNull(undefined(""));
         assertEquals(" ", undefined(" "));
@@ -50,7 +50,7 @@ class InputFormatTest {
     }
 
     @Test
-    void testNumber() {
+    void convertNumber() {
         assertNull(number(null));
         assertNull(number(""));
         assertEquals(123, number(123));
@@ -66,7 +66,7 @@ class InputFormatTest {
     }
 
     @Test
-    void testString() {
+    void convertString() {
         assertNull(string(null));
         assertNull(string(""));
         assertEquals(" ", string(" "));
@@ -76,7 +76,7 @@ class InputFormatTest {
     }
 
     @Test
-    void testArray() {
+    void convertArray() {
         assertNull(array(null));
         assertNull(array(""));
         assertThrows(Exception.class, () -> array("abc"));
@@ -88,7 +88,7 @@ class InputFormatTest {
     }
 
     @Test
-    void testBool() {
+    void convertBool() {
         assertNull(bool(null));
         assertNull(bool(""));
 
@@ -117,7 +117,7 @@ class InputFormatTest {
     }
 
     @Test
-    void testNvl() {
+    void convertNvl() {
         assertNull(nvl(new Object[]{null}));
         assertNull(nvl(null, ""));
         assertNull(nvl(null, null, null));

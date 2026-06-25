@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class InputSuppliersTest {
 
     @Test
-    void testEmpty() {
+    void empty() {
         var supplier = InputSuppliers.empty();
         assertThatThrownBy(() -> supplier.get("a"))
                 .isInstanceOf(ProfileException.class)
@@ -35,7 +35,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMap() {
+    void ofMap() {
         var supplier = InputSuppliers.ofMap(Map.of(
                 "a", 123,
                 "b", "hello",
@@ -51,7 +51,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMapWithNullHeaderSpec() {
+    void ofMapWithNullHeaderSpec() {
         Map<String, Object> inputs = Map.of(
                 "a", 123,
                 "b", "hello"
@@ -75,7 +75,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMapWithHeaderSpec() {
+    void ofMapWithHeaderSpec() {
         var specs = Map.of(
                 "a", HeaderSpec.Input.builder()
                         .type(HeaderSpec.InputType.NUMBER)
@@ -108,7 +108,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMapWithHeaderSpecOptionsAndRegex() {
+    void ofMapWithHeaderSpecOptionsAndRegex() {
         var header = HeaderSpec.builder()
                 .spec(new HeaderSpec.Spec(Map.of(
                         "environment", HeaderSpec.Input.builder()
@@ -138,7 +138,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMapRejectsInputOutsideOptions() {
+    void ofMapRejectsInputOutsideOptions() {
         var header = HeaderSpec.builder()
                 .spec(new HeaderSpec.Spec(Map.of(
                         "environment", HeaderSpec.Input.builder()
@@ -157,7 +157,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMapRejectsInputNotMatchingRegex() {
+    void ofMapRejectsInputNotMatchingRegex() {
         var header = HeaderSpec.builder()
                 .spec(new HeaderSpec.Spec(Map.of(
                         "version", HeaderSpec.Input.builder()
@@ -176,7 +176,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMapRejectsInvalidRegexPattern() {
+    void ofMapRejectsInvalidRegexPattern() {
         var header = HeaderSpec.builder()
                 .spec(new HeaderSpec.Spec(Map.of(
                         "version", HeaderSpec.Input.builder()
@@ -195,7 +195,7 @@ class InputSuppliersTest {
     }
 
     @Test
-    void testOfMissSpec() {
+    void ofMissSpec() {
         var header = HeaderSpec.builder()
                 .spec(new HeaderSpec.Spec(Map.of(
                         "a", HeaderSpec.Input.builder()

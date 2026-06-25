@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SlugUtilsTest {
 
     @Test
-    void testResolve() {
+    void computeSlug() {
         assertEquals("", resolve(null));
         assertEquals("", resolve(""));
         assertEquals("", resolve("   "));

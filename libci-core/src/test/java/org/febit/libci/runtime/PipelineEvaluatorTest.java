@@ -18,6 +18,7 @@ package org.febit.libci.runtime;
 import org.febit.lang.PeriodDuration;
 import org.febit.libci.core.Profile;
 import org.febit.libci.core.rule.WorkspaceApi;
+import org.febit.libci.core.spec.InheritPolicy;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.RuleChangesSpec;
 import org.febit.libci.core.spec.RuleExistsSpec;
@@ -26,6 +27,7 @@ import org.febit.libci.core.spec.WorkflowSpec;
 import org.febit.libci.core.variable.VarsHeapImpl;
 import org.febit.libci.runtime.plan.JobPlan;
 import org.febit.libci.runtime.state.JobState;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -291,6 +293,59 @@ class PipelineEvaluatorTest {
         dimensions.put(key2, values2);
         matrix.putAll(dimensions);
         return matrix;
+    }
+
+    @Nested
+    class BuilderValidation {
+
+        @Test
+        void nullBaseVarsThrows() {
+            var profile = new Profile(
+                    VariablesSpec.create(),
+                    WorkflowSpec.builder().build(),
+                    List.of("build"),
+                    new TreeMap<>()
+            );
+            assertThrows(NullPointerException.class, () ->
+                    PipelineEvaluator.builder()
+                            .profile(profile)
+                            .baseVars(null)
+                            .build());
+        }
+    }
+
+    @Nested
+    class InheritVariables {
+
+        @Test
+        void planUsesJobWithOnlyPolicy() {
+            var inherit = new JobSpec.Inherit(
+                    InheritPolicy.all(),
+                    InheritPolicy.only(List.of("ALLOWED_VAR"))
+            );
+            var job = JobSpec.builder()
+                    .name("build")
+                    .stage("build")
+                    .image(new JobSpec.Image("alpine", null, null, null, null))
+                    .services(List.of())
+                    .tags(List.of())
+                    .timeout(PeriodDuration.NEVER)
+                    .retry(new JobSpec.Retry(0, List.of(JobSpec.RetryWhen.ALWAYS), List.of()))
+                    .idTokens(new JobSpec.IdTokens())
+                    .beforeScript(List.of())
+                    .script(List.of("echo build"))
+                    .afterScript(List.of())
+                    .hooks(JobSpec.Hooks.NONE)
+                    .interruptible(false)
+                    .inherit(inherit)
+                    .rules(List.of())
+                    .build();
+            var profile = newProfile(job);
+
+            var context = newContext(profile);
+            var stage = context.states().stages().getFirst();
+            assertEquals(1, context.states().jobsOf(stage).size());
+        }
     }
 }
 

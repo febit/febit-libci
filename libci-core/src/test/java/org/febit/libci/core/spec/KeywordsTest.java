@@ -40,211 +40,88 @@ import static org.febit.libci.core.spec.Keywords.TAGS;
 import static org.febit.libci.core.spec.Keywords.TIMEOUT;
 import static org.febit.libci.core.spec.Keywords.VARIABLES;
 import static org.febit.libci.core.spec.Keywords.WORKFLOW;
-import static org.febit.libci.core.spec.Keywords.isDeprecatedGlobalKeyword;
-import static org.febit.libci.core.spec.Keywords.isGlobalKeyword;
-import static org.febit.libci.core.spec.Keywords.isHiddenJob;
-import static org.febit.libci.core.spec.Keywords.isPropsOfDefaultSection;
-import static org.febit.libci.core.spec.Keywords.isRegularJob;
 import static org.junit.jupiter.api.Assertions.*;
 
 class KeywordsTest {
 
     @Test
-    void testIsHiddenJob() {
+    void checkIsHiddenJob() {
         //noinspection DataFlowIssue
-        assertFalse(isHiddenJob(null));
+        assertFalse(Keywords.isHiddenJob(null));
 
         var names = List.of(
-                "",
-                "unknown",
-                "abc",
-
-                INCLUDE,
-                DEFAULT,
-                STAGES,
-                WORKFLOW,
-                VARIABLES,
-
-                // Deprecated
-                IMAGE,
-                SERVICES,
-                CACHE,
-                BEFORE_SCRIPT,
-                AFTER_SCRIPT
+                "", "unknown", "abc",
+                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
+                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
         );
-
-        names.forEach(
-                name -> assertFalse(isHiddenJob(name))
-        );
-
-        names.stream()
-                .map(n -> "." + n)
-                .forEach(
-                        name -> assertTrue(isHiddenJob(name))
-                );
+        names.forEach(name -> assertFalse(Keywords.isHiddenJob(name)));
+        names.stream().map(n -> "." + n).forEach(name -> assertTrue(Keywords.isHiddenJob(name)));
     }
 
     @Test
-    void testIsRegularJob() {
+    void checkIsRegularJob() {
         //noinspection DataFlowIssue
-        assertFalse(isRegularJob(null));
-        assertFalse(isRegularJob(""));
+        assertFalse(Keywords.isRegularJob(null));
+        assertFalse(Keywords.isRegularJob(""));
 
-        assertTrue(isRegularJob("a".repeat(255)));
-        assertFalse(isRegularJob("a".repeat(256)));
+        assertTrue(Keywords.isRegularJob("a".repeat(255)));
+        assertFalse(Keywords.isRegularJob("a".repeat(256)));
 
         var keywords = List.of(
-                INCLUDE,
-                DEFAULT,
-                STAGES,
-                WORKFLOW,
-                VARIABLES,
-
-                // Deprecated
-                IMAGE,
-                SERVICES,
-                CACHE,
-                BEFORE_SCRIPT,
-                AFTER_SCRIPT
+                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
+                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
         );
+        keywords.forEach(name -> assertFalse(Keywords.isRegularJob(name)));
+        keywords.stream().map(n -> "." + n).forEach(name -> assertFalse(Keywords.isRegularJob(name)));
 
-        keywords.forEach(
-                name -> assertFalse(isRegularJob(name))
-        );
-
-        keywords.stream()
-                .map(n -> "." + n)
-                .forEach(
-                        name -> assertFalse(isRegularJob(name))
-                );
-
-
-        var names = List.of(
-                "unknown",
-                "abc",
-
-                SCRIPT,
-                STAGE,
-                EXTENDS
-        );
-
-        names.forEach(
-                name -> assertTrue(isRegularJob(name))
-        );
-
-        names.stream()
-                .map(n -> "." + n)
-                .forEach(
-                        name -> assertFalse(isRegularJob(name))
-                );
+        var names = List.of("unknown", "abc", SCRIPT, STAGE, EXTENDS);
+        names.forEach(name -> assertTrue(Keywords.isRegularJob(name)));
+        names.stream().map(n -> "." + n).forEach(name -> assertFalse(Keywords.isRegularJob(name)));
     }
 
     @Test
-    void testIsGlobalKeyword() {
+    void checkIsGlobalKeyword() {
         //noinspection DataFlowIssue
-        assertFalse(isGlobalKeyword(null));
+        assertFalse(Keywords.isGlobalKeyword(null));
+
+        Stream.of("", "  ", "unknown", "abc", STAGE, EXTENDS)
+                .forEach(key -> assertFalse(Keywords.isGlobalKeyword(key)));
 
         Stream.of(
-                "",
-                "  ",
-                "unknown",
-                "abc",
-
-                STAGE,
-                EXTENDS
-        ).forEach(
-                key -> assertFalse(isGlobalKeyword(key))
-        );
-
-        Stream.of(
-                INCLUDE,
-                DEFAULT,
-                STAGES,
-                WORKFLOW,
-                VARIABLES,
-
-                // Deprecated
-                IMAGE,
-                SERVICES,
-                CACHE,
-                BEFORE_SCRIPT,
-                AFTER_SCRIPT
-        ).forEach(
-                key -> assertTrue(isGlobalKeyword(key))
-        );
+                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
+                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
+        ).forEach(key -> assertTrue(Keywords.isGlobalKeyword(key)));
     }
 
     @Test
-    void testIsDeprecatedGlobalKeyword() {
+    void checkIsDeprecatedGlobalKeyword() {
         //noinspection DataFlowIssue
-        assertFalse(isDeprecatedGlobalKeyword(null));
+        assertFalse(Keywords.isDeprecatedGlobalKeyword(null));
 
         Stream.of(
-                "",
-                "  ",
-                "unknown",
-                "abc",
-
-                INCLUDE,
-                DEFAULT,
-                STAGES,
-                WORKFLOW,
-                VARIABLES,
-
-                STAGE,
-                EXTENDS
-        ).forEach(
-                key -> assertFalse(isDeprecatedGlobalKeyword(key))
-        );
+                "", "  ", "unknown", "abc",
+                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
+                STAGE, EXTENDS
+        ).forEach(key -> assertFalse(Keywords.isDeprecatedGlobalKeyword(key)));
 
         Stream.of(
-                IMAGE,
-                SERVICES,
-                CACHE,
-                BEFORE_SCRIPT,
-                AFTER_SCRIPT
-        ).forEach(
-                key -> assertTrue(isDeprecatedGlobalKeyword(key))
-        );
+                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
+        ).forEach(key -> assertTrue(Keywords.isDeprecatedGlobalKeyword(key)));
     }
 
     @Test
-    void testIsPropsOfDefaultSection() {
+    void checkIsPropsOfDefaultSection() {
         //noinspection DataFlowIssue
-        assertFalse(isPropsOfDefaultSection(null));
+        assertFalse(Keywords.isPropsOfDefaultSection(null));
 
         Stream.of(
-                "",
-                "  ",
-                "unknown",
-                "abc",
-
-                INCLUDE,
-                DEFAULT,
-                STAGES,
-                WORKFLOW,
-
-                STAGE,
-                EXTENDS
-        ).forEach(
-                key -> assertFalse(isPropsOfDefaultSection(key))
-        );
+                "", "  ", "unknown", "abc",
+                INCLUDE, DEFAULT, STAGES, WORKFLOW, STAGE, EXTENDS
+        ).forEach(key -> assertFalse(Keywords.isPropsOfDefaultSection(key)));
 
         Stream.of(
-                AFTER_SCRIPT,
-                ARTIFACTS,
-                BEFORE_SCRIPT,
-                CACHE,
-                HOOKS,
-                ID_TOKENS,
-                IMAGE,
-                INTERRUPTIBLE,
-                RETRY,
-                SERVICES,
-                TAGS,
-                TIMEOUT
-        ).forEach(
-                key -> assertTrue(isPropsOfDefaultSection(key))
-        );
+                AFTER_SCRIPT, ARTIFACTS, BEFORE_SCRIPT, CACHE, HOOKS,
+                ID_TOKENS, IMAGE, INTERRUPTIBLE, RETRY, SERVICES, TAGS, TIMEOUT
+        ).forEach(key -> assertTrue(Keywords.isPropsOfDefaultSection(key)));
     }
 }

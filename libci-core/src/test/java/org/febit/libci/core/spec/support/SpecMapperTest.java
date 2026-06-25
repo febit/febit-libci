@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SpecMapperTest {
 
     @Test
-    void testToYaml() {
+    void toYaml() {
 
         var original = """
                 name: example

@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class GitCommitLogFormatTest {
 
     @Test
-    void testNormalCase() {
+    void normalCase() {
         var result = parseLog("H:abc\0s:title\0b:line1\nline2");
 
         assertEquals("abc", result.get(GitCommitField.HASH));
@@ -76,7 +76,7 @@ class GitCommitLogFormatTest {
     }
 
     @Test
-    void testFormat() {
+    void format() {
         assertEquals(
                 "H:%H%x00s:%s%x00b:%b",
                 GitCommitLogFormat.format(
@@ -88,7 +88,7 @@ class GitCommitLogFormatTest {
     }
 
     @Test
-    void testFormatEmpty() {
+    void formatEmpty() {
         assertEquals("", GitCommitLogFormat.format());
     }
 }

@@ -24,3 +24,6 @@ node_modules
 
 .vscode/*
 !.vscode/extensions.json
+
+.agent/
+AGENTS.md

@@ -17,11 +17,13 @@ package org.febit.libci.runtime;
 
 import org.febit.lang.PeriodDuration;
 import org.febit.libci.core.Profile;
+import org.febit.libci.core.spec.InheritPolicy;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
 import org.febit.libci.core.variable.VarsHeapImpl;
 import org.febit.libci.runtime.plan.PipelinePlan;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -34,574 +36,652 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PipelinePlannerTest {
 
-    // ---------- Basic structure ----------
-
-    @Test
-    void shouldCreateCorrectStagesFromProfile() {
-        var profile = newProfile(
-                List.of("prepare", "build", "verify"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build", null, null),
-                newJob("verify", "verify", null, null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(3, plan.stages().size());
-        assertEquals("prepare", plan.stages().getFirst().name());
-        assertEquals(1, plan.stages().getFirst().iid());
-        assertEquals("01_prepare", plan.stages().getFirst().slug());
-        assertEquals("build", plan.stages().get(1).name());
-        assertEquals(2, plan.stages().get(1).iid());
-        assertEquals("02_build", plan.stages().get(1).slug());
-        assertEquals("verify", plan.stages().get(2).name());
-        assertEquals(3, plan.stages().get(2).iid());
-        assertEquals("03_verify", plan.stages().get(2).slug());
-    }
-
-    @Test
-    void shouldAssignSequentialJobIidsAcrossStages() {
-        var profile = newProfile(
-                List.of("prepare", "build", "verify"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build", null, null),
-                newJob("build-lib", "build", null, null),
-                newJob("verify", "verify", null, null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(4, plan.jobs().size());
-        assertEquals(1, plan.jobs().getFirst().iid());
-        assertEquals("prepare-env", plan.jobs().getFirst().name());
-        assertEquals(1, plan.jobs().getFirst().stageIid());
-
-        assertEquals(2, plan.jobs().get(1).iid());
-        assertEquals("build-app", plan.jobs().get(1).name());
-        assertEquals(2, plan.jobs().get(1).stageIid());
-
-        assertEquals(3, plan.jobs().get(2).iid());
-        assertEquals("build-lib", plan.jobs().get(2).name());
-        assertEquals(2, plan.jobs().get(2).stageIid());
-
-        assertEquals(4, plan.jobs().get(3).iid());
-        assertEquals("verify", plan.jobs().get(3).name());
-        assertEquals(3, plan.jobs().get(3).stageIid());
-    }
-
-    @Test
-    void shouldGenerateJobSlugsWithIidPrefix() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob("build-app", "build", null, null),
-                newJob("build-lib", "build", null, null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals("01_build-app", plan.jobs().get(0).slug());
-        assertEquals("02_build-lib", plan.jobs().get(1).slug());
-    }
-
-    @Test
-    void shouldProduceEmptyRelationsWhenNoDependencies() {
-        var profile = newProfile(
-                List.of("build", "verify"),
-                newJob("build-app", "build", null, null),
-                newJob("verify", "verify", null, null)
-        );
-
-        var plan = plan(profile);
-
-        assertTrue(plan.relations().isEmpty());
-    }
-
-    // ---------- Matrix / parallel expansion ----------
-
-    @Test
-    void shouldExpandMatrixToMultipleJobsWithCorrectMatrixIids() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob("build-app", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux", "macos"),
-                                        "ARCH", List.of("amd64", "arm64")
-                                )))
-                                .build(),
-                        List.of("echo ok"))
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(4, plan.jobs().size());
-        assertEquals(1, plan.jobs().getFirst().iid());
-        assertEquals(1, plan.jobs().getFirst().matrixIid());
-        assertEquals(Map.of("OS", "linux", "ARCH", "amd64"), plan.jobs().getFirst().matrixVars());
-
-        assertEquals(2, plan.jobs().get(1).iid());
-        assertEquals(2, plan.jobs().get(1).matrixIid());
-        assertEquals(Map.of("OS", "linux", "ARCH", "arm64"), plan.jobs().get(1).matrixVars());
-
-        assertEquals(3, plan.jobs().get(2).iid());
-        assertEquals(3, plan.jobs().get(2).matrixIid());
-        assertEquals(Map.of("OS", "macos", "ARCH", "amd64"), plan.jobs().get(2).matrixVars());
-
-        assertEquals(4, plan.jobs().get(3).iid());
-        assertEquals(4, plan.jobs().get(3).matrixIid());
-        assertEquals(Map.of("OS", "macos", "ARCH", "arm64"), plan.jobs().get(3).matrixVars());
-    }
-
-    @Test
-    void shouldSetMatrixIidZeroWhenNoMatrixSpecified() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob("build-app", "build", null, null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(1, plan.jobs().size());
-        assertEquals(0, plan.jobs().getFirst().matrixIid());
-        assertTrue(plan.jobs().getFirst().matrixVars().isEmpty());
-    }
-
-    // ---------- Relations from dependencies spec ----------
-
-    @Test
-    void shouldCreateRelationsFromDependenciesSpec() {
-        var profile = newProfile(
-                List.of("prepare", "build"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build", null, List.of("prepare-env"))
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(1, plan.relations().size());
-        var rel = plan.relations().getFirst();
-        assertEquals(2, rel.job());           // build-app
-        assertEquals(1, rel.dependedOn());    // prepare-env
-        assertFalse(rel.optional());
-        assertTrue(rel.artifacts());           // dependencies spec always requests artifacts
-    }
-
-    @Test
-    void shouldNotFindSameStageJobWhenDependenciesUsesEarlierStage() {
-        // dependencies -> EARLIER_STAGE scope; same-stage job won't match
-        var profile = newProfile(
-                List.of("build"),
-                newJob("build-app", "build", null, null),
-                newJob("build-lib", "build", null, List.of("build-app"))
-        );
-
-        assertThatThrownBy(() -> plan(profile))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Required dependency not planned");
-    }
-
-    @Test
-    void shouldFindEarlierStageJobFromDependenciesSpec() {
-        var profile = newProfile(
-                List.of("prepare", "build", "verify"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build", null, List.of("prepare-env")),
-                newJob("verify", "verify", null, List.of("build-app", "prepare-env"))
-        );
-
-        var plan = plan(profile);
-
-        // verify depends on build-app and prepare-env
-        var verifyRels = plan.relationsOfJob(3);
-        assertEquals(2, verifyRels.size());
-        assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 2));
-        assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 1));
-    }
-
-    // ---------- Relations from needs spec ----------
-
-    @Test
-    void shouldCreateRelationsFromNeedsWithSameStage() {
-        // needs -> SAME_OR_EARLIER_STAGE scope, so same-stage job CAN match
-        var profile = newProfile(
-                List.of("build"),
-                newJob("build-app", "build", null, null),
-                newJob("build-lib", "build",
-                        List.of(JobSpec.Need.builder()
-                                .job("build-app")
-                                .build()),
-                        null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(1, plan.relations().size());
-        var rel = plan.relations().getFirst();
-        assertEquals(2, rel.job());           // build-lib
-        assertEquals(1, rel.dependedOn());    // build-app
-        assertFalse(rel.optional());
-        assertTrue(rel.artifacts());          // needs default artifacts=true
-    }
-
-    @Test
-    void shouldCreateRelationsFromNeedsToEarlierStage() {
-        var profile = newProfile(
-                List.of("prepare", "build"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build",
-                        List.of(JobSpec.Need.builder()
-                                .job("prepare-env")
-                                .build()),
-                        null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(1, plan.relations().size());
-        var rel = plan.relations().getFirst();
-        assertEquals(2, rel.job());
-        assertEquals(1, rel.dependedOn());
-    }
-
-    @Test
-    void shouldCreateRelationsWithArtifactsFalse() {
-        var profile = newProfile(
-                List.of("prepare", "build"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build",
-                        List.of(JobSpec.Need.builder()
-                                .job("prepare-env")
-                                .artifacts(false)
-                                .build()),
-                        null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(1, plan.relations().size());
-        assertFalse(plan.relations().getFirst().artifacts());
-    }
-
-    @Test
-    void shouldCreateRelationsWithOptionalTrue() {
-        var profile = newProfile(
-                List.of("prepare", "build"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build",
-                        List.of(JobSpec.Need.builder()
-                                .job("prepare-env")
-                                .optional(true)
-                                .build()),
-                        null)
-        );
-
-        var plan = plan(profile);
-
-        assertEquals(1, plan.relations().size());
-        assertTrue(plan.relations().getFirst().optional());
-    }
-
-    // ---------- scope error ----------
-
-    @Test
-    void shouldThrowWhenDependencyScopeIsProject() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob("verify", "build",
-                        List.of(JobSpec.Need.builder()
-                                .project("group/project")
-                                .job("build")
-                                .build()),
-                        null)
-        );
-
-        assertThatThrownBy(() -> plan(profile))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Unsupported dependency scope in plan")
-                .hasMessageContaining("PROJECT")
-                .hasMessageContaining("01_verify");
-    }
-
-    @Test
-    void shouldThrowWhenDependencyScopeIsPipeline() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob("verify", "build",
-                        List.of(JobSpec.Need.builder()
-                                .pipeline("some-pipeline")
-                                .job("build")
-                                .build()),
-                        null)
-        );
-
-        assertThatThrownBy(() -> plan(profile))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Unsupported dependency scope in plan")
-                .hasMessageContaining("PIPELINE")
-                .hasMessageContaining("01_verify");
-    }
-
-    @Test
-    void shouldThrowWhenRequiredDependencyMatrixFilterMatchesNoVariant() {
-        var profile = newProfile(
-                List.of("build", "verify"),
-                newJob("build-app", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux"),
-                                        "ARCH", List.of("amd64")
-                                )))
-                                .build(),
-                        List.of("echo ok")),
-                newJob("verify", "verify",
-                        List.of(JobSpec.Need.builder()
-                                .job("build-app")
-                                .parallel(JobSpec.Parallel.builder()
-                                        .matrix(List.of(matrix(
-                                                "OS", List.of("macos"),
-                                                "ARCH", List.of("arm64")
-                                        )))
-                                        .build())
-                                .build()),
-                        null)
-        );
-
-        assertThatThrownBy(() -> plan(profile))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Required dependency not planned");
-    }
-
-    @Test
-    void shouldNotThrowWhenOptionalDependencyMatrixFilterMatchesNoVariant() {
-        var profile = newProfile(
-                List.of("build", "verify"),
-                newJob("build-app", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux"),
-                                        "ARCH", List.of("amd64")
-                                )))
-                                .build(),
-                        List.of("echo ok")),
-                newJob("verify", "verify",
-                        List.of(JobSpec.Need.builder()
-                                .job("build-app")
-                                .optional(true)
-                                .parallel(JobSpec.Parallel.builder()
-                                        .matrix(List.of(matrix(
-                                                "OS", List.of("macos"),
-                                                "ARCH", List.of("arm64")
-                                        )))
-                                        .build())
-                                .build()),
-                        null)
-        );
-
-        var pipelinePlan = plan(profile);
-        // Optional dependency with no matching variant should not fail;
-        // no relation should be created.
-        var jobs = pipelinePlan.jobs();
-        var relations = pipelinePlan.relationsOfJob(jobs.getLast().iid());
-        assertTrue(relations.isEmpty());
-    }
-
-    // ---------- DAG cycle detection ----------
-
-    @Test
-    void shouldThrowWhenDependencyCycleDetected() {
-        // A needs B and B needs A within the same stage → cycle
-        var profile = newProfile(
-                List.of("build"),
-                newJob("job-a", "build",
-                        List.of(JobSpec.Need.builder().job("job-b").build()),
-                        null),
-                newJob("job-b", "build",
-                        List.of(JobSpec.Need.builder().job("job-a").build()),
-                        null)
-        );
-
-        assertThatThrownBy(() -> plan(profile))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("cycle");
-    }
-
-    @Test
-    void shouldNotThrowWhenNoCycleInLinearChain() {
-        var profile = newProfile(
-                List.of("build", "verify", "deploy"),
-                newJob("build-app", "build", null, null),
-                newJob("verify", "verify",
-                        List.of(JobSpec.Need.builder().job("build-app").build()),
-                        null),
-                newJob("deploy", "deploy",
-                        List.of(JobSpec.Need.builder().job("verify").build()),
-                        null)
-        );
-
-        var plan = plan(profile);
-
-        // Linear chain: 0→1→2
-        assertEquals(2, plan.relations().size());
-    }
-
-    // ---------- Matrix dependency relations ----------
-
-    @Test
-    void shouldCreateRelationsForAllMatrixVariantsWhenNeedHasNoParallelFilter() {
-        var profile = newProfile(
-                List.of("build", "verify"),
-                newJob("build-app", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux", "macos"),
-                                        "ARCH", List.of("amd64", "arm64")
-                                )))
-                                .build(),
-                        List.of("echo ok")),
-                newJob("verify", "verify",
-                        List.of(JobSpec.Need.builder()
-                                .job("build-app")
-                                .build()),
-                        null)
-        );
-
-        var plan = plan(profile);
-        var verify = plan.jobs().get(4); // iid 4, after build-app x4
-        var rels = plan.relationsOfJob(verify.iid());
-
-        assertEquals(4, rels.size());
-        for (int i = 0; i < 4; i++) {
-            int finalI = i + 1;
-            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == finalI));
+    @Nested
+    class BasicStructure {
+
+        @Test
+        void createsCorrectStagesFromProfile() {
+            var profile = newProfile(
+                    List.of("prepare", "build", "verify"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build", null, null),
+                    newJob("verify", "verify", null, null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(3, plan.stages().size());
+            assertEquals("prepare", plan.stages().getFirst().name());
+            assertEquals(1, plan.stages().getFirst().iid());
+            assertEquals("01_prepare", plan.stages().getFirst().slug());
+            assertEquals("build", plan.stages().get(1).name());
+            assertEquals(2, plan.stages().get(1).iid());
+            assertEquals("02_build", plan.stages().get(1).slug());
+            assertEquals("verify", plan.stages().get(2).name());
+            assertEquals(3, plan.stages().get(2).iid());
+            assertEquals("03_verify", plan.stages().get(2).slug());
+        }
+
+        @Test
+        void assignsSequentialJobIidsAcrossStages() {
+            var profile = newProfile(
+                    List.of("prepare", "build", "verify"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build", null, null),
+                    newJob("build-lib", "build", null, null),
+                    newJob("verify", "verify", null, null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(4, plan.jobs().size());
+            assertEquals(1, plan.jobs().getFirst().iid());
+            assertEquals("prepare-env", plan.jobs().getFirst().name());
+            assertEquals(1, plan.jobs().getFirst().stageIid());
+
+            assertEquals(2, plan.jobs().get(1).iid());
+            assertEquals("build-app", plan.jobs().get(1).name());
+            assertEquals(2, plan.jobs().get(1).stageIid());
+
+            assertEquals(3, plan.jobs().get(2).iid());
+            assertEquals("build-lib", plan.jobs().get(2).name());
+            assertEquals(2, plan.jobs().get(2).stageIid());
+
+            assertEquals(4, plan.jobs().get(3).iid());
+            assertEquals("verify", plan.jobs().get(3).name());
+            assertEquals(3, plan.jobs().get(3).stageIid());
+        }
+
+        @Test
+        void generatesJobSlugsWithIidPrefix() {
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build", null, null),
+                    newJob("build-lib", "build", null, null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals("01_build-app", plan.jobs().get(0).slug());
+            assertEquals("02_build-lib", plan.jobs().get(1).slug());
+        }
+
+        @Test
+        void producesEmptyRelationsWhenNoDependencies() {
+            var profile = newProfile(
+                    List.of("build", "verify"),
+                    newJob("build-app", "build", null, null),
+                    newJob("verify", "verify", null, null)
+            );
+
+            var plan = plan(profile);
+
+            assertTrue(plan.relations().isEmpty());
         }
     }
 
-    @Test
-    void shouldCreateFilteredRelationsWhenNeedHasParallelMatrix() {
-        var profile = newProfile(
-                List.of("build", "verify"),
-                newJob("build-app", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux", "macos"),
-                                        "ARCH", List.of("amd64", "arm64")
-                                )))
-                                .build(),
-                        List.of("echo ok")),
-                newJob("verify", "verify",
-                        List.of(JobSpec.Need.builder()
-                                .job("build-app")
-                                .parallel(JobSpec.Parallel.builder()
-                                        .matrix(List.of(matrix(
-                                                "OS", List.of("linux"),
-                                                "ARCH", List.of("amd64", "arm64")
-                                        )))
-                                        .build())
-                                .build()),
-                        null)
-        );
+    @Nested
+    class MatrixExpansion {
 
-        var plan = plan(profile);
-        var verify = plan.jobs().get(4);
-        var rels = plan.relationsOfJob(verify.iid());
+        @Test
+        void expandsMatrixToMultipleJobsWithCorrectMatrixIids() {
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build", null, null,
+                            JobSpec.Parallel.builder()
+                                    .matrix(List.of(matrix(
+                                            "OS", List.of("linux", "macos"),
+                                            "ARCH", List.of("amd64", "arm64")
+                                    )))
+                                    .build(),
+                            List.of("echo ok"))
+            );
 
-        assertEquals(2, rels.size());
-        // linux+amd64 → iid 0, linux+arm64 → iid 1
-        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1));
-        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2));
+            var plan = plan(profile);
+
+            assertEquals(4, plan.jobs().size());
+            assertEquals(1, plan.jobs().getFirst().iid());
+            assertEquals(1, plan.jobs().getFirst().matrixIid());
+            assertEquals(Map.of("OS", "linux", "ARCH", "amd64"), plan.jobs().getFirst().matrixVars());
+
+            assertEquals(2, plan.jobs().get(1).iid());
+            assertEquals(2, plan.jobs().get(1).matrixIid());
+            assertEquals(Map.of("OS", "linux", "ARCH", "arm64"), plan.jobs().get(1).matrixVars());
+
+            assertEquals(3, plan.jobs().get(2).iid());
+            assertEquals(3, plan.jobs().get(2).matrixIid());
+            assertEquals(Map.of("OS", "macos", "ARCH", "amd64"), plan.jobs().get(2).matrixVars());
+
+            assertEquals(4, plan.jobs().get(3).iid());
+            assertEquals(4, plan.jobs().get(3).matrixIid());
+            assertEquals(Map.of("OS", "macos", "ARCH", "arm64"), plan.jobs().get(3).matrixVars());
+        }
+
+        @Test
+        void setsMatrixIidZeroWhenNoMatrixSpecified() {
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build", null, null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(1, plan.jobs().size());
+            assertEquals(0, plan.jobs().getFirst().matrixIid());
+            assertTrue(plan.jobs().getFirst().matrixVars().isEmpty());
+        }
     }
 
-    @Test
-    void shouldCreateRelationPerVariantForEachNeedInSameJob() {
-        var profile = newProfile(
-                List.of("build", "verify"),
-                newJob("build-app", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux"),
-                                        "ARCH", List.of("amd64", "arm64")
-                                )))
-                                .build(),
-                        List.of("echo ok")),
-                newJob("build-lib", "build", null, null,
-                        JobSpec.Parallel.builder()
-                                .matrix(List.of(matrix(
-                                        "OS", List.of("linux"),
-                                        "ARCH", List.of("amd64", "arm64")
-                                )))
-                                .build(),
-                        List.of("echo ok")),
-                newJob("verify", "verify",
-                        List.of(
-                                JobSpec.Need.builder().job("build-app").build(),
-                                JobSpec.Need.builder().job("build-lib").build()
-                        ),
-                        null)
-        );
+    @Nested
+    class DependenciesSpec {
 
-        var plan = plan(profile);
-        var verify = plan.jobs().get(4); // iid 4
-        var rels = plan.relationsOfJob(verify.iid());
+        @Test
+        void createsRelationsFromDependenciesSpec() {
+            var profile = newProfile(
+                    List.of("prepare", "build"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build", null, List.of("prepare-env"))
+            );
 
-        // 2 variants of build-app + 2 variants of build-lib = 4 relations
-        assertEquals(4, rels.size());
+            var plan = plan(profile);
+
+            assertEquals(1, plan.relations().size());
+            var rel = plan.relations().getFirst();
+            assertEquals(2, rel.job());           // build-app
+            assertEquals(1, rel.dependedOn());    // prepare-env
+            assertFalse(rel.optional());
+            assertTrue(rel.artifacts());           // dependencies spec always requests artifacts
+        }
+
+        @Test
+        void notFindsSameStageJobWhenDependenciesUsesEarlierStage() {
+            // dependencies -> EARLIER_STAGE scope; same-stage job won't match
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build", null, null),
+                    newJob("build-lib", "build", null, List.of("build-app"))
+            );
+
+            assertThatThrownBy(() -> plan(profile))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Required dependency not planned");
+        }
+
+        @Test
+        void findsEarlierStageJobFromDependenciesSpec() {
+            var profile = newProfile(
+                    List.of("prepare", "build", "verify"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build", null, List.of("prepare-env")),
+                    newJob("verify", "verify", null, List.of("build-app", "prepare-env"))
+            );
+
+            var plan = plan(profile);
+
+            // verify depends on build-app and prepare-env
+            var verifyRels = plan.relationsOfJob(3);
+            assertEquals(2, verifyRels.size());
+            assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 2));
+            assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 1));
+        }
     }
 
-    // ---------- Dependencies + Needs combined ----------
+    @Nested
+    class NeedsSpec {
 
-    @Test
-    void shouldCreateRelationsFromBothDependenciesAndNeeds() {
-        var profile = newProfile(
-                List.of("prepare", "build", "verify"),
-                newJob("prepare-env", "prepare", null, null),
-                newJob("build-app", "build", null, null),
-                newJob("verify", "verify",
-                        List.of(JobSpec.Need.builder().job("prepare-env").build()),
-                        List.of("build-app"))
-        );
+        @Test
+        void createsRelationsFromNeedsWithSameStage() {
+            // needs -> SAME_OR_EARLIER_STAGE scope, so same-stage job CAN match
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build", null, null),
+                    newJob("build-lib", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .job("build-app")
+                                    .build()),
+                            null)
+            );
 
-        var plan = plan(profile);
-        var verify = plan.jobs().get(2);
-        var rels = plan.relationsOfJob(verify.iid());
+            var plan = plan(profile);
 
-        assertEquals(2, rels.size());
-        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1 && r.artifacts()));
-        assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2 && r.artifacts()));
+            assertEquals(1, plan.relations().size());
+            var rel = plan.relations().getFirst();
+            assertEquals(2, rel.job());           // build-lib
+            assertEquals(1, rel.dependedOn());    // build-app
+            assertFalse(rel.optional());
+            assertTrue(rel.artifacts());          // needs default artifacts=true
+        }
+
+        @Test
+        void createsRelationsFromNeedsToEarlierStage() {
+            var profile = newProfile(
+                    List.of("prepare", "build"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .job("prepare-env")
+                                    .build()),
+                            null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(1, plan.relations().size());
+            var rel = plan.relations().getFirst();
+            assertEquals(2, rel.job());
+            assertEquals(1, rel.dependedOn());
+        }
+
+        @Test
+        void createsRelationsWithArtifactsFalse() {
+            var profile = newProfile(
+                    List.of("prepare", "build"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .job("prepare-env")
+                                    .artifacts(false)
+                                    .build()),
+                            null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(1, plan.relations().size());
+            assertFalse(plan.relations().getFirst().artifacts());
+        }
+
+        @Test
+        void createsRelationsWithOptionalTrue() {
+            var profile = newProfile(
+                    List.of("prepare", "build"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .job("prepare-env")
+                                    .optional(true)
+                                    .build()),
+                            null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(1, plan.relations().size());
+            assertTrue(plan.relations().getFirst().optional());
+        }
     }
 
-    // ---------- Job with dependency name not matching any job ----------
+    @Nested
+    class ScopeErrors {
 
-    @Test
-    void shouldThrowWhenRequiredDependencyJobNameNotFound() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob("build-app", "build",
-                        List.of(JobSpec.Need.builder()
-                                .job("nonexistent-job")
-                                .build()),
-                        null)
-        );
+        @Test
+        void throwsWhenDependencyScopeIsProject() {
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("verify", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .project("group/project")
+                                    .job("build")
+                                    .build()),
+                            null)
+            );
 
-        assertThatThrownBy(() -> plan(profile))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Required dependency not planned");
+            assertThatThrownBy(() -> plan(profile))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Unsupported dependency scope in plan")
+                    .hasMessageContaining("PROJECT")
+                    .hasMessageContaining("01_verify");
+        }
+
+        @Test
+        void throwsWhenDependencyScopeIsPipeline() {
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("verify", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .pipeline("some-pipeline")
+                                    .job("build")
+                                    .build()),
+                            null)
+            );
+
+            assertThatThrownBy(() -> plan(profile))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Unsupported dependency scope in plan")
+                    .hasMessageContaining("PIPELINE")
+                    .hasMessageContaining("01_verify");
+        }
+
+        @Test
+        void throwsWhenRequiredDependencyMatrixFilterMatchesNoVariant() {
+            var profile = newProfile(
+                    List.of("build", "verify"),
+                    newJob("build-app", "build", null, null,
+                            JobSpec.Parallel.builder()
+                                    .matrix(List.of(matrix(
+                                            "OS", List.of("linux"),
+                                            "ARCH", List.of("amd64")
+                                    )))
+                                    .build(),
+                            List.of("echo ok")),
+                    newJob("verify", "verify",
+                            List.of(JobSpec.Need.builder()
+                                    .job("build-app")
+                                    .parallel(JobSpec.Parallel.builder()
+                                            .matrix(List.of(matrix(
+                                                    "OS", List.of("macos"),
+                                                    "ARCH", List.of("arm64")
+                                            )))
+                                            .build())
+                                    .build()),
+                            null)
+            );
+
+            assertThatThrownBy(() -> plan(profile))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Required dependency not planned");
+        }
+
+        @Test
+        void notThrowsWhenOptionalDependencyMatrixFilterMatchesNoVariant() {
+            var profile = newProfile(
+                    List.of("build", "verify"),
+                    newJob("build-app", "build", null, null,
+                            JobSpec.Parallel.builder()
+                                    .matrix(List.of(matrix(
+                                            "OS", List.of("linux"),
+                                            "ARCH", List.of("amd64")
+                                    )))
+                                    .build(),
+                            List.of("echo ok")),
+                    newJob("verify", "verify",
+                            List.of(JobSpec.Need.builder()
+                                    .job("build-app")
+                                    .optional(true)
+                                    .parallel(JobSpec.Parallel.builder()
+                                            .matrix(List.of(matrix(
+                                                    "OS", List.of("macos"),
+                                                    "ARCH", List.of("arm64")
+                                            )))
+                                            .build())
+                                    .build()),
+                            null)
+            );
+
+            var pipelinePlan = plan(profile);
+            // Optional dependency with no matching variant should not fail;
+            // no relation should be created.
+            var jobs = pipelinePlan.jobs();
+            var relations = pipelinePlan.relationsOfJob(jobs.getLast().iid());
+            assertTrue(relations.isEmpty());
+        }
     }
 
-    @Test
-    void shouldNotThrowWhenOptionalDependencyJobNameNotFound() {
-        var profile = newProfile(
-                List.of("build"),
-                newJob("build-app", "build",
-                        List.of(JobSpec.Need.builder()
-                                .job("nonexistent-job")
-                                .optional(true)
-                                .build()),
-                        null)
-        );
+    @Nested
+    class CycleDetection {
 
-        var plan = plan(profile);
+        @Test
+        void throwsWhenDependencyCycleDetected() {
+            // A needs B and B needs A within the same stage → cycle
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("job-a", "build",
+                            List.of(JobSpec.Need.builder().job("job-b").build()),
+                            null),
+                    newJob("job-b", "build",
+                            List.of(JobSpec.Need.builder().job("job-a").build()),
+                            null)
+            );
 
-        assertTrue(plan.relations().isEmpty());
+            assertThatThrownBy(() -> plan(profile))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("cycle");
+        }
+
+        @Test
+        void notThrowsWhenNoCycleInLinearChain() {
+            var profile = newProfile(
+                    List.of("build", "verify", "deploy"),
+                    newJob("build-app", "build", null, null),
+                    newJob("verify", "verify",
+                            List.of(JobSpec.Need.builder().job("build-app").build()),
+                            null),
+                    newJob("deploy", "deploy",
+                            List.of(JobSpec.Need.builder().job("verify").build()),
+                            null)
+            );
+
+            var plan = plan(profile);
+
+            // Linear chain: 0→1→2
+            assertEquals(2, plan.relations().size());
+        }
+    }
+
+    @Nested
+    class MatrixDependencyRelations {
+
+        @Test
+        void createsRelationsForAllMatrixVariantsWhenNeedHasNoParallelFilter() {
+            var profile = newProfile(
+                    List.of("build", "verify"),
+                    newJob("build-app", "build", null, null,
+                            JobSpec.Parallel.builder()
+                                    .matrix(List.of(matrix(
+                                            "OS", List.of("linux", "macos"),
+                                            "ARCH", List.of("amd64", "arm64")
+                                    )))
+                                    .build(),
+                            List.of("echo ok")),
+                    newJob("verify", "verify",
+                            List.of(JobSpec.Need.builder()
+                                    .job("build-app")
+                                    .build()),
+                            null)
+            );
+
+            var plan = plan(profile);
+            var verify = plan.jobs().get(4); // iid 4, after build-app x4
+            var rels = plan.relationsOfJob(verify.iid());
+
+            assertEquals(4, rels.size());
+            for (int i = 0; i < 4; i++) {
+                int finalI = i + 1;
+                assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == finalI));
+            }
+        }
+
+        @Test
+        void createsFilteredRelationsWhenNeedHasParallelMatrix() {
+            var profile = newProfile(
+                    List.of("build", "verify"),
+                    newJob("build-app", "build", null, null,
+                            JobSpec.Parallel.builder()
+                                    .matrix(List.of(matrix(
+                                            "OS", List.of("linux", "macos"),
+                                            "ARCH", List.of("amd64", "arm64")
+                                    )))
+                                    .build(),
+                            List.of("echo ok")),
+                    newJob("verify", "verify",
+                            List.of(JobSpec.Need.builder()
+                                    .job("build-app")
+                                    .parallel(JobSpec.Parallel.builder()
+                                            .matrix(List.of(matrix(
+                                                    "OS", List.of("linux"),
+                                                    "ARCH", List.of("amd64", "arm64")
+                                            )))
+                                            .build())
+                                    .build()),
+                            null)
+            );
+
+            var plan = plan(profile);
+            var verify = plan.jobs().get(4);
+            var rels = plan.relationsOfJob(verify.iid());
+
+            assertEquals(2, rels.size());
+            // linux+amd64 → iid 0, linux+arm64 → iid 1
+            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1));
+            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2));
+        }
+
+        @Test
+        void createsRelationPerVariantForEachNeedInSameJob() {
+            var profile = newProfile(
+                    List.of("build", "verify"),
+                    newJob("build-app", "build", null, null,
+                            JobSpec.Parallel.builder()
+                                    .matrix(List.of(matrix(
+                                            "OS", List.of("linux"),
+                                            "ARCH", List.of("amd64", "arm64")
+                                    )))
+                                    .build(),
+                            List.of("echo ok")),
+                    newJob("build-lib", "build", null, null,
+                            JobSpec.Parallel.builder()
+                                    .matrix(List.of(matrix(
+                                            "OS", List.of("linux"),
+                                            "ARCH", List.of("amd64", "arm64")
+                                    )))
+                                    .build(),
+                            List.of("echo ok")),
+                    newJob("verify", "verify",
+                            List.of(
+                                    JobSpec.Need.builder().job("build-app").build(),
+                                    JobSpec.Need.builder().job("build-lib").build()
+                            ),
+                            null)
+            );
+
+            var plan = plan(profile);
+            var verify = plan.jobs().get(4); // iid 4
+            var rels = plan.relationsOfJob(verify.iid());
+
+            // 2 variants of build-app + 2 variants of build-lib = 4 relations
+            assertEquals(4, rels.size());
+        }
+    }
+
+    @Nested
+    class CombinedDependencies {
+
+        @Test
+        void createsRelationsFromBothDependenciesAndNeeds() {
+            var profile = newProfile(
+                    List.of("prepare", "build", "verify"),
+                    newJob("prepare-env", "prepare", null, null),
+                    newJob("build-app", "build", null, null),
+                    newJob("verify", "verify",
+                            List.of(JobSpec.Need.builder().job("prepare-env").build()),
+                            List.of("build-app"))
+            );
+
+            var plan = plan(profile);
+            var verify = plan.jobs().get(2);
+            var rels = plan.relationsOfJob(verify.iid());
+
+            assertEquals(2, rels.size());
+            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1 && r.artifacts()));
+            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2 && r.artifacts()));
+        }
+    }
+
+    @Nested
+    class MissingDependency {
+
+        @Test
+        void throwsWhenRequiredDependencyJobNameNotFound() {
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .job("nonexistent-job")
+                                    .build()),
+                            null)
+            );
+
+            assertThatThrownBy(() -> plan(profile))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Required dependency not planned");
+        }
+
+        @Test
+        void notThrowsWhenOptionalDependencyJobNameNotFound() {
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build",
+                            List.of(JobSpec.Need.builder()
+                                    .job("nonexistent-job")
+                                    .optional(true)
+                                    .build()),
+                            null)
+            );
+
+            var plan = plan(profile);
+
+            assertTrue(plan.relations().isEmpty());
+        }
+    }
+
+    @Nested
+    class SlugTruncation {
+
+        @Test
+        void truncatesWhenNameExceedsMaxSize() {
+            var longName = "a-very-long-job-name-that-exceeds-the-maximum-slug-size-limit-48-chars";
+            assertTrue(longName.length() > 48);
+
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob(longName, "build", null, null)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(1, plan.jobs().size());
+            var slug = plan.jobs().getFirst().slug();
+            assertTrue(slug.length() <= 48);
+            assertTrue(slug.startsWith("01_"));
+        }
+    }
+
+    @Nested
+    class InheritVariables {
+
+        @Test
+        void handlesInheritNone() {
+            var inherit = new JobSpec.Inherit(
+                    InheritPolicy.all(),
+                    InheritPolicy.none()
+            );
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build", null, null, inherit)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(1, plan.jobs().size());
+            assertEquals("build-app", plan.jobs().getFirst().name());
+        }
+
+        @Test
+        void handlesInheritOnly() {
+            var inherit = new JobSpec.Inherit(
+                    InheritPolicy.all(),
+                    InheritPolicy.only(List.of("ALLOWED"))
+            );
+            var profile = newProfile(
+                    List.of("build"),
+                    newJob("build-app", "build", null, null, inherit)
+            );
+
+            var plan = plan(profile);
+
+            assertEquals(1, plan.jobs().size());
+            assertEquals("build-app", plan.jobs().getFirst().name());
+        }
     }
 
     private static PipelinePlan plan(Profile profile) {
@@ -662,6 +742,34 @@ class PipelinePlannerTest {
             List<String> dependencies
     ) {
         return newJob(name, stage, needs, dependencies, null, List.of("echo build"));
+    }
+
+    private static JobSpec newJob(
+            String name,
+            String stage,
+            List<JobSpec.Need> needs,
+            List<String> dependencies,
+            JobSpec.Inherit inherit
+    ) {
+        return JobSpec.builder()
+                .name(name)
+                .stage(stage)
+                .image(new JobSpec.Image("alpine", null, null, null, null))
+                .services(List.of())
+                .tags(List.of())
+                .timeout(PeriodDuration.NEVER)
+                .retry(new JobSpec.Retry(0, List.of(JobSpec.RetryWhen.ALWAYS), List.of()))
+                .needs(needs)
+                .dependencies(dependencies)
+                .inherit(inherit)
+                .idTokens(new JobSpec.IdTokens())
+                .beforeScript(List.of())
+                .script(List.of("echo build"))
+                .afterScript(List.of())
+                .hooks(JobSpec.Hooks.NONE)
+                .interruptible(false)
+                .rules(List.of())
+                .build();
     }
 
     private static JobSpec.ParallelMatrix matrix(

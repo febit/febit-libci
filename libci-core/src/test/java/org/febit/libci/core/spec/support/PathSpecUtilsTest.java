@@ -19,113 +19,99 @@ import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
-import static org.febit.libci.core.spec.support.PathSpecUtils.antMatch;
-import static org.febit.libci.core.spec.support.PathSpecUtils.isRelative;
-import static org.febit.libci.core.spec.support.PathSpecUtils.isRoot;
-import static org.febit.libci.core.spec.support.PathSpecUtils.isYamlFile;
-import static org.febit.libci.core.spec.support.PathSpecUtils.normalize;
-import static org.febit.libci.core.spec.support.PathSpecUtils.sibling;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PathSpecUtilsTest {
 
     @Test
-    void testIsRelative() {
-        assertFalse(isRelative(null));
-        assertTrue(isRelative("./file.yaml"));
-        assertTrue(isRelative("../file.yaml"));
-        assertFalse(isRelative("file.yaml"));
-        assertFalse(isRelative("/file.yaml"));
+    void checkIsRelative() {
+        assertFalse(PathSpecUtils.isRelative(null));
+        assertTrue(PathSpecUtils.isRelative("./file.yaml"));
+        assertTrue(PathSpecUtils.isRelative("../file.yaml"));
+        assertFalse(PathSpecUtils.isRelative("file.yaml"));
+        assertFalse(PathSpecUtils.isRelative("/file.yaml"));
     }
 
     @Test
-    void testIsYamlFile() {
+    void checkIsYamlFile() {
         //noinspection DataFlowIssue
-        assertFalse(isYamlFile(null));
-        assertFalse(isYamlFile(""));
+        assertFalse(PathSpecUtils.isYamlFile(null));
+        assertFalse(PathSpecUtils.isYamlFile(""));
 
-        assertFalse(isYamlFile("a.json"));
-        assertFalse(isYamlFile("yml"));
-        assertFalse(isYamlFile("yaml"));
+        assertFalse(PathSpecUtils.isYamlFile("a.json"));
+        assertFalse(PathSpecUtils.isYamlFile("yml"));
+        assertFalse(PathSpecUtils.isYamlFile("yaml"));
 
-        assertTrue(isYamlFile(".yml"));
-        assertTrue(isYamlFile("a.yml"));
-        assertTrue(isYamlFile("a.yaml"));
+        assertTrue(PathSpecUtils.isYamlFile(".yml"));
+        assertTrue(PathSpecUtils.isYamlFile("a.yml"));
+        assertTrue(PathSpecUtils.isYamlFile("a.yaml"));
     }
 
     @Test
-    void testIsRoot() {
-        assertTrue(isRoot(null));
-        assertTrue(isRoot(""));
-        assertTrue(isRoot("/"));
+    void checkIsRoot() {
+        assertTrue(PathSpecUtils.isRoot(null));
+        assertTrue(PathSpecUtils.isRoot(""));
+        assertTrue(PathSpecUtils.isRoot("/"));
 
-        assertFalse(isRoot("."));
-        assertFalse(isRoot("/a"));
-        assertFalse(isRoot("file.yaml"));
+        assertFalse(PathSpecUtils.isRoot("."));
+        assertFalse(PathSpecUtils.isRoot("/a"));
+        assertFalse(PathSpecUtils.isRoot("file.yaml"));
     }
 
     @Test
-    void testSibling() {
-        assertEquals("file.yaml", sibling(null, "file.yaml"));
-
-        assertEquals("dir/file.yaml", sibling("dir/refer.yaml", "./file.yaml"));
-        assertEquals("dir/file.yaml", sibling("dir/refer.yaml", "../dir/file.yaml"));
-        assertEquals("file.yaml", sibling("dir/refer.yaml", "file.yaml"));
-        assertNull(sibling("dir/refer.yaml", "../../file.yaml"));
+    void sibling() {
+        assertEquals("file.yaml", PathSpecUtils.sibling(null, "file.yaml"));
+        assertEquals("dir/file.yaml", PathSpecUtils.sibling("dir/refer.yaml", "./file.yaml"));
+        assertEquals("dir/file.yaml", PathSpecUtils.sibling("dir/refer.yaml", "../dir/file.yaml"));
+        assertEquals("file.yaml", PathSpecUtils.sibling("dir/refer.yaml", "file.yaml"));
+        assertNull(PathSpecUtils.sibling("dir/refer.yaml", "../../file.yaml"));
     }
 
     @Test
-    void testAntMatch() {
-        assertTrue(antMatch("**/*.yaml", "a/b/c/file.yaml"));
-        assertTrue(antMatch("a/**/*.yaml", "a/b/c/file.yaml"));
-        assertTrue(antMatch("a/b/c/**/*.yaml", "a/b/c/file.yaml"));
+    void antMatch() {
+        assertTrue(PathSpecUtils.antMatch("**/*.yaml", "a/b/c/file.yaml"));
+        assertTrue(PathSpecUtils.antMatch("a/**/*.yaml", "a/b/c/file.yaml"));
+        assertTrue(PathSpecUtils.antMatch("a/b/c/**/*.yaml", "a/b/c/file.yaml"));
 
-        assertFalse(antMatch("**/*.yaml", null));
-        assertFalse(antMatch("*.yaml", "a/b/c/file.txt"));
-        assertFalse(antMatch("a/*.yaml", "a/b/c/file.txt"));
-        assertFalse(antMatch("**/*.yaml", "a/b/c/file.txt"));
+        assertFalse(PathSpecUtils.antMatch("**/*.yaml", null));
+        assertFalse(PathSpecUtils.antMatch("*.yaml", "a/b/c/file.txt"));
+        assertFalse(PathSpecUtils.antMatch("a/*.yaml", "a/b/c/file.txt"));
+        assertFalse(PathSpecUtils.antMatch("**/*.yaml", "a/b/c/file.txt"));
     }
 
     @Test
-    void testNormalize() {
-        assertNull(normalize(null));
+    void checkNormalize() {
+        assertNull(PathSpecUtils.normalize(null));
 
         // Invalid
-        assertNull(normalize("../"));
-        assertNull(normalize("../a"));
-        assertNull(normalize("../a/"));
-        assertNull(normalize("../a/b"));
-        assertNull(normalize("../a/b/"));
-        assertNull(normalize("a/../../b"));
-        assertNull(normalize("a/../../b/"));
+        assertNull(PathSpecUtils.normalize("../"));
+        assertNull(PathSpecUtils.normalize("../a"));
+        assertNull(PathSpecUtils.normalize("../a/"));
+        assertNull(PathSpecUtils.normalize("../a/b"));
+        assertNull(PathSpecUtils.normalize("../a/b/"));
+        assertNull(PathSpecUtils.normalize("a/../../b"));
+        assertNull(PathSpecUtils.normalize("a/../../b/"));
 
-        assertEquals("", normalize(""));
-        assertEquals("", normalize("/"));
+        assertEquals("", PathSpecUtils.normalize(""));
+        assertEquals("", PathSpecUtils.normalize("/"));
 
         // Starts with "/"
-        assertEquals("file.yaml", normalize("/file.yaml"));
-        assertEquals("a/b/c", normalize("/a/b/c"));
-        assertEquals("b/c", normalize("/a/../b/c"));
-        assertEquals("a/b/c", normalize("/a/./b/c"));
+        assertEquals("file.yaml", PathSpecUtils.normalize("/file.yaml"));
+        assertEquals("a/b/c", PathSpecUtils.normalize("/a/b/c"));
+        assertEquals("b/c", PathSpecUtils.normalize("/a/../b/c"));
+        assertEquals("a/b/c", PathSpecUtils.normalize("/a/./b/c"));
 
-        // dot segments
-        assertEquals("b", normalize("a/../b"));
-        assertEquals("b/", normalize("a/../b/."));
-        assertEquals("a/b/c", normalize("a/./b/./c"));
+        // Dot segments
+        assertEquals("b", PathSpecUtils.normalize("a/../b"));
+        assertEquals("b/", PathSpecUtils.normalize("a/../b/."));
+        assertEquals("a/b/c", PathSpecUtils.normalize("a/./b/./c"));
 
-        // end with "/"
-        assertEquals("a/", normalize("a/"));
-        assertEquals("a/", normalize("a/./"));
-        assertEquals("", normalize("a/../"));
+        // End with "/"
+        assertEquals("a/", PathSpecUtils.normalize("a/"));
+        assertEquals("a/", PathSpecUtils.normalize("a/./"));
+        assertEquals("", PathSpecUtils.normalize("a/../"));
 
-        Stream.of(
-                "a/b/c",
-                "/a/b/c",
-                "a/b/c/../c",
-                "a/b/c/d/.././../c"
-        ).forEach(path -> {
-            assertEquals("a/b/c", normalize(path));
-        });
+        Stream.of("a/b/c", "/a/b/c", "a/b/c/../c", "a/b/c/d/.././../c")
+                .forEach(path -> assertEquals("a/b/c", PathSpecUtils.normalize(path)));
     }
-
 }

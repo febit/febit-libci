@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DocumentUtilsTest {
 
     @Test
-    void testCopy() {
+    void deepCopy() {
         Stream.of(1, "a", true).forEach(v ->
                 assertSame(v, copy(v))
         );
@@ -55,7 +55,7 @@ class DocumentUtilsTest {
     }
 
     @Test
-    void testFlat() {
+    void flatten() {
         Stream.of(
                 1, "a", true,
                 new ArrayList<>(),
@@ -91,7 +91,7 @@ class DocumentUtilsTest {
         ), flat(original));
     }
     @Test
-    void testReplace() {
+    void replace() {
 
         var original = copy(Map.of(
                 "a", 1,
@@ -124,7 +124,7 @@ class DocumentUtilsTest {
     }
 
     @Test
-    void testInherit() {
+    void inherit() {
 
         var base = Map.of(
                 "flag", "base",
@@ -160,7 +160,7 @@ class DocumentUtilsTest {
     }
 
     @Test
-    void testWithPolicyNone() {
+    void withPolicyNone() {
 
         var base = Map.of(
                 "flag", "base",
@@ -187,7 +187,7 @@ class DocumentUtilsTest {
     }
 
     @Test
-    void testWithPolicyOnly() {
+    void withPolicyOnly() {
 
         var base = Map.of(
                 "flag", "base",

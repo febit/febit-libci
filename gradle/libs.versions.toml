@@ -7,6 +7,7 @@ mina-sshd = "2.17.1"
 groovy-cps = "1.31"
 jpi2 = "0.58.0-rc.1"
 eddsa = "0.3.0"
+mockito = '5.23.0'
 
 xbib-jflex = "3.0.2"
 
@@ -35,6 +36,7 @@ jgit-junit-http = { module = "org.eclipse.jgit:org.eclipse.jgit.junit.http", ver
 
 mina-sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "mina-sshd" }
 eddsa = { module = "net.i2p.crypto:eddsa", version.ref = "eddsa" }
+mockito-core = { module = 'org.mockito:mockito-core', version.ref = 'mockito' }
 
 [plugins]
 febit-bom = { id = "org.febit.standard-bom", version.ref = "febit-devkit" }

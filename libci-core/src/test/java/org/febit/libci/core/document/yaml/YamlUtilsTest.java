@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class YamlUtilsTest {
 
     @Test
-    void testDump() {
+    void dump() {
         var map = new LinkedHashMap<String, Object>();
         map.put("key", "value");
         map.put("list", List.of("item1", "item2"));
@@ -50,7 +50,7 @@ class YamlUtilsTest {
     }
 
     @Test
-    void testLoader() {
+    void loader() {
 
         var txt = """
                 key: value

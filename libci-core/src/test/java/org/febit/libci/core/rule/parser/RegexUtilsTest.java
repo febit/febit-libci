@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RegexUtilsTest {
 
     @Test
-    void testFlags() {
+    void parseFlags() {
         assertEquals(0, flags(null));
         assertEquals(0, flags(""));
         assertEquals(0, flags("gy"));
@@ -49,7 +49,7 @@ class RegexUtilsTest {
     }
 
     @Test
-    void testEncodeFlags() {
+    void formatFlags() {
         assertEquals("", encodeFlags(0));
 
         assertEquals("d", encodeFlags(Pattern.UNIX_LINES));
