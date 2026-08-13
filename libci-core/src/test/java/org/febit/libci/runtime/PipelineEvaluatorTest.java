@@ -24,6 +24,7 @@ import org.febit.libci.core.spec.RuleChangesSpec;
 import org.febit.libci.core.spec.RuleExistsSpec;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
+import org.febit.libci.core.variable.VarDefinedPhase;
 import org.febit.libci.core.variable.VarsHeapImpl;
 import org.febit.libci.runtime.plan.JobPlan;
 import org.febit.libci.runtime.state.JobState;
@@ -230,6 +231,18 @@ class PipelineEvaluatorTest {
         return PipelineContext.create(plan);
     }
 
+    private static PipelineContext newContext(Profile profile, Map<String, String> predefined) {
+        var baseVars = VarsHeapImpl.create();
+        var view = baseVars.withPhase(VarDefinedPhase.PREDEFINED_SYS);
+        predefined.forEach(view::direct);
+        var spec = PipelineEvaluator.builder()
+                .profile(profile)
+                .baseVars(baseVars)
+                .evaluate();
+        var plan = PipelinePlanner.create(spec, baseVars).plan();
+        return PipelineContext.create(plan);
+    }
+
     private static Profile newProfile(JobSpec... jobs) {
         var jobMapping = new TreeMap<String, JobSpec>();
         for (var job : jobs) {
@@ -293,6 +306,42 @@ class PipelineEvaluatorTest {
         dimensions.put(key2, values2);
         matrix.putAll(dimensions);
         return matrix;
+    }
+
+    @Test
+    void planIncludesJobWhenRegexRuleMatchesBranch() {
+        // End-to-end: the `if: '$BRANCH =~ /feature/'` rule must be evaluated with
+        // GitLab CI substring (partial) regex semantics through the full
+        // compile -> evaluate -> plan -> context pipeline.
+        var rule = JobSpec.Rule.builder()
+                .if0("$BRANCH =~ /feature/")
+                .when(JobSpec.When.ALWAYS)
+                .build();
+        var fallback = ruleNever();
+
+        var profile = newProfile(
+                newJob("feature-job", List.of(rule, fallback))
+        );
+
+        // "feature/login-form" contains "feature" -> rule matches -> job included
+        var onFeature = newContext(profile, Map.of("BRANCH", "feature/login-form"));
+        assertEquals(Set.of("feature-job"), onFeature.spec().jobs().keySet());
+
+        // "main" does not contain "feature" -> falls through to NEVER -> job excluded
+        var onMain = newContext(profile, Map.of("BRANCH", "main"));
+        assertTrue(onMain.spec().jobs().isEmpty());
+
+        // anchored pattern still works end-to-end: "^feature" only matches the prefix
+        var anchoredRule = JobSpec.Rule.builder()
+                .if0("$BRANCH =~ /^feature/")
+                .when(JobSpec.When.ALWAYS)
+                .build();
+        var anchoredProfile = newProfile(
+                newJob("anchored-job", List.of(anchoredRule, fallback))
+        );
+        assertEquals(Set.of("anchored-job"),
+                newContext(anchoredProfile, Map.of("BRANCH", "feature/x")).spec().jobs().keySet());
+        assertTrue(newContext(anchoredProfile, Map.of("BRANCH", "x-feature")).spec().jobs().isEmpty());
     }
 
     @Nested

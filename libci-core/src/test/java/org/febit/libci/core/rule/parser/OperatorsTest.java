@@ -144,6 +144,13 @@ class OperatorsTest {
         void notMatches() {
             assertFalse(Operators.matchWithRegex("abc", Pattern.compile("\\d+")));
         }
+
+        @Test
+        void containsMatch() {
+            // GitLab CI `=~` is a partial (substring) match, not a full-string match.
+            assertTrue(Operators.matchWithRegex("abc", Pattern.compile("b")));
+            assertFalse(Operators.matchWithRegex("abc", Pattern.compile("x")));
+        }
     }
 
     @Nested

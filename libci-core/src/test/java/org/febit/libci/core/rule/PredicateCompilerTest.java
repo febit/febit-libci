@@ -187,10 +187,62 @@ class PredicateCompilerTest {
         assertTrue(compile("$A == 'b' || $B == 'b'").eval(context));
         assertFalse(compile("$A == 'b' && $B == 'b'").eval(context));
 
-        assertFalse(compile("$ABC =~ /a*/").eval(context));
+        // GitLab CI `=~` is a partial (substring) match, not a full-string match:
+        assertTrue(compile("$ABC =~ /b/").eval(context));        // "abc" contains "b"
+        assertFalse(compile("$ABC =~ /x/").eval(context));       // "abc" does not contain "x"
         assertTrue(compile("$ABC =~ /[abc]+/").eval(context));
-        assertTrue(compile("$BBB !~ /a*/").eval(context));
-        assertTrue(compile("$BBB =~ /b*/").eval(context));
+        assertTrue(compile("$BBB !~ /x/").eval(context));        // "bbb" does not contain "x"
+        assertTrue(compile("$BBB =~ /b*/").eval(context));       // empty-prefix matches "bbb"
+    }
+
+    @Test
+    void regexMatch() {
+        var vars = VarsHeapImpl.create();
+        var view = vars.withPhase(VarDefinedPhase.PREDEFINED_SYS);
+        view.direct("CI_COMMIT_REF_NAME", "feature/login-form");
+        view.direct("CI_PIPELINE_SOURCE", "push");
+        // UNDEF is intentionally left undefined (null)
+
+        var context = ContextImpl.builder()
+                .vars(vars::get)
+                .build();
+
+        // --- substring (partial) match: the core GitLab CI semantics ---
+        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /feature/").eval(context));        // contains "feature"
+        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /login/").eval(context));          // contains "login"
+        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /release/").eval(context));       // not contained
+
+        // --- anchoring is still honored: a substring engine respects ^ and $ ---
+        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /^feature/").eval(context));       // starts with "feature"
+        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /^login/").eval(context));        // does not start with "login"
+        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /form$/").eval(context));          // ends with "form"
+        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /feature$/").eval(context));      // does not end with "feature"
+        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /^feature$/").eval(context));     // not the whole string
+
+        // --- !~ is the negation of =~ ---
+        assertFalse(compile("$CI_COMMIT_REF_NAME !~ /feature/").eval(context));       // it does contain "feature"
+        assertTrue(compile("$CI_COMMIT_REF_NAME !~ /release/").eval(context));        // it does not contain "release"
+        assertTrue(compile("$CI_COMMIT_REF_NAME !~ /^login/").eval(context));
+
+        // --- case sensitivity: no flag => case-sensitive ---
+        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /FEATURE/i").eval(context));       // (?i) flag
+        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /FEATURE/").eval(context));       // case-sensitive, no match
+
+        // --- null (undefined) variable never matches, but !~ is always true ---
+        assertFalse(compile("$UNDEF =~ /anything/").eval(context));                   // null left => false
+        assertFalse(compile("$UNDEF =~ /^.*$/").eval(context));                       // null left => false even for catch-all
+        assertTrue(compile("$UNDEF !~ /anything/").eval(context));                    // null left => !~ true
+
+        // --- combination with other operators (short-circuit friendly) ---
+        assertTrue(compile(
+                "$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_PIPELINE_SOURCE == \"push\""
+        ).eval(context));
+        assertFalse(compile(
+                "$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_PIPELINE_SOURCE == \"schedule\""
+        ).eval(context));
+        assertTrue(compile(
+                "$CI_COMMIT_REF_NAME !~ /^feature/ || $CI_PIPELINE_SOURCE == \"push\""
+        ).eval(context));
     }
 
 }

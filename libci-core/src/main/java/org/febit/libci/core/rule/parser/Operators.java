@@ -81,6 +81,7 @@ public class Operators {
     }
 
     private static boolean match(Pattern pattern, String text) {
-        return pattern.matcher(text).matches();
+        // GitLab CI `=~` / `!~` perform a partial (substring) match, not a full-string match.
+        return pattern.matcher(text).find();
     }
 }
