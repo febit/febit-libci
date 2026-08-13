@@ -188,7 +188,7 @@ class PipelinePlannerTest {
             assertEquals(1, plan.relations().size());
             var rel = plan.relations().getFirst();
             assertEquals(2, rel.job());           // build-app
-            assertEquals(1, rel.dependedOn());    // prepare-env
+            assertEquals(1, rel.dependsOn());    // prepare-env
             assertFalse(rel.optional());
             assertTrue(rel.artifacts());           // dependencies spec always requests artifacts
         }
@@ -221,8 +221,8 @@ class PipelinePlannerTest {
             // verify depends on build-app and prepare-env
             var verifyRels = plan.relationsOfJob(3);
             assertEquals(2, verifyRels.size());
-            assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 2));
-            assertTrue(verifyRels.stream().anyMatch(r -> r.dependedOn() == 1));
+            assertTrue(verifyRels.stream().anyMatch(r -> r.dependsOn() == 2));
+            assertTrue(verifyRels.stream().anyMatch(r -> r.dependsOn() == 1));
         }
     }
 
@@ -247,7 +247,7 @@ class PipelinePlannerTest {
             assertEquals(1, plan.relations().size());
             var rel = plan.relations().getFirst();
             assertEquals(2, rel.job());           // build-lib
-            assertEquals(1, rel.dependedOn());    // build-app
+            assertEquals(1, rel.dependsOn());    // build-app
             assertFalse(rel.optional());
             assertTrue(rel.artifacts());          // needs default artifacts=true
         }
@@ -269,7 +269,7 @@ class PipelinePlannerTest {
             assertEquals(1, plan.relations().size());
             var rel = plan.relations().getFirst();
             assertEquals(2, rel.job());
-            assertEquals(1, rel.dependedOn());
+            assertEquals(1, rel.dependsOn());
         }
 
         @Test
@@ -487,7 +487,7 @@ class PipelinePlannerTest {
             assertEquals(4, rels.size());
             for (int i = 0; i < 4; i++) {
                 int finalI = i + 1;
-                assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == finalI));
+                assertTrue(rels.stream().anyMatch(r -> r.dependsOn() == finalI));
             }
         }
 
@@ -522,8 +522,8 @@ class PipelinePlannerTest {
 
             assertEquals(2, rels.size());
             // linux+amd64 → iid 0, linux+arm64 → iid 1
-            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1));
-            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2));
+            assertTrue(rels.stream().anyMatch(r -> r.dependsOn() == 1));
+            assertTrue(rels.stream().anyMatch(r -> r.dependsOn() == 2));
         }
 
         @Test
@@ -582,8 +582,8 @@ class PipelinePlannerTest {
             var rels = plan.relationsOfJob(verify.iid());
 
             assertEquals(2, rels.size());
-            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 1 && r.artifacts()));
-            assertTrue(rels.stream().anyMatch(r -> r.dependedOn() == 2 && r.artifacts()));
+            assertTrue(rels.stream().anyMatch(r -> r.dependsOn() == 1 && r.artifacts()));
+            assertTrue(rels.stream().anyMatch(r -> r.dependsOn() == 2 && r.artifacts()));
         }
     }
 

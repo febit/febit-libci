@@ -20,21 +20,40 @@ import java.io.Serializable;
 /**
  * A resolved dependency relation in the job execution DAG.
  * <p>
- * Read as: {@code job} depends on {@code dependedOn} to complete first.
+ * Read as: {@code job} depends on {@code dependsOn} to complete first.
  *
- * @param job        dependent job iid (must wait)
- * @param dependedOn prerequisite job iid (must finish first)
- * @param optional   whether failure of {@code dependedOn} blocks {@code job}
- * @param artifacts  whether artifacts should be passed over this relation
+ * @param job       dependent job iid (must wait)
+ * @param dependsOn prerequisite job iid (must finish first)
+ * @param optional  whether failure of {@code dependsOn} blocks {@code job}
+ * @param artifacts whether artifacts should be passed over this relation
  */
 @lombok.Builder(
         builderClassName = "Builder"
 )
 public record JobRelation(
         int job,
-        int dependedOn,
+        int dependsOn,
         boolean optional,
         boolean artifacts
 ) implements Serializable {
 
+    /**
+     * @deprecated use {@link #dependsOn()} instead
+     */
+    @Deprecated(forRemoval = true)
+    public int dependedOn() {
+        return dependsOn;
+    }
+
+    public static class Builder {
+
+        /**
+         * @deprecated use {@link #dependsOn(int)} instead
+         */
+        @Deprecated(forRemoval = true)
+        public Builder dependedOn(int dependedOn) {
+            this.dependsOn = dependedOn;
+            return this;
+        }
+    }
 }

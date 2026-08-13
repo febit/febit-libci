@@ -214,7 +214,7 @@ public class PipelinePlanner {
                 }
                 relations.add(JobRelation.builder()
                         .job(job.iid())
-                        .dependedOn(pred.iid())
+                        .dependsOn(pred.iid())
                         .optional(dep.optional())
                         .artifacts(dep.artifacts())
                         .build());
@@ -239,7 +239,7 @@ public class PipelinePlanner {
             successors.add(new ArrayList<>());
         }
         for (var rel : relations) {
-            successors.get(rel.dependedOn() - 1).add(rel.job() - 1);
+            successors.get(rel.dependsOn() - 1).add(rel.job() - 1);
             indegree[rel.job() - 1]++;
         }
 

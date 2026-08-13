@@ -151,7 +151,7 @@ public class JobExecution implements Serializable {
     public List<String> artifactDependencies() {
         return context.plan().relationsOfJob(job.plan().iid()).stream()
                 .filter(JobRelation::artifacts)
-                .map(JobRelation::dependedOn)
+                .map(JobRelation::dependsOn)
                 .map(iid -> context.plan().job(iid).slug())
                 .toList();
     }
@@ -239,7 +239,7 @@ public class JobExecution implements Serializable {
             var depStates = new ArrayList<JobStateDependency>();
             var relations = context.plan().relationsOfJob(job.plan().iid());
             for (var rel : relations) {
-                var dependedPlan = context.plan().job(rel.dependedOn());
+                var dependedPlan = context.plan().job(rel.dependsOn());
                 var state = context.states().of(dependedPlan);
                 depStates.add(new JobStateDependency(state, rel.optional()));
             }
