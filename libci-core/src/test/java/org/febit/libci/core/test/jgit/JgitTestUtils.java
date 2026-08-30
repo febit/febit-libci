@@ -21,6 +21,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.dfs.DfsRepositoryDescription;
 import org.eclipse.jgit.internal.storage.dfs.InMemoryRepository;
 import org.eclipse.jgit.junit.TestRepository;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 import org.febit.lang.UncheckedException;
 import org.febit.lang.util.Base64Utils;
@@ -87,7 +88,13 @@ public class JgitTestUtils {
                     .setDirectory(dir)
                     .setInitialBranch(branch)
                     .call();
-            return commitTo(git.getRepository(), branch, files);
+            var repo = git.getRepository();
+            // Git.init().setInitialBranch() prefixes "refs/heads/" internally,
+            // so a fully-qualified branch like "refs/heads/main" would point
+            // HEAD to a non-existent "refs/heads/refs/heads/main". Re-link HEAD
+            // to the given branch to mimic a real remote repository.
+            repo.updateRef(Constants.HEAD).link(branch);
+            return commitTo(repo, branch, files);
         } catch (Exception e) {
             throw new UncheckedException(e);
         }
