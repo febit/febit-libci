@@ -53,6 +53,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -1058,6 +1059,30 @@ class JobSpecRecordsTest {
         void nameIsRequired() {
             assertThrowsNPE(Func.builder()::build);
             assertDoesNotThrow(Func.builder().name("my-func")::build);
+        }
+
+        @Test
+        void compactConstructor() {
+            // Mutable maps on purpose: otherwise the assertion would pass
+            // even without the defensive copy.
+            var func = Func.builder()
+                    .name("f")
+                    .inputs(new HashMap<>(Map.of("in", "1")))
+                    .env(new HashMap<>(Map.of("ENV", "1")))
+                    .build();
+            assertThrows(UnsupportedOperationException.class, () -> func.inputs().put("k", "v"));
+            assertThrows(UnsupportedOperationException.class, () -> func.env().put("k", "v"));
+        }
+
+        @Test
+        void compactConstructorKeepsNull() {
+            var func = Func.builder()
+                    .name("f")
+                    .inputs(null)
+                    .env(null)
+                    .build();
+            assertNull(func.inputs());
+            assertNull(func.env());
         }
     }
 

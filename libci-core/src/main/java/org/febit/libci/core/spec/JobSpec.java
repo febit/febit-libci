@@ -1194,6 +1194,11 @@ public record JobSpec(
             @Expandable(phase = ExpandPhase.COMMAND)
             Map<String, String> env
     ) implements ISpec {
+
+        public Func {
+            inputs = inputs == null ? null : Immutables.of(inputs);
+            env = env == null ? null : Immutables.of(env);
+        }
     }
 
     @Jacksonized
