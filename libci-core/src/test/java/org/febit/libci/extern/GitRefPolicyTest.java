@@ -15,31 +15,32 @@
  */
 package org.febit.libci.extern;
 
-import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import static org.febit.libci.extern.GitRefPolicy.isProtected;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GitRefPolicyTest {
 
-    @Test
-    void checkProtected() {
-        assertTrue(isProtected("master"));
-        assertTrue(isProtected("main"));
-        assertTrue(isProtected("dev"));
-        assertTrue(isProtected("develop"));
-        assertTrue(isProtected("uat"));
-        assertTrue(isProtected("test"));
-        assertTrue(isProtected("release"));
-        assertTrue(isProtected("releases"));
-        assertTrue(isProtected("RELEASE_1"));
-        assertTrue(isProtected("release-1.0"));
-        assertTrue(isProtected("RELEASE-1.0"));
-        assertTrue(isProtected("releases/2025-01-01"));
-
-        assertFalse(isProtected("feature/awesome-feature"));
-        assertFalse(isProtected("bugfix/critical-bug"));
-        assertFalse(isProtected("hotfix/urgent-fix"));
+    @TableTest("""
+            ref                 | protected
+            master              | true
+            main                | true
+            dev                 | true
+            develop             | true
+            uat                 | true
+            test                | true
+            release             | true
+            releases            | true
+            RELEASE_1           | true
+            release-1.0         | true
+            RELEASE-1.0         | true
+            releases/2025-01-01 | true
+            feature/awesome     | false
+            bugfix/critical     | false
+            hotfix/urgent       | false
+            """)
+    void checkProtected(String ref, boolean protectedRef) {
+        assertEquals(protectedRef, isProtected(ref));
     }
-
 }

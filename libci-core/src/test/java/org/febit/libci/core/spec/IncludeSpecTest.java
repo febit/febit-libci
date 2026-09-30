@@ -17,6 +17,7 @@ package org.febit.libci.core.spec;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import org.febit.libci.core.exception.ProfileException;
 
@@ -40,49 +41,21 @@ class IncludeSpecTest {
             assertNotNull(IncludeSpec.Kind.valueOf("TEMPLATE"));
         }
 
-        @Test
-        void isComponent() {
-            assertTrue(IncludeSpec.Kind.COMPONENT.isComponent());
-            assertFalse(IncludeSpec.Kind.REMOTE.isComponent());
-            assertFalse(IncludeSpec.Kind.PROJECT.isComponent());
-            assertFalse(IncludeSpec.Kind.LOCAL.isComponent());
-            assertFalse(IncludeSpec.Kind.TEMPLATE.isComponent());
-        }
-
-        @Test
-        void isRemote() {
-            assertFalse(IncludeSpec.Kind.COMPONENT.isRemote());
-            assertTrue(IncludeSpec.Kind.REMOTE.isRemote());
-            assertFalse(IncludeSpec.Kind.PROJECT.isRemote());
-            assertFalse(IncludeSpec.Kind.LOCAL.isRemote());
-            assertFalse(IncludeSpec.Kind.TEMPLATE.isRemote());
-        }
-
-        @Test
-        void isProject() {
-            assertFalse(IncludeSpec.Kind.COMPONENT.isProject());
-            assertFalse(IncludeSpec.Kind.REMOTE.isProject());
-            assertTrue(IncludeSpec.Kind.PROJECT.isProject());
-            assertFalse(IncludeSpec.Kind.LOCAL.isProject());
-            assertFalse(IncludeSpec.Kind.TEMPLATE.isProject());
-        }
-
-        @Test
-        void isLocal() {
-            assertFalse(IncludeSpec.Kind.COMPONENT.isLocal());
-            assertFalse(IncludeSpec.Kind.REMOTE.isLocal());
-            assertFalse(IncludeSpec.Kind.PROJECT.isLocal());
-            assertTrue(IncludeSpec.Kind.LOCAL.isLocal());
-            assertFalse(IncludeSpec.Kind.TEMPLATE.isLocal());
-        }
-
-        @Test
-        void isTemplate() {
-            assertFalse(IncludeSpec.Kind.COMPONENT.isTemplate());
-            assertFalse(IncludeSpec.Kind.REMOTE.isTemplate());
-            assertFalse(IncludeSpec.Kind.PROJECT.isTemplate());
-            assertFalse(IncludeSpec.Kind.LOCAL.isTemplate());
-            assertTrue(IncludeSpec.Kind.TEMPLATE.isTemplate());
+        @TableTest("""
+                value     | isComponent | isRemote | isProject | isLocal | isTemplate
+                COMPONENT | true        | false    | false     | false   | false
+                REMOTE    | false       | true     | false     | false   | false
+                PROJECT   | false       | false    | true      | false   | false
+                LOCAL     | false       | false    | false     | true    | false
+                TEMPLATE  | false       | false    | false     | false   | true
+                """)
+        void flags(IncludeSpec.Kind value, boolean isComponent, boolean isRemote,
+                   boolean isProject, boolean isLocal, boolean isTemplate) {
+            assertEquals(isComponent, value.isComponent());
+            assertEquals(isRemote, value.isRemote());
+            assertEquals(isProject, value.isProject());
+            assertEquals(isLocal, value.isLocal());
+            assertEquals(isTemplate, value.isTemplate());
         }
     }
 

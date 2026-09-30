@@ -15,23 +15,23 @@
  */
 package org.febit.libci.core.variable;
 
-import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class VarDefinedPhaseTest {
 
-    @Test
-    void canOverride() {
-        assertTrue(VarDefinedPhase.LIBCI_CONST.canOverride(VarDefinedPhase.PERSISTED_JOB));
-        assertTrue(VarDefinedPhase.PERSISTED_JOB.canOverride(VarDefinedPhase.LIBCI_CONST));
-
-        assertTrue(VarDefinedPhase.CUSTOM.canOverride(VarDefinedPhase.DEFINED_JOB));
-        assertFalse(VarDefinedPhase.DEFINED_JOB.canOverride(VarDefinedPhase.CUSTOM));
-
-        assertTrue(VarDefinedPhase.UNDEFINED.canOverride(VarDefinedPhase.UNDEFINED));
-        assertTrue(VarDefinedPhase.RUNTIME_ENV.canOverride(VarDefinedPhase.UNDEFINED));
-        assertFalse(VarDefinedPhase.UNDEFINED.canOverride(VarDefinedPhase.RUNTIME_ENV));
+    @TableTest("""
+            from          | to            | expected
+            LIBCI_CONST   | PERSISTED_JOB | true
+            PERSISTED_JOB | LIBCI_CONST   | true
+            CUSTOM        | DEFINED_JOB   | true
+            DEFINED_JOB   | CUSTOM        | false
+            UNDEFINED     | UNDEFINED     | true
+            RUNTIME_ENV   | UNDEFINED     | true
+            UNDEFINED     | RUNTIME_ENV   | false
+            """)
+    void canOverride(VarDefinedPhase from, VarDefinedPhase to, boolean expected) {
+        assertEquals(expected, from.canOverride(to));
     }
-
 }

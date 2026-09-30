@@ -16,6 +16,7 @@
 package org.febit.libci.core.spec;
 
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,34 +27,17 @@ class CiJobStatusTest {
         assertEquals(6, CiJobStatus.values().length);
     }
 
-    @Test
-    void unknownValue() {
-        assertEquals("__UNKNOWN__", CiJobStatus.UNKNOWN.value());
-    }
-
-    @Test
-    void pendingValue() {
-        assertEquals("pending", CiJobStatus.PENDING.value());
-    }
-
-    @Test
-    void runningValue() {
-        assertEquals("running", CiJobStatus.RUNNING.value());
-    }
-
-    @Test
-    void canceledValue() {
-        assertEquals("canceled", CiJobStatus.CANCELED.value());
-    }
-
-    @Test
-    void successValue() {
-        assertEquals("success", CiJobStatus.SUCCESS.value());
-    }
-
-    @Test
-    void failedValue() {
-        assertEquals("failed", CiJobStatus.FAILED.value());
+    @TableTest("""
+            status   | value
+            UNKNOWN  | __UNKNOWN__
+            PENDING  | pending
+            RUNNING  | running
+            CANCELED | canceled
+            SUCCESS  | success
+            FAILED   | failed
+            """)
+    void value(CiJobStatus status, String value) {
+        assertEquals(value, status.value());
     }
 
     @Test

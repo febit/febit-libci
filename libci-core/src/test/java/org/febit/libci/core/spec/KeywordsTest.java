@@ -16,112 +16,60 @@
 package org.febit.libci.core.spec;
 
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
-import java.util.List;
-import java.util.stream.Stream;
-
-import static org.febit.libci.core.spec.Keywords.AFTER_SCRIPT;
-import static org.febit.libci.core.spec.Keywords.ARTIFACTS;
-import static org.febit.libci.core.spec.Keywords.BEFORE_SCRIPT;
-import static org.febit.libci.core.spec.Keywords.CACHE;
-import static org.febit.libci.core.spec.Keywords.DEFAULT;
-import static org.febit.libci.core.spec.Keywords.EXTENDS;
-import static org.febit.libci.core.spec.Keywords.HOOKS;
-import static org.febit.libci.core.spec.Keywords.ID_TOKENS;
-import static org.febit.libci.core.spec.Keywords.IMAGE;
-import static org.febit.libci.core.spec.Keywords.INCLUDE;
-import static org.febit.libci.core.spec.Keywords.INTERRUPTIBLE;
-import static org.febit.libci.core.spec.Keywords.RETRY;
-import static org.febit.libci.core.spec.Keywords.SCRIPT;
-import static org.febit.libci.core.spec.Keywords.SERVICES;
-import static org.febit.libci.core.spec.Keywords.STAGE;
-import static org.febit.libci.core.spec.Keywords.STAGES;
-import static org.febit.libci.core.spec.Keywords.TAGS;
-import static org.febit.libci.core.spec.Keywords.TIMEOUT;
-import static org.febit.libci.core.spec.Keywords.VARIABLES;
-import static org.febit.libci.core.spec.Keywords.WORKFLOW;
 import static org.junit.jupiter.api.Assertions.*;
 
 class KeywordsTest {
 
-    @Test
-    void checkIsHiddenJob() {
-        //noinspection DataFlowIssue
-        assertFalse(Keywords.isHiddenJob(null));
-
-        var names = List.of(
-                "", "unknown", "abc",
-                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
-                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
-        );
-        names.forEach(name -> assertFalse(Keywords.isHiddenJob(name)));
-        names.stream().map(n -> "." + n).forEach(name -> assertTrue(Keywords.isHiddenJob(name)));
+    @TableTest("""
+            name          | hidden | regular | global | deprecated | props
+                          | false  | false   | false  | false      | false
+            ''            | false  | false   | false  | false      | false
+            '   '         | false  | true    | false  | false      | false
+            unknown       | false  | true    | false  | false      | false
+            abc           | false  | true    | false  | false      | false
+            include       | false  | false   | true   | false      | false
+            default       | false  | false   | true   | false      | false
+            stages        | false  | false   | true   | false      | false
+            workflow      | false  | false   | true   | false      | false
+            variables     | false  | false   | true   | false      | false
+            image         | false  | false   | true   | true       | true
+            services      | false  | false   | true   | true       | true
+            cache         | false  | false   | true   | true       | true
+            before_script | false  | false   | true   | true       | true
+            after_script  | false  | false   | true   | true       | true
+            script        | false  | true    | false  | false      | false
+            stage         | false  | true    | false  | false      | false
+            extends       | false  | true    | false  | false      | false
+            artifacts     | false  | true    | false  | false      | true
+            hooks         | false  | true    | false  | false      | true
+            id_tokens     | false  | true    | false  | false      | true
+            interruptible | false  | true    | false  | false      | true
+            retry         | false  | true    | false  | false      | true
+            tags          | false  | true    | false  | false      | true
+            timeout       | false  | true    | false  | false      | true
+            .             | true   | false   | false  | false      | false
+            .unknown      | true   | false   | false  | false      | false
+            .abc          | true   | false   | false  | false      | false
+            .include      | true   | false   | false  | false      | false
+            .image        | true   | false   | false  | false      | false
+            .script       | true   | false   | false  | false      | false
+            .stage        | true   | false   | false  | false      | false
+            .after_script | true   | false   | false  | false      | false
+            """)
+    void classify(String name, boolean hidden, boolean regular,
+                  boolean global, boolean deprecated, boolean props) {
+        assertEquals(hidden, Keywords.isHiddenJob(name), "isHiddenJob");
+        assertEquals(regular, Keywords.isRegularJob(name), "isRegularJob");
+        assertEquals(global, Keywords.isGlobalKeyword(name), "isGlobalKeyword");
+        assertEquals(deprecated, Keywords.isDeprecatedGlobalKeyword(name), "isDeprecatedGlobalKeyword");
+        assertEquals(props, Keywords.isPropsOfDefaultSection(name), "isPropsOfDefaultSection");
     }
 
     @Test
-    void checkIsRegularJob() {
-        //noinspection DataFlowIssue
-        assertFalse(Keywords.isRegularJob(null));
-        assertFalse(Keywords.isRegularJob(""));
-
-        assertTrue(Keywords.isRegularJob("a".repeat(255)));
-        assertFalse(Keywords.isRegularJob("a".repeat(256)));
-
-        var keywords = List.of(
-                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
-                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
-        );
-        keywords.forEach(name -> assertFalse(Keywords.isRegularJob(name)));
-        keywords.stream().map(n -> "." + n).forEach(name -> assertFalse(Keywords.isRegularJob(name)));
-
-        var names = List.of("unknown", "abc", SCRIPT, STAGE, EXTENDS);
-        names.forEach(name -> assertTrue(Keywords.isRegularJob(name)));
-        names.stream().map(n -> "." + n).forEach(name -> assertFalse(Keywords.isRegularJob(name)));
-    }
-
-    @Test
-    void checkIsGlobalKeyword() {
-        //noinspection DataFlowIssue
-        assertFalse(Keywords.isGlobalKeyword(null));
-
-        Stream.of("", "  ", "unknown", "abc", STAGE, EXTENDS)
-                .forEach(key -> assertFalse(Keywords.isGlobalKeyword(key)));
-
-        Stream.of(
-                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
-                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
-        ).forEach(key -> assertTrue(Keywords.isGlobalKeyword(key)));
-    }
-
-    @Test
-    void checkIsDeprecatedGlobalKeyword() {
-        //noinspection DataFlowIssue
-        assertFalse(Keywords.isDeprecatedGlobalKeyword(null));
-
-        Stream.of(
-                "", "  ", "unknown", "abc",
-                INCLUDE, DEFAULT, STAGES, WORKFLOW, VARIABLES,
-                STAGE, EXTENDS
-        ).forEach(key -> assertFalse(Keywords.isDeprecatedGlobalKeyword(key)));
-
-        Stream.of(
-                IMAGE, SERVICES, CACHE, BEFORE_SCRIPT, AFTER_SCRIPT
-        ).forEach(key -> assertTrue(Keywords.isDeprecatedGlobalKeyword(key)));
-    }
-
-    @Test
-    void checkIsPropsOfDefaultSection() {
-        //noinspection DataFlowIssue
-        assertFalse(Keywords.isPropsOfDefaultSection(null));
-
-        Stream.of(
-                "", "  ", "unknown", "abc",
-                INCLUDE, DEFAULT, STAGES, WORKFLOW, STAGE, EXTENDS
-        ).forEach(key -> assertFalse(Keywords.isPropsOfDefaultSection(key)));
-
-        Stream.of(
-                AFTER_SCRIPT, ARTIFACTS, BEFORE_SCRIPT, CACHE, HOOKS,
-                ID_TOKENS, IMAGE, INTERRUPTIBLE, RETRY, SERVICES, TAGS, TIMEOUT
-        ).forEach(key -> assertTrue(Keywords.isPropsOfDefaultSection(key)));
+    void regularJobLengthBound() {
+        assertTrue(Keywords.isRegularJob("a".repeat(Keywords.JOB_NAME_MAX_LENGTH)));
+        assertFalse(Keywords.isRegularJob("a".repeat(Keywords.JOB_NAME_MAX_LENGTH + 1)));
     }
 }

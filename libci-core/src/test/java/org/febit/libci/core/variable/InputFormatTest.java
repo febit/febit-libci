@@ -16,8 +16,10 @@
 package org.febit.libci.core.variable;
 
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
+import org.tabletest.junit.TypeConverter;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import static org.febit.libci.core.variable.InputFormat.array;
 import static org.febit.libci.core.variable.InputFormat.bool;
@@ -30,90 +32,154 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InputFormatTest {
 
-    @Test
-    @SuppressWarnings("ConstantValue")
-    void checkIsNullOrEmpty() {
-        assertTrue(isNullOrEmpty(null));
-        assertTrue(isNullOrEmpty(""));
-        assertFalse(isNullOrEmpty(" "));
-        assertFalse(isNullOrEmpty(0));
-        assertFalse(isNullOrEmpty(false));
+    @TypeConverter
+    static Object decode(String cell) {
+        if (cell == null) {
+            return null;
+        }
+        if (cell.isEmpty()) {
+            return "";
+        }
+        if (cell.startsWith("int:")) {
+            return Integer.parseInt(cell.substring(4));
+        }
+        if (cell.startsWith("long:")) {
+            return Long.parseLong(cell.substring(5));
+        }
+        if (cell.startsWith("dbl:")) {
+            return Double.parseDouble(cell.substring(4));
+        }
+        if (cell.startsWith("bool:")) {
+            return Boolean.parseBoolean(cell.substring(5));
+        }
+        if (cell.startsWith("str:")) {
+            return cell.substring(4);
+        }
+        if (cell.startsWith("list:")) {
+            var items = cell.substring(5).split(",");
+            var list = new ArrayList<Object>(items.length);
+            for (var item : items) {
+                list.add("null".equals(item) ? null : decode(item));
+            }
+            return list;
+        }
+        if ("true".equals(cell)) {
+            return Boolean.TRUE;
+        }
+        if ("false".equals(cell)) {
+            return Boolean.FALSE;
+        }
+        if (cell.matches("-?\\d+")) {
+            return Integer.parseInt(cell);
+        }
+        return cell;
     }
 
-    @Test
-    void convertUndefined() {
-        assertNull(undefined(null));
-        assertNull(undefined(""));
-        assertEquals(" ", undefined(" "));
-        assertEquals(0, undefined(0));
-        assertEquals(false, undefined(false));
+    @TableTest("""
+            input | expected
+                  | true
+            ''    | true
+            ' '   | false
+            0     | false
+            false | false
+            """)
+    void checkIsNullOrEmpty(String input, boolean expected) {
+        assertEquals(expected, isNullOrEmpty(decode(input)));
     }
 
-    @Test
-    void convertNumber() {
-        assertNull(number(null));
-        assertNull(number(""));
-        assertEquals(123, number(123));
-        assertEquals(123L, number(123L));
-        assertEquals(123L, number("123"));
-        assertEquals(123L, number("  123  "));
-        assertEquals(123.45, number("123.45"));
-        assertEquals(123.45, number("  123.45  "));
-
-        assertThrows(Exception.class, () -> number("abc"));
-        assertThrows(Exception.class, () -> number("123abc"));
-        assertThrows(Exception.class, () -> number("abc123"));
+    @TableTest("""
+            input | expected
+                  |
+            ''    |
+            ' '   | ' '
+            0     | 0
+            false | false
+            """)
+    void convertUndefined(String input, String expected) {
+        assertEquals(decode(expected), undefined(decode(input)));
     }
 
-    @Test
-    void convertString() {
-        assertNull(string(null));
-        assertNull(string(""));
-        assertEquals(" ", string(" "));
-        assertEquals("abc", string("abc"));
-        assertEquals("123", string(123));
-        assertEquals("true", string(true));
+    @TableTest("""
+            input     | expected
+                  |
+            ''        |
+            ' '       | ' '
+            abc       | abc
+            int:123   | 123
+            bool:true | true
+            """)
+    void convertString(String input, String expected) {
+        assertEquals(expected, string(decode(input)));
     }
 
-    @Test
-    void convertArray() {
-        assertNull(array(null));
-        assertNull(array(""));
-        assertThrows(Exception.class, () -> array("abc"));
-        assertThrows(Exception.class, () -> array(123));
-        assertThrows(Exception.class, () -> array(true));
-
-        var list = List.of(1, "a", true);
-        assertSame(list, array(list));
+    @TableTest("""
+            input            | expected   | throws
+                             |            | false
+            ''               |            | false
+            int:123          | int:123    | false
+            long:123         | long:123   | false
+            str:123          | long:123   | false
+            'str:  123  '    | long:123   | false
+            dbl:123.45       | dbl:123.45 | false
+            'str:  123.45  ' | dbl:123.45 | false
+            str:abc          |            | true
+            str:123abc       |            | true
+            str:abc123       |            | true
+            """)
+    void convertNumber(String input, String expected, boolean throwsException) {
+        if (throwsException) {
+            assertThrows(Exception.class, () -> number(decode(input)));
+        } else {
+            assertEquals(decode(expected), number(decode(input)));
+        }
     }
 
-    @Test
-    void convertBool() {
-        assertNull(bool(null));
-        assertNull(bool(""));
+    @TableTest("""
+            input      | expected | throws
+                       |          | false
+            ''         |          | false
+            int:2      |          | true
+            str:abc    |          | true
+            bool:true  | true     | false
+            bool:false | false    | false
+            int:0      | false    | false
+            int:1      | true     | false
+            str:1      | true     | false
+            str:true   | true     | false
+            str:y      | true     | false
+            str:Y      | true     | false
+            str:Yes    | true     | false
+            str:on     | true     | false
+            str:0      | false    | false
+            str:false  | false    | false
+            str:n      | false    | false
+            str:N      | false    | false
+            str:No     | false    | false
+            str:off    | false    | false
+            """)
+    void convertBool(String input, String expected, boolean throwsException) {
+        if (throwsException) {
+            assertThrows(Exception.class, () -> bool(decode(input)));
+        } else {
+            assertEquals(decode(expected), bool(decode(input)));
+        }
+    }
 
-        assertThrows(Exception.class, () -> bool("abc"));
-        assertThrows(Exception.class, () -> bool(2));
-
-        assertEquals(true, bool(true));
-        assertEquals(false, bool(false));
-
-        assertEquals(false, bool(0));
-        assertEquals(true, bool(1));
-
-        assertEquals(true, bool("1"));
-        assertEquals(true, bool("true"));
-        assertEquals(true, bool("y"));
-        assertEquals(true, bool("Y"));
-        assertEquals(true, bool("Yes"));
-        assertEquals(true, bool("on"));
-
-        assertEquals(false, bool("0"));
-        assertEquals(false, bool("false"));
-        assertEquals(false, bool("n"));
-        assertEquals(false, bool("N"));
-        assertEquals(false, bool("No"));
-        assertEquals(false, bool("off"));
+    @TableTest("""
+            input         | expected      | throws
+                          |               | false
+            ''            |               | false
+            int:123       |               | true
+            bool:true     |               | true
+            str:abc       |               | true
+            list:1,a,true | list:1,a,true | false
+            """)
+    void convertArray(String input, String expected, boolean throwsException) {
+        if (throwsException) {
+            assertThrows(Exception.class, () -> array(decode(input)));
+        } else {
+            assertEquals(decode(expected), array(decode(input)));
+        }
     }
 
     @Test
@@ -130,5 +196,4 @@ class InputFormatTest {
         assertEquals("a", nvl("a", "b"));
         assertEquals("a", nvl("a", "b", "c"));
     }
-
 }

@@ -15,33 +15,35 @@
  */
 package org.febit.libci.core.spec.support;
 
-import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import static org.febit.libci.core.spec.support.SlugUtils.resolve;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SlugUtilsTest {
 
-    @Test
-    void computeSlug() {
-        assertEquals("", resolve(null));
-        assertEquals("", resolve(""));
-        assertEquals("", resolve("   "));
-        assertEquals("", resolve("!@#$%^&*()"));
-        assertEquals("a", resolve("a"));
-        assertEquals("A", resolve("A"));
-        assertEquals("0", resolve("0"));
-        assertEquals("9", resolve("9"));
-        assertEquals("a-b-c", resolve("a b c"));
-        assertEquals("a-b-c", resolve("a_b_c"));
-        assertEquals("a-b-c", resolve("a@b#c"));
-        assertEquals("abc", resolve("abc"));
-        assertEquals("abc", resolve("  abc  "));
-        assertEquals("abc-123", resolve("  abc 123  "));
-        assertEquals("abc-123-xyz", resolve("  abc 123 xyz  "));
-        assertEquals("abc-123-xyz", resolve("  abc_123_xyz  "));
-        assertEquals("abc-123-xyz", resolve("  abc@123#xyz  "));
-        assertEquals("abc-123-xyz", resolve("!@#abc$%^123&*()xyz"));
+    @TableTest("""
+            input                 | expected
+                                  | ''
+            ''                    | ''
+            '   '                 | ''
+            '!@#$%^&*()'          | ''
+            a                     | a
+            A                     | A
+            0                     | 0
+            9                     | 9
+            'a b c'               | a-b-c
+            'a_b_c'               | a-b-c
+            'a@b#c'               | a-b-c
+            abc                   | abc
+            '  abc  '             | abc
+            '  abc 123  '         | abc-123
+            '  abc 123 xyz  '     | abc-123-xyz
+            '  abc_123_xyz  '     | abc-123-xyz
+            '  abc@123#xyz  '     | abc-123-xyz
+            '!@#abc$%^123&*()xyz' | abc-123-xyz
+            """)
+    void computeSlug(String input, String expected) {
+        assertEquals(expected, resolve(input));
     }
-
 }

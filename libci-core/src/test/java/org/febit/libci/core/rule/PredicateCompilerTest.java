@@ -16,6 +16,7 @@
 package org.febit.libci.core.rule;
 
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import org.febit.libci.core.exception.RuleFormatException;
 import org.febit.libci.core.rule.ir.BiPredicateChain;
@@ -36,58 +37,25 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PredicateCompilerTest {
 
-    @Test
-    void invalid() {
-        assertThatThrownBy(() -> compile("1"))
+    @TableTest("""
+            expr              | message
+            1                 | "Illegal expr character '1'"
+            $VAR && $B )      | "Unexpected token 'RPAREN', expect: EOF"
+            ==                | "Unexpected token 'EQ', expect: variable,"
+            $VAR ==           | "Unexpected token 'EOF', expect: variable or"
+            $VAR == (         | "Unexpected token 'LPAREN', expect: variable or"
+            $VAR == ==        | "Unexpected token 'EQ', expect: variable or"
+            '$VAR == ||'      | "Unexpected token 'OR', expect: variable or"
+            $VAR (            | "Unexpected token 'LPAREN', missing operator"
+            $VAR $B           | "Unexpected token 'VAR', missing operator"
+            "$VAR ''"         | "Unexpected token 'DIRECT_VALUE', missing operator"
+            "$VAR == 'a' == " | "Unexpected token 'EQ', expect: &&,"
+            "$VAR == 'a' != " | "Unexpected token 'NOT_EQ', expect: &&,"
+            """)
+    void invalidMessage(String expr, String message) {
+        assertThatThrownBy(() -> compile(expr))
                 .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Illegal expr character '1'");
-
-        // EOF
-        assertThatThrownBy(() -> compile("$VAR && $B )"))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'RPAREN', expect: EOF");
-
-        // Basic Predicate
-        assertThatThrownBy(() -> compile("=="))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'EQ', expect: variable,");
-
-        // Value
-        assertThatThrownBy(() -> compile("$VAR =="))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'EOF', expect: variable or");
-
-        assertThatThrownBy(() -> compile("$VAR == ("))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'LPAREN', expect: variable or");
-
-        assertThatThrownBy(() -> compile("$VAR == =="))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'EQ', expect: variable or");
-
-        assertThatThrownBy(() -> compile("$VAR == ||"))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'OR', expect: variable or");
-
-        // Missing operator
-        assertThatThrownBy(() -> compile("$VAR ("))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'LPAREN', missing operator");
-        assertThatThrownBy(() -> compile("$VAR $B"))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'VAR', missing operator");
-        assertThatThrownBy(() -> compile("$VAR ''"))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'DIRECT_VALUE', missing operator");
-
-        // And Predicate
-        assertThatThrownBy(() -> compile("$VAR == 'a' == "))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'EQ', expect: &&,");
-
-        assertThatThrownBy(() -> compile("$VAR == 'a' != "))
-                .isInstanceOf(RuleFormatException.class)
-                .hasMessageContaining("Unexpected token 'NOT_EQ', expect: &&,");
+                .hasMessageContaining(message);
     }
 
     @Test
@@ -132,118 +100,76 @@ class PredicateCompilerTest {
         ;
     }
 
-    @Test
-    void logic() {
-        assertThat(compile("$A && $B && $C"))
+    @TableTest("""
+            expr               | expected
+            '$A && $B && $C'   | '(($A && $B) && $C)'
+            '$A || $B || $C'   | '(($A || $B) || $C)'
+            '$A && $B || $C'   | '(($A && $B) || $C)'
+            '$A && ($B || $C)' | '($A && ($B || $C))'
+            '$A || $B && $C'   | '($A || ($B && $C))'
+            '($A || $B) && $C' | '(($A || $B) && $C)'
+            """)
+    void logic(String expr, String expected) {
+        assertThat(compile(expr))
                 .asInstanceOf(type(BiPredicateChain.class))
-                .returns("(($A && $B) && $C)", Object::toString);
-
-        assertThat(compile("$A || $B || $C"))
-                .asInstanceOf(type(BiPredicateChain.class))
-                .returns("(($A || $B) || $C)", Object::toString);
-
-        assertThat(compile("$A && $B || $C"))
-                .asInstanceOf(type(BiPredicateChain.class))
-                .returns("(($A && $B) || $C)", Object::toString);
-
-        assertThat(compile("$A && ($B || $C)"))
-                .asInstanceOf(type(BiPredicateChain.class))
-                .returns("($A && ($B || $C))", Object::toString);
-
-        assertThat(compile("$A || $B && $C"))
-                .asInstanceOf(type(BiPredicateChain.class))
-                .returns("($A || ($B && $C))", Object::toString);
-
-        assertThat(compile("($A || $B) && $C"))
-                .asInstanceOf(type(BiPredicateChain.class))
-                .returns("(($A || $B) && $C)", Object::toString);
+                .returns(expected, Object::toString);
     }
 
-    @Test
-    void operators() {
+    private Context evalContext() {
         var vars = VarsHeapImpl.create();
-
         var view = vars.withPhase(VarDefinedPhase.PREDEFINED_SYS);
         view.direct("EMPTY", "");
         view.direct("A", "a");
         view.direct("B", "b");
         view.direct("ABC", "abc");
         view.direct("BBB", "bbb");
-
-        var context = ContextImpl.builder()
-                .vars(vars::get)
-                .build();
-
-        assertFalse(compile("$EMPTY").eval(context));
-        assertTrue(compile("$EMPTY == ''").eval(context));
-
-        assertTrue(compile("$A").eval(context));
-        assertTrue(compile("$A == 'a'").eval(context));
-        assertFalse(compile("$A != 'a'").eval(context));
-        assertTrue(compile("$A != 'b'").eval(context));
-        assertFalse(compile("$A == 'b'").eval(context));
-
-        assertTrue(compile("$A == 'a' && $B == 'b'").eval(context));
-        assertTrue(compile("$A == 'a' || $B == 'b'").eval(context));
-        assertTrue(compile("$A == 'b' || $B == 'b'").eval(context));
-        assertFalse(compile("$A == 'b' && $B == 'b'").eval(context));
-
-        // GitLab CI `=~` is a partial (substring) match, not a full-string match:
-        assertTrue(compile("$ABC =~ /b/").eval(context));        // "abc" contains "b"
-        assertFalse(compile("$ABC =~ /x/").eval(context));       // "abc" does not contain "x"
-        assertTrue(compile("$ABC =~ /[abc]+/").eval(context));
-        assertTrue(compile("$BBB !~ /x/").eval(context));        // "bbb" does not contain "x"
-        assertTrue(compile("$BBB =~ /b*/").eval(context));       // empty-prefix matches "bbb"
-    }
-
-    @Test
-    void regexMatch() {
-        var vars = VarsHeapImpl.create();
-        var view = vars.withPhase(VarDefinedPhase.PREDEFINED_SYS);
         view.direct("CI_COMMIT_REF_NAME", "feature/login-form");
         view.direct("CI_PIPELINE_SOURCE", "push");
         // UNDEF is intentionally left undefined (null)
-
-        var context = ContextImpl.builder()
+        return ContextImpl.builder()
                 .vars(vars::get)
                 .build();
-
-        // --- substring (partial) match: the core GitLab CI semantics ---
-        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /feature/").eval(context));        // contains "feature"
-        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /login/").eval(context));          // contains "login"
-        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /release/").eval(context));       // not contained
-
-        // --- anchoring is still honored: a substring engine respects ^ and $ ---
-        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /^feature/").eval(context));       // starts with "feature"
-        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /^login/").eval(context));        // does not start with "login"
-        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /form$/").eval(context));          // ends with "form"
-        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /feature$/").eval(context));      // does not end with "feature"
-        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /^feature$/").eval(context));     // not the whole string
-
-        // --- !~ is the negation of =~ ---
-        assertFalse(compile("$CI_COMMIT_REF_NAME !~ /feature/").eval(context));       // it does contain "feature"
-        assertTrue(compile("$CI_COMMIT_REF_NAME !~ /release/").eval(context));        // it does not contain "release"
-        assertTrue(compile("$CI_COMMIT_REF_NAME !~ /^login/").eval(context));
-
-        // --- case sensitivity: no flag => case-sensitive ---
-        assertTrue(compile("$CI_COMMIT_REF_NAME =~ /FEATURE/i").eval(context));       // (?i) flag
-        assertFalse(compile("$CI_COMMIT_REF_NAME =~ /FEATURE/").eval(context));       // case-sensitive, no match
-
-        // --- null (undefined) variable never matches, but !~ is always true ---
-        assertFalse(compile("$UNDEF =~ /anything/").eval(context));                   // null left => false
-        assertFalse(compile("$UNDEF =~ /^.*$/").eval(context));                       // null left => false even for catch-all
-        assertTrue(compile("$UNDEF !~ /anything/").eval(context));                    // null left => !~ true
-
-        // --- combination with other operators (short-circuit friendly) ---
-        assertTrue(compile(
-                "$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_PIPELINE_SOURCE == \"push\""
-        ).eval(context));
-        assertFalse(compile(
-                "$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_PIPELINE_SOURCE == \"schedule\""
-        ).eval(context));
-        assertTrue(compile(
-                "$CI_COMMIT_REF_NAME !~ /^feature/ || $CI_PIPELINE_SOURCE == \"push\""
-        ).eval(context));
     }
 
+    @TableTest("""
+            expr                                                                     | expected
+            $EMPTY                                                                   | false
+            "$EMPTY == ''"                                                           | true
+            $A                                                                       | true
+            "$A == 'a'"                                                              | true
+            "$A != 'a'"                                                              | false
+            "$A != 'b'"                                                              | true
+            "$A == 'b'"                                                              | false
+            "$A == 'a' && $B == 'b'"                                                 | true
+            "$A == 'a' || $B == 'b'"                                                 | true
+            "$A == 'b' || $B == 'b'"                                                 | true
+            "$A == 'b' && $B == 'b'"                                                 | false
+            $ABC =~ /b/                                                              | true
+            $ABC =~ /x/                                                              | false
+            $ABC =~ /[abc]+/                                                         | true
+            $BBB !~ /x/                                                              | true
+            $BBB =~ /b*/                                                             | true
+            $CI_COMMIT_REF_NAME =~ /feature/                                         | true
+            $CI_COMMIT_REF_NAME =~ /login/                                           | true
+            $CI_COMMIT_REF_NAME =~ /release/                                         | false
+            $CI_COMMIT_REF_NAME =~ /^feature/                                        | true
+            $CI_COMMIT_REF_NAME =~ /^login/                                          | false
+            $CI_COMMIT_REF_NAME =~ /form$/                                           | true
+            $CI_COMMIT_REF_NAME =~ /feature$/                                        | false
+            $CI_COMMIT_REF_NAME =~ /^feature$/                                       | false
+            $CI_COMMIT_REF_NAME !~ /feature/                                         | false
+            $CI_COMMIT_REF_NAME !~ /release/                                         | true
+            $CI_COMMIT_REF_NAME !~ /^login/                                          | true
+            $CI_COMMIT_REF_NAME =~ /FEATURE/i                                        | true
+            $CI_COMMIT_REF_NAME =~ /FEATURE/                                         | false
+            $UNDEF =~ /anything/                                                     | false
+            $UNDEF =~ /^.*$/                                                         | false
+            $UNDEF !~ /anything/                                                     | true
+            '$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_PIPELINE_SOURCE == "push"'     | true
+            '$CI_COMMIT_REF_NAME =~ /^feature/ && $CI_PIPELINE_SOURCE == "schedule"' | false
+            '$CI_COMMIT_REF_NAME !~ /^feature/ || $CI_PIPELINE_SOURCE == "push"'     | true
+            """)
+    void eval(String expr, boolean expected) {
+        assertEquals(expected, compile(expr).eval(evalContext()));
+    }
 }

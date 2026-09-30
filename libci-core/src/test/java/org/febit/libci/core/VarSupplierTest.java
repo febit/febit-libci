@@ -16,27 +16,20 @@
 package org.febit.libci.core;
 
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class VarSupplierTest {
 
-    @Test
-    void expandNull() {
-        var supplier = new TestVarSupplier();
-        assertEquals("", supplier.expand(null));
-    }
-
-    @Test
-    void expandEmpty() {
-        var supplier = new TestVarSupplier();
-        assertEquals("", supplier.expand(""));
-    }
-
-    @Test
-    void expandPlain() {
-        var supplier = new TestVarSupplier();
-        assertEquals("hello", supplier.expand("hello"));
+    @TableTest("""
+            input | expected
+                  | ''
+            ''    | ''
+            hello | hello
+            """)
+    void expand(String input, String expected) {
+        assertEquals(expected, new TestVarSupplier().expand(input));
     }
 
     @Test

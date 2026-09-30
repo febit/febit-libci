@@ -15,40 +15,43 @@
  */
 package org.febit.libci.core.variable;
 
-import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
+
+import org.febit.libci.core.VarSupplier;
 
 import java.util.Map;
 
-import static org.febit.libci.core.variable.VarPatterns.expand;
 import static org.junit.jupiter.api.Assertions.*;
 
 class VarPatternsTest {
 
-    @Test
-    void basic() {
-        var vars = Map.of(
-                "A", "a",
-                "B", "b",
-                "C", "c",
-                "EMPTY", "",
-                "ABC", "abc",
-                "A_BC", "a-bc"
-        );
+    private static final Map<String, String> MAP = Map.of(
+            "A", "a",
+            "B", "b",
+            "C", "c",
+            "EMPTY", "",
+            "ABC", "abc",
+            "A_BC", "a-bc"
+    );
 
-        assertNull(expand(null, vars::get));
+    private static final VarSupplier VARS = name -> MAP.get(name);
 
-        assertEquals("", expand("", vars::get));
-        assertEquals("", expand("$EMPTY", vars::get));
-        assertEquals("a", expand("$A", vars::get));
-        assertEquals("a-b-c", expand("$A-$B-$C", vars::get));
-        assertEquals("a-b-c", expand("${A}-${B}-${C}", vars::get));
-        assertEquals("abc", expand("$A$B$C", vars::get));
-        assertEquals("abc", expand("${A}${B}${C}", vars::get));
-        assertEquals("abc", expand("$ABC", vars::get));
-        assertEquals("", expand("$ABCD", vars::get));
-        assertEquals("abc D", expand("$ABC D", vars::get));
-        assertEquals("abc D", expand("$ABC D", vars::get));
-        assertEquals("a-bc ", expand("$A_BC $D", vars::get));
+    @TableTest("""
+            template       | expected
+                           |
+            ''             | ''
+            $EMPTY         | ''
+            $A             | a
+            $A-$B-$C       | a-b-c
+            ${A}-${B}-${C} | a-b-c
+            $A$B$C         | abc
+            ${A}${B}${C}   | abc
+            $ABC           | abc
+            $ABCD          | ''
+            $ABC D         | abc D
+            '$A_BC $D'     | 'a-bc '
+            """)
+    void expandPattern(String template, String expected) {
+        assertEquals(expected, VarPatterns.expand(template, VARS));
     }
-
 }

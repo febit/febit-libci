@@ -15,182 +15,156 @@
  */
 package org.febit.libci.core.dotenv;
 
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DotenvParserTest {
 
+    private static void assertParses(String input, DotenvEntry... expected) {
+        assertThat(DotenvParser.parse(input))
+                .isEqualTo(List.of(expected));
+    }
+
     @Test
     void basic() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 # This is a comment
                 KEY1=value1 with spaces
                 KEY2="value2 with spaces"
                 KEY3='value3 with spaces'
                 KEY4=value4 # inline comment
                 KEY5= # inline comment
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1 with spaces"),
-                        new DotenvEntry("KEY2", "value2 with spaces"),
-                        new DotenvEntry("KEY3", "value3 with spaces"),
-                        new DotenvEntry("KEY4", "value4"),
-                        new DotenvEntry("KEY5", "")
-                ));
-
+                        """,
+                new DotenvEntry("KEY1", "value1 with spaces"),
+                new DotenvEntry("KEY2", "value2 with spaces"),
+                new DotenvEntry("KEY3", "value3 with spaces"),
+                new DotenvEntry("KEY4", "value4"),
+                new DotenvEntry("KEY5", ""));
     }
 
     @Test
     void empty() {
-        assertThat(DotenvParser.parse("""
-                """))
-                .isEmpty();
-
-        assertThat(DotenvParser.parse("""
-                # This is a comment
-                """))
-                .isEmpty();
-
-        assertThat(DotenvParser.parse("""
+        assertThat(DotenvParser.parse("")).isEmpty();
+        assertThat(DotenvParser.parse("# This is a comment")).isEmpty();
+        assertParses("""
                 KEY1=
                 KEY2=""
                 KEY3=''
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", ""),
-                        new DotenvEntry("KEY2", ""),
-                        new DotenvEntry("KEY3", "")
-                ));
+                        """,
+                new DotenvEntry("KEY1", ""),
+                new DotenvEntry("KEY2", ""),
+                new DotenvEntry("KEY3", ""));
     }
 
     @Test
     void export() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 export KEY1=value1 with spaces
                 export KEY2="value2 with spaces"
                 export KEY3='value3 with spaces'
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1 with spaces"),
-                        new DotenvEntry("KEY2", "value2 with spaces"),
-                        new DotenvEntry("KEY3", "value3 with spaces")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value1 with spaces"),
+                new DotenvEntry("KEY2", "value2 with spaces"),
+                new DotenvEntry("KEY3", "value3 with spaces"));
     }
 
     @Test
     void spaces() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1=value1 with spaces
                 KEY2="value2 with spaces"
                 KEY3='value3 with spaces'
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1 with spaces"),
-                        new DotenvEntry("KEY2", "value2 with spaces"),
-                        new DotenvEntry("KEY3", "value3 with spaces")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value1 with spaces"),
+                new DotenvEntry("KEY2", "value2 with spaces"),
+                new DotenvEntry("KEY3", "value3 with spaces"));
 
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1 = value1 with spaces
                 KEY2 = "value2 with spaces"
                 KEY3 = 'value3 with spaces'
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1 with spaces"),
-                        new DotenvEntry("KEY2", "value2 with spaces"),
-                        new DotenvEntry("KEY3", "value3 with spaces")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value1 with spaces"),
+                new DotenvEntry("KEY2", "value2 with spaces"),
+                new DotenvEntry("KEY3", "value3 with spaces"));
 
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 \t       KEY1 =value1 with spaces\t
                  \t KEY2 =\t"value2 with spaces"\t
                  \t  KEY3 ='value3 with spaces'\t
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1 with spaces"),
-                        new DotenvEntry("KEY2", "value2 with spaces"),
-                        new DotenvEntry("KEY3", "value3 with spaces")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value1 with spaces"),
+                new DotenvEntry("KEY2", "value2 with spaces"),
+                new DotenvEntry("KEY3", "value3 with spaces"));
     }
 
     @Test
     void tailingComment() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1=value1 with spaces # comment
                 KEY2="value2 with spaces" # comment
                 KEY3='value3 with spaces' # comment
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1 with spaces"),
-                        new DotenvEntry("KEY2", "value2 with spaces"),
-                        new DotenvEntry("KEY3", "value3 with spaces")
-                ));
-        assertThat(DotenvParser.parse("""
+                        """,
+                new DotenvEntry("KEY1", "value1 with spaces"),
+                new DotenvEntry("KEY2", "value2 with spaces"),
+                new DotenvEntry("KEY3", "value3 with spaces"));
+        assertParses("""
                 KEY1=value1 with spaces# comment
                 KEY2="value2 with spaces"# comment
                 KEY3='value3 with spaces'# comment
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1 with spaces"),
-                        new DotenvEntry("KEY2", "value2 with spaces"),
-                        new DotenvEntry("KEY3", "value3 with spaces")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value1 with spaces"),
+                new DotenvEntry("KEY2", "value2 with spaces"),
+                new DotenvEntry("KEY3", "value3 with spaces"));
 
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1= # comment
                 KEY2=# comment
                 KEY3=\t\t# comment
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", ""),
-                        new DotenvEntry("KEY2", ""),
-                        new DotenvEntry("KEY3", "")
-                ));
+                        """,
+                new DotenvEntry("KEY1", ""),
+                new DotenvEntry("KEY2", ""),
+                new DotenvEntry("KEY3", ""));
     }
 
     @Test
     void escaped() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1=value\\ with\\ spaces, tabs\\t, newlines\\r\\n
                 KEY2="value with \\"escaped quotes\\", \\\\ backslashes, tabs\\t, newlines\\r\\n"
                 KEY3='value with \\'escaped quotes\\', \\\\ backslashes, tabs\\t, newlines\\r\\n'
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value\\ with\\ spaces, tabs\\t, newlines\\r\\n"),
-                        new DotenvEntry("KEY2", "value with \"escaped quotes\", \\ backslashes, tabs\t, newlines\r\n"),
-                        new DotenvEntry("KEY3", "value with 'escaped quotes', \\ backslashes, tabs\t, newlines\r\n")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value\\ with\\ spaces, tabs\\t, newlines\\r\\n"),
+                new DotenvEntry("KEY2", "value with \"escaped quotes\", \\ backslashes, tabs\t, newlines\r\n"),
+                new DotenvEntry("KEY3", "value with 'escaped quotes', \\ backslashes, tabs\t, newlines\r\n"));
     }
 
     @Test
     void multiLine() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY2="value2 with \\
                 continued"
                 KEY3='value3 with \\
                 continued'
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY2", "value2 with continued"),
-                        new DotenvEntry("KEY3", "value3 with continued")
-                ));
+                        """,
+                new DotenvEntry("KEY2", "value2 with continued"),
+                new DotenvEntry("KEY3", "value3 with continued"));
     }
 
     @Test
     void quotes() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1="value with spaces and # not a comment"
                 KEY2='value with spaces and # not a comment'
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value with spaces and # not a comment"),
-                        new DotenvEntry("KEY2", "value with spaces and # not a comment")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value with spaces and # not a comment"),
+                new DotenvEntry("KEY2", "value with spaces and # not a comment"));
     }
 
     @Test
@@ -214,145 +188,97 @@ class DotenvParserTest {
                 .isEmpty();
     }
 
-    @Test
-    void unexpectedTrailingCharInQuotedValue() {
-        assertThatThrownBy(() -> DotenvParser.parse("KEY1=\"value1\" extra"))
-                .isInstanceOf(DotenvFormatException.class)
-                .hasMessageContaining("Unexpected trailing char");
-    }
-
-    @Test
-    void unexpectedTrailingCharInSingleQuotedValue() {
-        assertThatThrownBy(() -> DotenvParser.parse("KEY1='value1' extra"))
-                .isInstanceOf(DotenvFormatException.class)
-                .hasMessageContaining("Unexpected trailing char");
+    @TableTest("""
+            input                 | message
+            'KEY1="value1" extra' | Unexpected trailing char
+            "KEY1='value1' extra" | Unexpected trailing char
+            '=value'              |
+            'export =value'       |
+            'KEY1="value\\z"'     | Illegal escaped
+            "KEY1='value\\z'"     | Illegal escaped
+            """)
+    void invalid(String input, String message) {
+        var ex = assertThrows(DotenvFormatException.class, () -> DotenvParser.parse(input));
+        if (message != null && !message.isBlank()) {
+            assertTrue(ex.getMessage().contains(message), ex.getMessage());
+        }
     }
 
     @Test
     void exportWithSpacesAndQuotes() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 export   KEY1  =  "value1"
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value1"));
     }
 
     @Test
     void multiLineWithBackslashContinuation() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1="line1\\
                 line2"
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "line1line2")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "line1line2"));
     }
 
     @Test
     void valueWithTabs() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1=\tvalue\twith\ttabs\t
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value\twith\ttabs")
-                ));
-    }
-
-    @Test
-    void emptyKeyWithValue() {
-        assertThatThrownBy(() -> DotenvParser.parse("=value"))
-                .isInstanceOf(DotenvFormatException.class);
-    }
-
-    @Test
-    void exportWithEmptyKey() {
-        assertThatThrownBy(() -> DotenvParser.parse("export =value"))
-                .isInstanceOf(DotenvFormatException.class);
+                        """,
+                new DotenvEntry("KEY1", "value\twith\ttabs"));
     }
 
     @Test
     void blankLinesBetweenEntries() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1=value1
 
 
                 KEY2=value2
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1"),
-                        new DotenvEntry("KEY2", "value2")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "value1"),
+                new DotenvEntry("KEY2", "value2"));
     }
 
     @Test
     void valueWithEqualsSign() {
-        assertThat(DotenvParser.parse("KEY1=val=ue"))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "val=ue")
-                ));
+        assertParses("KEY1=val=ue",
+                new DotenvEntry("KEY1", "val=ue"));
     }
 
     @Test
     void doubleQuoteInsideSingleQuote() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1='"double quoted" inside single quotes'
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "\"double quoted\" inside single quotes")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "\"double quoted\" inside single quotes"));
     }
 
     @Test
     void singleQuoteInsideDoubleQuote() {
-        assertThat(DotenvParser.parse("""
+        assertParses("""
                 KEY1="'single quoted' inside double quotes"
-                """))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "'single quoted' inside double quotes")
-                ));
+                        """,
+                new DotenvEntry("KEY1", "'single quoted' inside double quotes"));
     }
 
     @Test
     void valueOnlyWhitespace() {
-        assertThat(DotenvParser.parse("KEY1=   \t  "))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "")
-                ));
+        assertParses("KEY1=   \t  ",
+                new DotenvEntry("KEY1", ""));
     }
 
     @Test
     void dosLineEndings() {
-        assertThat(DotenvParser.parse("KEY1=value1\r\nKEY2=value2\r\n"))
-                .isEqualTo(List.of(
-                        new DotenvEntry("KEY1", "value1"),
-                        new DotenvEntry("KEY2", "value2")
-                ));
+        assertParses("KEY1=value1\r\nKEY2=value2\r\n",
+                new DotenvEntry("KEY1", "value1"),
+                new DotenvEntry("KEY2", "value2"));
     }
 
-    @Nested
-    class ErrorCases {
-
-        @Test
-        void illegalEscapeInDoubleQuote() {
-            assertThatThrownBy(() -> DotenvParser.parse("KEY1=\"value\\z\""))
-                    .isInstanceOf(DotenvFormatException.class)
-                    .hasMessageContaining("Illegal escaped");
-        }
-
-        @Test
-        void illegalEscapeInSingleQuote() {
-            assertThatThrownBy(() -> DotenvParser.parse("KEY1='value\\z'"))
-                    .isInstanceOf(DotenvFormatException.class)
-                    .hasMessageContaining("Illegal escaped");
-        }
-
-        @Test
-        void incompleteEntry() {
-            assertThat(DotenvParser.parse("KEY1"))
-                    .isEqualTo(List.of(
-                            new DotenvEntry("KEY1", "")
-                    ));
-        }
+    @Test
+    void incompleteEntry() {
+        assertParses("KEY1",
+                new DotenvEntry("KEY1", ""));
     }
 }

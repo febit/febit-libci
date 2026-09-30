@@ -17,6 +17,7 @@ package org.febit.libci.core.rule.parser;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import org.febit.libci.core.exception.RuleEvaluationException;
 
@@ -152,10 +153,6 @@ class OperatorsTest {
             assertTrue(Operators.matchWithRegex("abc", Pattern.compile("b")));
             assertFalse(Operators.matchWithRegex("abc", Pattern.compile("x")));
         }
-    }
-
-    @Nested
-    class IsNotMatchWithRegex {
 
         @Test
         void negates() {
@@ -168,25 +165,23 @@ class OperatorsTest {
     @Nested
     class IsEquals {
 
-        @Test
-        void equalStrings() {
-            assertTrue(Operators.isEquals("a", "a"));
+        @TableTest("""
+                left | right | expected
+                a    | a     | true
+                a    | b     | false
+                     |       | true
+                """)
+        void equals(Object left, Object right, boolean expected) {
+            assertEquals(expected, Operators.isEquals(left, right));
         }
 
-        @Test
-        void differentStrings() {
-            assertFalse(Operators.isEquals("a", "b"));
-        }
-
-        @Test
-        void bothNull() {
-            assertTrue(Operators.isEquals(null, null));
-        }
-
-        @Test
-        void isNotEquals() {
-            assertTrue(Operators.isNotEquals("a", "b"));
-            assertFalse(Operators.isNotEquals("a", "a"));
+        @TableTest("""
+                left | right | expected
+                a    | b     | true
+                a    | a     | false
+                """)
+        void notEquals(Object left, Object right, boolean expected) {
+            assertEquals(expected, Operators.isNotEquals(left, right));
         }
     }
 }

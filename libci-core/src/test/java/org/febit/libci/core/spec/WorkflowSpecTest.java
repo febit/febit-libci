@@ -17,6 +17,7 @@ package org.febit.libci.core.spec;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import java.util.List;
 
@@ -30,20 +31,25 @@ class WorkflowSpecTest {
         @Test
         void values() {
             assertEquals(2, WorkflowSpec.RuleWhen.values().length);
-            assertEquals("always", WorkflowSpec.RuleWhen.ALWAYS.getValue());
-            assertEquals("never", WorkflowSpec.RuleWhen.NEVER.getValue());
         }
 
-        @Test
-        void isAlways() {
-            assertTrue(WorkflowSpec.RuleWhen.ALWAYS.isAlways());
-            assertFalse(WorkflowSpec.RuleWhen.ALWAYS.isNever());
+        @TableTest("""
+                value  | getValue
+                ALWAYS | always
+                NEVER  | never
+                """)
+        void getValue(WorkflowSpec.RuleWhen value, String getValue) {
+            assertEquals(getValue, value.getValue());
         }
 
-        @Test
-        void isNever() {
-            assertFalse(WorkflowSpec.RuleWhen.NEVER.isAlways());
-            assertTrue(WorkflowSpec.RuleWhen.NEVER.isNever());
+        @TableTest("""
+                value  | isAlways | isNever
+                ALWAYS | true     | false
+                NEVER  | false    | true
+                """)
+        void flags(WorkflowSpec.RuleWhen value, boolean isAlways, boolean isNever) {
+            assertEquals(isAlways, value.isAlways());
+            assertEquals(isNever, value.isNever());
         }
     }
 
@@ -78,16 +84,30 @@ class WorkflowSpecTest {
         @Test
         void onNewCommitEnum() {
             assertEquals(3, WorkflowSpec.AutoCancel.OnNewCommit.values().length);
-            assertEquals("conservative", WorkflowSpec.AutoCancel.OnNewCommit.CONSERVATIVE.getValue());
-            assertEquals("interruptible", WorkflowSpec.AutoCancel.OnNewCommit.INTERRUPTIBLE.getValue());
-            assertEquals("none", WorkflowSpec.AutoCancel.OnNewCommit.NONE.getValue());
+        }
+
+        @TableTest("""
+                value         | getValue
+                CONSERVATIVE  | conservative
+                INTERRUPTIBLE | interruptible
+                NONE          | none
+                """)
+        void onNewCommitValues(WorkflowSpec.AutoCancel.OnNewCommit value, String getValue) {
+            assertEquals(getValue, value.getValue());
         }
 
         @Test
         void onJobFailureEnum() {
             assertEquals(2, WorkflowSpec.AutoCancel.OnJobFailure.values().length);
-            assertEquals("all", WorkflowSpec.AutoCancel.OnJobFailure.ALL.getValue());
-            assertEquals("none", WorkflowSpec.AutoCancel.OnJobFailure.NONE.getValue());
+        }
+
+        @TableTest("""
+                value | getValue
+                ALL   | all
+                NONE  | none
+                """)
+        void onJobFailureValues(WorkflowSpec.AutoCancel.OnJobFailure value, String getValue) {
+            assertEquals(getValue, value.getValue());
         }
 
         @Test

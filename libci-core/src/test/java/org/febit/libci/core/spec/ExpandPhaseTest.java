@@ -16,40 +16,32 @@
 package org.febit.libci.core.spec;
 
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ExpandPhaseTest {
 
-    @Test
-    void isTargetSamePhase() {
-        assertTrue(ExpandPhase.PARSE.isTarget(ExpandPhase.PARSE));
-        assertTrue(ExpandPhase.PLAN.isTarget(ExpandPhase.PLAN));
-        assertTrue(ExpandPhase.RUN.isTarget(ExpandPhase.RUN));
-        assertTrue(ExpandPhase.COMMAND.isTarget(ExpandPhase.COMMAND));
-    }
-
-    @Test
-    void isTargetNested() {
-        assertTrue(ExpandPhase.PARSE.isTarget(ExpandPhase.NESTED));
-        assertTrue(ExpandPhase.PLAN.isTarget(ExpandPhase.NESTED));
-        assertTrue(ExpandPhase.RUN.isTarget(ExpandPhase.NESTED));
-        assertTrue(ExpandPhase.COMMAND.isTarget(ExpandPhase.NESTED));
-    }
-
-    @Test
-    void isTargetDifferentPhase() {
-        assertFalse(ExpandPhase.PARSE.isTarget(ExpandPhase.PLAN));
-        assertFalse(ExpandPhase.PLAN.isTarget(ExpandPhase.RUN));
-        assertFalse(ExpandPhase.RUN.isTarget(ExpandPhase.COMMAND));
-        assertFalse(ExpandPhase.COMMAND.isTarget(ExpandPhase.PARSE));
-    }
-
-    @Test
-    void isTargetNoneSelf() {
-        assertTrue(ExpandPhase.NONE.isTarget(ExpandPhase.NONE));
-        assertTrue(ExpandPhase.NONE.isTarget(ExpandPhase.NESTED));
-        assertFalse(ExpandPhase.NONE.isTarget(ExpandPhase.RUN));
+    @TableTest("""
+            self    | target  | expected
+            PARSE   | PARSE   | true
+            PLAN    | PLAN    | true
+            RUN     | RUN     | true
+            COMMAND | COMMAND | true
+            PARSE   | NESTED  | true
+            PLAN    | NESTED  | true
+            RUN     | NESTED  | true
+            COMMAND | NESTED  | true
+            PARSE   | PLAN    | false
+            PLAN    | RUN     | false
+            RUN     | COMMAND | false
+            COMMAND | PARSE   | false
+            NONE    | NONE    | true
+            NONE    | NESTED  | true
+            NONE    | RUN     | false
+            """)
+    void target(ExpandPhase self, ExpandPhase target, boolean expected) {
+        assertEquals(expected, self.isTarget(target));
     }
 
     @Test

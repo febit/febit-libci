@@ -17,6 +17,7 @@ package org.febit.libci.core.spec;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.tabletest.junit.TableTest;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -32,18 +33,25 @@ class ArtifactsSpecTest {
     class Access_ {
 
         @Test
-        void values() {
+        void count() {
             assertEquals(3, ArtifactsSpec.Access.values().length);
             assertNotNull(ArtifactsSpec.Access.valueOf("ALL"));
             assertNotNull(ArtifactsSpec.Access.valueOf("DEVELOPER"));
             assertNotNull(ArtifactsSpec.Access.valueOf("NONE"));
         }
 
+        @TableTest("""
+                value     | getValue
+                ALL       | all
+                DEVELOPER | developer
+                NONE      | none
+                """)
+        void values(ArtifactsSpec.Access value, String getValue) {
+            assertEquals(getValue, value.getValue());
+        }
+
         @Test
-        void valueAndDescription() {
-            assertEquals("all", ArtifactsSpec.Access.ALL.getValue());
-            assertEquals("developer", ArtifactsSpec.Access.DEVELOPER.getValue());
-            assertEquals("none", ArtifactsSpec.Access.NONE.getValue());
+        void description() {
             for (var acc : ArtifactsSpec.Access.values()) {
                 assertNotNull(acc.getDescription());
                 assertFalse(acc.getDescription().isBlank());
@@ -55,37 +63,33 @@ class ArtifactsSpecTest {
     class When_ {
 
         @Test
-        void values() {
+        void count() {
             assertEquals(3, ArtifactsSpec.When.values().length);
             assertNotNull(ArtifactsSpec.When.valueOf("ALWAYS"));
             assertNotNull(ArtifactsSpec.When.valueOf("ON_SUCCESS"));
             assertNotNull(ArtifactsSpec.When.valueOf("ON_FAILURE"));
         }
 
+        @TableTest("""
+                value      | getValue   | isAlways | isOnSuccess | isOnFailure
+                ALWAYS     | always     | true     | false       | false
+                ON_SUCCESS | on_success | false    | true        | false
+                ON_FAILURE | on_failure | false    | false       | true
+                """)
+        void contract(ArtifactsSpec.When value, String getValue,
+                      boolean isAlways, boolean isOnSuccess, boolean isOnFailure) {
+            assertEquals(getValue, value.getValue());
+            assertEquals(isAlways, value.isAlways());
+            assertEquals(isOnSuccess, value.isOnSuccess());
+            assertEquals(isOnFailure, value.isOnFailure());
+        }
+
         @Test
-        void valueAndDescription() {
-            assertEquals("always", ArtifactsSpec.When.ALWAYS.getValue());
-            assertEquals("on_success", ArtifactsSpec.When.ON_SUCCESS.getValue());
-            assertEquals("on_failure", ArtifactsSpec.When.ON_FAILURE.getValue());
+        void description() {
             for (var w : ArtifactsSpec.When.values()) {
                 assertNotNull(w.getDescription());
                 assertFalse(w.getDescription().isBlank());
             }
-        }
-
-        @Test
-        void isMethods() {
-            assertTrue(ArtifactsSpec.When.ALWAYS.isAlways());
-            assertFalse(ArtifactsSpec.When.ALWAYS.isOnSuccess());
-            assertFalse(ArtifactsSpec.When.ALWAYS.isOnFailure());
-
-            assertFalse(ArtifactsSpec.When.ON_SUCCESS.isAlways());
-            assertTrue(ArtifactsSpec.When.ON_SUCCESS.isOnSuccess());
-            assertFalse(ArtifactsSpec.When.ON_SUCCESS.isOnFailure());
-
-            assertFalse(ArtifactsSpec.When.ON_FAILURE.isAlways());
-            assertFalse(ArtifactsSpec.When.ON_FAILURE.isOnSuccess());
-            assertTrue(ArtifactsSpec.When.ON_FAILURE.isOnFailure());
         }
     }
 
@@ -264,19 +268,15 @@ class ArtifactsSpecTest {
         }
     }
 
-    @Nested
-    class Defaults_ {
-
-        @Test
-        void constants() {
-            assertEquals("artifacts", ArtifactsSpec.Defaults.NAME);
-            assertEquals(true, ArtifactsSpec.Defaults.IS_PUBLIC);
-            assertEquals(false, ArtifactsSpec.Defaults.UNTRACKED);
-            assertEquals(ArtifactsSpec.When.ON_SUCCESS, ArtifactsSpec.Defaults.WHEN);
-            assertEquals(ArtifactsSpec.Access.ALL, ArtifactsSpec.Defaults.ACCESS);
-            assertTrue(ArtifactsSpec.Defaults.PATHS.isEmpty());
-            assertTrue(ArtifactsSpec.Defaults.EXCLUDE.isEmpty());
-            assertTrue(ArtifactsSpec.Defaults.REPORTS.isEmpty());
-        }
+    @Test
+    void defaultsConstants() {
+        assertEquals("artifacts", ArtifactsSpec.Defaults.NAME);
+        assertEquals(true, ArtifactsSpec.Defaults.IS_PUBLIC);
+        assertEquals(false, ArtifactsSpec.Defaults.UNTRACKED);
+        assertEquals(ArtifactsSpec.When.ON_SUCCESS, ArtifactsSpec.Defaults.WHEN);
+        assertEquals(ArtifactsSpec.Access.ALL, ArtifactsSpec.Defaults.ACCESS);
+        assertTrue(ArtifactsSpec.Defaults.PATHS.isEmpty());
+        assertTrue(ArtifactsSpec.Defaults.EXCLUDE.isEmpty());
+        assertTrue(ArtifactsSpec.Defaults.REPORTS.isEmpty());
     }
 }
