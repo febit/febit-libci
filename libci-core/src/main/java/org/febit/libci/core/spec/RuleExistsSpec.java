@@ -16,9 +16,11 @@
 package org.febit.libci.core.spec;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+
+import org.febit.libci.core.util.Immutables;
+
 import lombok.Singular;
 import lombok.extern.jackson.Jacksonized;
-import org.febit.libci.core.util.Immutables;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

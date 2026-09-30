@@ -50,4 +50,3 @@ public class RuleEvaluationException extends LibciException {
     }
 
 }
-

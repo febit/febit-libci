@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.spec;
 
-import org.febit.libci.core.exception.ProfileException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.exception.ProfileException;
 
 import java.util.List;
 import java.util.Map;

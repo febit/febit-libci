@@ -15,9 +15,10 @@
  */
 package org.febit.libci.jenkins.workflow;
 
-import org.febit.libci.core.spec.ArtifactsSpec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import org.febit.libci.core.spec.ArtifactsSpec;
 
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -100,5 +101,3 @@ class WorkspaceOutputSupportTest {
         assertFalse(Files.exists(targetDir.resolve("dir/skip.log")));
     }
 }
-
-

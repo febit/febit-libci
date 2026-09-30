@@ -15,8 +15,6 @@
  */
 package org.febit.libci.core.test.jgit;
 
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.dfs.DfsRepositoryDescription;
 import org.eclipse.jgit.internal.storage.dfs.InMemoryRepository;
@@ -25,8 +23,12 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 import org.febit.lang.UncheckedException;
 import org.febit.lang.util.Base64Utils;
+
 import org.febit.libci.core.spec.support.PathSpecUtils;
 import org.febit.libci.core.spec.support.SlugUtils;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.security.KeyPair;

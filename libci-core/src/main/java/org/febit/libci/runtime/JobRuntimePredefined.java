@@ -15,10 +15,11 @@
  */
 package org.febit.libci.runtime;
 
-import lombok.experimental.UtilityClass;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.spec.CiJobStatus;
 import org.febit.libci.core.variable.VarDefinedPhase;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;

@@ -17,6 +17,7 @@ package org.febit.libci.jenkins.workflow;
 
 import hudson.FilePath;
 import org.febit.lang.Unchecked;
+
 import org.febit.libci.core.rule.WorkspaceApi;
 import org.febit.libci.core.spec.RuleChangesSpec;
 import org.febit.libci.core.spec.RuleExistsSpec;
@@ -24,7 +25,7 @@ import org.febit.libci.core.spec.support.PathSpecUtils;
 
 import java.io.IOException;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 public record JenkinsWorkspaceApi(
         FilePath workspace

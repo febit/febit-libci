@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.exception;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.rule.ir.IExpr;
 import org.febit.libci.core.rule.parser.Token;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

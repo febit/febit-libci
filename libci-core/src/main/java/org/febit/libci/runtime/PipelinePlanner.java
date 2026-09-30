@@ -15,8 +15,6 @@
  */
 package org.febit.libci.runtime;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.predefined.JobPredefined;
 import org.febit.libci.core.spec.CiJobStatus;
@@ -30,6 +28,9 @@ import org.febit.libci.runtime.plan.JobPlan;
 import org.febit.libci.runtime.plan.JobRelation;
 import org.febit.libci.runtime.plan.PipelinePlan;
 import org.febit.libci.runtime.plan.StagePlan;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

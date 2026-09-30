@@ -15,7 +15,6 @@
  */
 package org.febit.libci.runtime;
 
-import lombok.extern.slf4j.Slf4j;
 import org.febit.libci.core.Profile;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.predefined.JobPredefined;
@@ -25,6 +24,8 @@ import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
 import org.febit.libci.core.variable.VarDefinedPhase;
 import org.febit.libci.core.variable.VarsHeapImpl;
+
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;

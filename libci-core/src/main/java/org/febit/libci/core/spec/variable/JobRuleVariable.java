@@ -15,9 +15,11 @@
  */
 package org.febit.libci.core.spec.variable;
 
-import lombok.extern.jackson.Jacksonized;
-import org.febit.libci.core.spec.support.jackson.VariableValueInstantiator;
 import tools.jackson.databind.annotation.JsonValueInstantiator;
+
+import org.febit.libci.core.spec.support.jackson.VariableValueInstantiator;
+
+import lombok.extern.jackson.Jacksonized;
 
 @Jacksonized
 @lombok.Builder(

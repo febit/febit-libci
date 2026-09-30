@@ -15,11 +15,12 @@
  */
 package org.febit.libci.core.predefined;
 
-import lombok.experimental.UtilityClass;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.support.SlugUtils;
 import org.febit.libci.core.variable.VarDefinedPhase;
+
+import lombok.experimental.UtilityClass;
 
 import static org.febit.lang.util.Defaults.nvl;
 import static org.febit.libci.core.predefined.Predefined.CI_ENVIRONMENT_ACTION;

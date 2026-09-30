@@ -15,14 +15,16 @@
  */
 package org.febit.libci.core.test.jgit;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.junit.ssh.SshTestGitServer;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
+
 import org.febit.libci.core.resource.support.jgit.sshd.ServerKeyDatabases;
 import org.febit.libci.core.resource.support.jgit.sshd.StaticSshdSessionFactory;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;

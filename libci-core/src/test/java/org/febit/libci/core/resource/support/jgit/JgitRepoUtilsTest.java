@@ -27,10 +27,11 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.spec.support.PathSpecUtils;
 import org.febit.libci.core.test.jgit.JgitTestSshServer;
 import org.febit.libci.core.test.jgit.JgitTestUtils;
-import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.spec.support.jackson;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.spec.variable.JobVariable;
-import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

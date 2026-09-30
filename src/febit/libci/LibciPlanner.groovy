@@ -1,6 +1,6 @@
 package febit.libci
 
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.febit.libci.core.variable.VarDefinedPhase
 import org.febit.libci.core.variable.VarsHeapImpl
 import org.febit.libci.runtime.plan.PipelinePlan

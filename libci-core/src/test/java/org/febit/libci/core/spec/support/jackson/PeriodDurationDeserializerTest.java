@@ -16,9 +16,10 @@
 package org.febit.libci.core.spec.support.jackson;
 
 import org.febit.lang.PeriodDuration;
-import org.febit.libci.core.spec.support.SpecMapper;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.exc.MismatchedInputException;
+
+import org.febit.libci.core.spec.support.SpecMapper;
 
 import java.util.List;
 import java.util.Map;

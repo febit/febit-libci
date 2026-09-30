@@ -24,6 +24,9 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
 import org.febit.lang.UncheckedException;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
+
 import org.febit.libci.core.ProfileCompiler;
 import org.febit.libci.core.ProfileDocument;
 import org.febit.libci.core.ProfileLoader;
@@ -36,8 +39,6 @@ import org.febit.libci.core.resource.source.PathSource;
 import org.febit.libci.runtime.PipelineEvaluator;
 import org.febit.libci.runtime.PipelinePlanner;
 import org.febit.libci.runtime.plan.PipelinePlan;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
 import java.io.IOException;
 import java.io.PrintStream;

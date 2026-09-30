@@ -15,11 +15,12 @@
  */
 package org.febit.libci.core.document;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import org.febit.libci.core.exception.ProfileException;
 import org.febit.libci.core.spec.ReferenceSpec;
 import org.febit.libci.core.util.SetUtils;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;

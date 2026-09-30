@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.spec.variable;
 
-import org.febit.libci.core.spec.support.SpecMapper;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.spec.support.SpecMapper;
 
 import java.util.List;
 import java.util.Map;

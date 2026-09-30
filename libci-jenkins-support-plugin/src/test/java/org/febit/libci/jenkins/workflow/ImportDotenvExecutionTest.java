@@ -18,6 +18,8 @@ package org.febit.libci.jenkins.workflow;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import org.febit.libci.core.dotenv.DotenvEntry;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -52,7 +54,7 @@ class ImportDotenvExecutionTest {
         );
         assertIterableEquals(
                 List.of("A", "B", "C"),
-                result.entries().stream().map(org.febit.libci.core.dotenv.DotenvEntry::key).toList()
+                result.entries().stream().map(DotenvEntry::key).toList()
         );
         assertIterableEquals(
                 List.of(2, 1),

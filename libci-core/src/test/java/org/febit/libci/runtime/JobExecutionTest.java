@@ -16,6 +16,8 @@
 package org.febit.libci.runtime;
 
 import org.febit.lang.PeriodDuration;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.Profile;
 import org.febit.libci.core.predefined.JobPredefined;
 import org.febit.libci.core.predefined.Predefined;
@@ -24,7 +26,6 @@ import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
 import org.febit.libci.core.variable.VarsHeapImpl;
 import org.febit.libci.runtime.state.JobState;
-import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -419,6 +420,3 @@ class JobExecutionTest {
         return matrix;
     }
 }
-
-
-

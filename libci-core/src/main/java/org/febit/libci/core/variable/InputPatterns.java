@@ -15,12 +15,14 @@
  */
 package org.febit.libci.core.variable;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.febit.lang.util.StringWalker;
+
 import org.febit.libci.core.VarSupplier;
 import org.febit.libci.core.document.DocumentUtils;
 import org.febit.libci.core.exception.ProfileException;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.Function;

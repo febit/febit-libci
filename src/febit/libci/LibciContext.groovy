@@ -1,7 +1,7 @@
 package febit.libci
 
 import com.cloudbees.groovy.cps.SerializableScript
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.febit.libci.core.VarSupplier
 import org.febit.libci.core.VarsHeap
 import org.febit.libci.core.dotenv.DotenvEntry

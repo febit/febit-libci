@@ -15,15 +15,16 @@
  */
 package org.febit.libci.runtime;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 import org.febit.libci.core.util.Immutables;
 import org.febit.libci.runtime.plan.JobPlan;
 import org.febit.libci.runtime.plan.PipelinePlan;
 import org.febit.libci.runtime.plan.StagePlan;
 import org.febit.libci.runtime.state.JobState;
 import org.febit.libci.runtime.state.StageState;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;

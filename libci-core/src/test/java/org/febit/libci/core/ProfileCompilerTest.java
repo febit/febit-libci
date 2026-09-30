@@ -15,13 +15,16 @@
  */
 package org.febit.libci.core;
 
-import org.febit.libci.core.document.yaml.YamlUtils;
-import org.febit.libci.core.exception.ProfileException;
-import org.febit.libci.core.resource.RemoteResource;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.io.TempDirDeletionStrategy;
 
+import org.febit.libci.core.document.yaml.YamlUtils;
+import org.febit.libci.core.exception.ProfileException;
+import org.febit.libci.core.resource.RemoteResource;
+
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -40,11 +43,20 @@ class ProfileCompilerTest {
                 .build();
     }
 
+    private static Map<String, Object> loadYaml(Path yamlFile) throws IOException {
+        try (var reader = Files.newBufferedReader(yamlFile)) {
+            return YamlUtils.loader().source(reader).load();
+        }
+    }
+
     @Nested
     class Compilation {
 
         @Test
-        void minimalProfile(@TempDir Path tmp) throws Exception {
+        void minimalProfile(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -55,7 +67,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -65,7 +77,10 @@ class ProfileCompilerTest {
         }
 
         @Test
-        void multipleJobs(@TempDir Path tmp) throws Exception {
+        void multipleJobs(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -80,7 +95,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -90,7 +105,10 @@ class ProfileCompilerTest {
         }
 
         @Test
-        void withWorkflow(@TempDir Path tmp) throws Exception {
+        void withWorkflow(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -104,7 +122,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -113,7 +131,10 @@ class ProfileCompilerTest {
         }
 
         @Test
-        void withVariables(@TempDir Path tmp) throws Exception {
+        void withVariables(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -127,7 +148,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -136,7 +157,10 @@ class ProfileCompilerTest {
         }
 
         @Test
-        void withDefaultSection(@TempDir Path tmp) throws Exception {
+        void withDefaultSection(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -151,7 +175,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -162,7 +186,10 @@ class ProfileCompilerTest {
         }
 
         @Test
-        void withoutDefaultSection(@TempDir Path tmp) throws Exception {
+        void withoutDefaultSection(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -173,7 +200,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -181,7 +208,10 @@ class ProfileCompilerTest {
         }
 
         @Test
-        void withoutStages(@TempDir Path tmp) throws Exception {
+        void withoutStages(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     build-job:
                       stage: build
@@ -190,7 +220,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -198,7 +228,10 @@ class ProfileCompilerTest {
         }
 
         @Test
-        void defaultSectionWithUnsupportedKeys(@TempDir Path tmp) throws Exception {
+        void defaultSectionWithUnsupportedKeys(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -213,7 +246,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 
@@ -225,7 +258,10 @@ class ProfileCompilerTest {
     class ErrorCases {
 
         @Test
-        void variablesNotAMap(@TempDir Path tmp) throws Exception {
+        void variablesNotAMap(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -237,13 +273,16 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             assertThrows(ProfileException.class, () -> ProfileCompiler.compile(doc));
         }
 
         @Test
-        void defaultSectionNotAMap(@TempDir Path tmp) throws Exception {
+        void defaultSectionNotAMap(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -255,13 +294,16 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             assertThrows(ProfileException.class, () -> ProfileCompiler.compile(doc));
         }
 
         @Test
-        void jobWithUndefinedStage(@TempDir Path tmp) throws Exception {
+        void jobWithUndefinedStage(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -272,14 +314,17 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var ex = assertThrows(ProfileException.class, () -> ProfileCompiler.compile(doc));
             assertTrue(ex.getMessage().contains("nonexistent"));
         }
 
         @Test
-        void jobIsNull(@TempDir Path tmp) throws Exception {
+        void jobIsNull(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -288,13 +333,16 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             assertThrows(ProfileException.class, () -> ProfileCompiler.compile(doc));
         }
 
         @Test
-        void jobIsNotAMap(@TempDir Path tmp) throws Exception {
+        void jobIsNotAMap(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -303,13 +351,16 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             assertThrows(ProfileException.class, () -> ProfileCompiler.compile(doc));
         }
 
         @Test
-        void exceptionWrapsDocument(@TempDir Path tmp) throws Exception {
+        void exceptionWrapsDocument(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -320,7 +371,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var ex = assertThrows(ProfileException.class, () -> ProfileCompiler.compile(doc));
             assertNotNull(ex.getMessage());
@@ -331,7 +382,10 @@ class ProfileCompilerTest {
     class Inheritance {
 
         @Test
-        void customInheritLimitingDefaults(@TempDir Path tmp) throws Exception {
+        void customInheritLimitingDefaults(
+                @TempDir(deletionStrategy = TempDirDeletionStrategy.IgnoreFailures.class)
+                Path tmp
+        ) throws Exception {
             var yaml = """
                     stages:
                       - build
@@ -350,7 +404,7 @@ class ProfileCompilerTest {
             var yamlFile = tmp.resolve("ci.yml");
             Files.writeString(yamlFile, yaml);
 
-            var raw = YamlUtils.loader().source(Files.newBufferedReader(yamlFile)).load();
+            var raw = loadYaml(yamlFile);
             var doc = docFromMap(raw);
             var profile = ProfileCompiler.compile(doc);
 

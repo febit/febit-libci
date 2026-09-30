@@ -15,10 +15,12 @@
  */
 package org.febit.libci.jenkins.workflow;
 
-import lombok.experimental.UtilityClass;
 import org.apache.tools.ant.DirectoryScanner;
+
 import org.febit.libci.core.spec.ArtifactsSpec;
 import org.febit.libci.extern.RelPathUtils;
+
+import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -131,5 +133,3 @@ final class WorkspaceOutputSupport {
         return values;
     }
 }
-
-

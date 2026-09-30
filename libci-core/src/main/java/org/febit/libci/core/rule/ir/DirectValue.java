@@ -19,6 +19,7 @@ import org.febit.libci.core.rule.Context;
 import org.febit.libci.core.rule.parser.RegexUtils;
 import org.febit.libci.core.rule.parser.Token;
 import org.febit.libci.core.spec.support.SpecMapper;
+
 import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Pattern;

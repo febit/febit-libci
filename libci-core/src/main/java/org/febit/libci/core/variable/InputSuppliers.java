@@ -15,10 +15,12 @@
  */
 package org.febit.libci.core.variable;
 
-import lombok.experimental.UtilityClass;
 import org.febit.lang.util.Maps;
+
 import org.febit.libci.core.exception.ProfileException;
 import org.febit.libci.core.spec.header.HeaderSpec;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;

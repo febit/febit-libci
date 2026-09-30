@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.spec.support.jackson;
 
-import org.febit.libci.core.spec.variable.IVariable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.deser.ValueInstantiator;
+
+import org.febit.libci.core.spec.variable.IVariable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

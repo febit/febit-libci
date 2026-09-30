@@ -15,10 +15,6 @@
  */
 package org.febit.libci.runtime;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
 import org.febit.libci.core.predefined.JobPredefined;
 import org.febit.libci.core.predefined.Predefined;
 import org.febit.libci.core.spec.CiJobStatus;
@@ -31,6 +27,11 @@ import org.febit.libci.runtime.plan.JobDependency;
 import org.febit.libci.runtime.plan.JobRelation;
 import org.febit.libci.runtime.state.JobState;
 import org.febit.libci.runtime.state.StageState;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
@@ -38,9 +39,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.febit.libci.core.util.Defaults.nvl;
+
+import static java.util.Objects.requireNonNull;
 
 @Slf4j
 @Accessors(fluent = true)

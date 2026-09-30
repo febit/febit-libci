@@ -16,6 +16,10 @@
 package org.febit.libci.core.spec;
 
 import org.febit.lang.PeriodDuration;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.document.yaml.YamlUtils;
 import org.febit.libci.core.spec.ArtifactsSpec.Access;
 import org.febit.libci.core.spec.ArtifactsSpec.ReportKind;
@@ -48,9 +52,6 @@ import org.febit.libci.core.spec.JobSpec.TriggerStrategy;
 import org.febit.libci.core.spec.JobSpec.When;
 import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.spec.variable.IVariable;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.HashMap;

@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.document.yaml;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.spec.DocPosition;
 import org.febit.libci.core.spec.ReferenceSpec;
-import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;

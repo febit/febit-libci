@@ -15,11 +15,10 @@
  */
 package org.febit.libci.core;
 
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 import org.febit.lang.jackson.JacksonTypes;
 import org.febit.lang.util.Logs;
+import tools.jackson.databind.JavaType;
+
 import org.febit.libci.core.document.DocumentUtils;
 import org.febit.libci.core.exception.ProfileException;
 import org.febit.libci.core.spec.DefaultSpec;
@@ -33,15 +32,17 @@ import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.spec.variable.GenericVariable;
 import org.febit.libci.core.spec.variable.IVariable;
 import org.febit.libci.core.util.Computed;
+
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import tools.jackson.databind.JavaType;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 
 @Slf4j
 @RequiredArgsConstructor(staticName = "create")

@@ -18,6 +18,7 @@ package org.febit.libci.core.rule.ir;
 import org.febit.libci.core.exception.RuleEvaluationException;
 import org.febit.libci.core.rule.Context;
 import org.febit.libci.core.rule.parser.Token;
+
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;

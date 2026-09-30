@@ -21,6 +21,7 @@ import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.spec.variable.IVariable;
 import org.febit.libci.core.variable.VarDefinedPhase;
+
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;

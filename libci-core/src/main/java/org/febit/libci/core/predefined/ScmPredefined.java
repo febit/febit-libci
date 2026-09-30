@@ -15,13 +15,15 @@
  */
 package org.febit.libci.core.predefined;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
+
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.predefined.git.GitCommitField;
 import org.febit.libci.core.predefined.git.GitScmMetadata;
 import org.febit.libci.core.spec.support.SlugUtils;
 import org.febit.libci.core.variable.VarDefinedPhase;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;

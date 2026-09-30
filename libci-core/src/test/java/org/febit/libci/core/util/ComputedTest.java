@@ -17,6 +17,8 @@ package org.febit.libci.core.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.Serializable;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ComputedTest {
@@ -60,6 +62,6 @@ class ComputedTest {
     @Test
     void isSerializable() {
         var c = Computed.of();
-        assertInstanceOf(java.io.Serializable.class, c);
+        assertInstanceOf(Serializable.class, c);
     }
 }

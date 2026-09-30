@@ -22,14 +22,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum VarDefinedPhase {
 
-    LIBCI_CONST(999999, "Constants"),
+    LIBCI_CONST(999_999, "Constants"),
 
-    PERSISTED_PIPELINE(999999, "Persisted Pipeline"),
-    PERSISTED_JOB(999999, "Persisted Job"),
+    PERSISTED_PIPELINE(999_999, "Persisted Pipeline"),
+    PERSISTED_JOB(999_999, "Persisted Job"),
 
-    PREDEFINED_SCM(999999, "Predefined SCM"),
-    PREDEFINED_SYS(999999, "Predefined System"),
-    PREDEFINED_JOB(999999, "Predefined Job"),
+    PREDEFINED_SCM(999_999, "Predefined SCM"),
+    PREDEFINED_SYS(999_999, "Predefined System"),
+    PREDEFINED_JOB(999_999, "Predefined Job"),
 
     JOB_DEPLOYMENT(6000, "Deployment Job"),
     JOB_REPORT_DOTENV(6000, "Job Dotenv Reported"),

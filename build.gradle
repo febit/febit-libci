@@ -5,7 +5,6 @@ plugins {
   alias libs.plugins.febit.java
   alias libs.plugins.febit.maven.publish
   alias libs.plugins.febit.codegen.module
-  alias libs.plugins.license
 }
 
 group = 'org.febit.libci'
@@ -16,8 +15,7 @@ description = 'Febit LibCI'
 ext {
 }
 
-allprojects { subproject ->
-  apply plugin: 'com.github.hierynomus.license'
+allprojects {
 
   group = rootProject.group
   version = rootProject.version
@@ -27,28 +25,37 @@ allprojects { subproject ->
     maven { url "https://repo.jenkins-ci.org/public" }
   }
 
-  standardMavenPublish {
-    pom {
-      customPom(subproject, it)
-    }
-  }
-
   codegenModule {
     defaultTemplate = fromFile("$rootDir/etc/module.java.tmpl")
   }
 
-  license {
-    mapping {
-      java = 'SLASHSTAR_STYLE'
-    }
-    include '**/*.java'
-    strictCheck = false
-    skipExistingHeaders = false
-    header = rootProject.file('etc/license-header.txt')
-  }
-
   tasks.withType(AbstractPublishToMaven).configureEach {
     mustRunAfter tasks.withType(Sign)
+  }
+
+  spotless {
+    java {
+      licenseHeaderFile rootProject.file('etc/license-header.txt')
+
+      shortenFullyQualifiedTypes()
+
+      cleanthat()
+          .addMutator('SafeAndConsensual')
+          .addMutator('PMD')
+          .addMutator('Stream')
+          .addMutator('SpotBugs')
+
+      removeUnusedImports()
+      importOrder(
+          '',
+          'org.febit.libci',
+          'jakarta.persistence|jakarta.validation|lombok|org.jspecify',
+          'jakarta|java|javax',
+          '\\#', '\\#jakarta|\\#java|\\#javax'
+      )
+
+      // tableTestFormatter()
+    }
   }
 }
 
@@ -65,31 +72,7 @@ configure(subprojects.findAll {
     withSourcesJar()
   }
 
-  jacocoTestReport {
-    reports {
-      xml.required.set(true)
-    }
-  }
-
-  configurations {
-    mockitoAgent
-  }
   dependencies {
-    mockitoAgent(libs.mockito.core) {
-      transitive = false
-    }
-  }
-  test {
-    jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
-    useJUnitPlatform()
-  }
-
-  licenseMain {
-    mustRunAfter generateModule
-  }
-
-  dependencies {
-
     compileOnly 'org.jspecify:jspecify'
     compileOnly 'com.github.spotbugs:spotbugs-annotations'
     testCompileOnly 'org.jspecify:jspecify'
@@ -118,52 +101,7 @@ configure(subprojects.findAll {
   }
 }
 
-project(':febit-libci-jenkins-support-plugin') {
-
-  description = "Febit LibCI Support Plugin"
-  dependencies {
-    implementation project(':febit-libci-core'), {
-      exclude group: 'org.slf4j', module: 'slf4j-api'
-
-      // exclude group: 'commons-io', module: 'commons-io'
-      // exclude group: 'commons-codec', module: 'commons-codec'
-
-      // commons-lang3 v3.x Jenkins API Plugin
-      exclude group: 'org.apache.commons', module: 'commons-lang3'
-
-      // commons-collections4 v4.x API Wrapper Plugin
-      exclude group: 'org.apache.commons', module: 'commons-collections4'
-      // Commons Compress API
-      exclude group: 'org.apache.commons', module: 'commons-compress'
-      // commons-text API
-      exclude group: 'org.apache.commons', module: 'commons-text'
-
-      // SnakeYAML Engine API Plugin
-      exclude group: 'org.snakeyaml', module: 'snakeyaml-engine'
-      // Jackson 3 API Plugin
-      exclude group: 'tools.jackson.core', module: 'jackson-core'
-      exclude group: 'tools.jackson.core', module: 'jackson-databind'
-      exclude group: 'tools.jackson.dataformat', module: 'jackson-dataformat-yaml'
-
-      exclude group: 'org.springframework', module: 'spring-core'
-      exclude group: 'org.eclipse.jgit', module: 'org.eclipse.jgit'
-    }
-
-    implementation 'io.jenkins.plugins.mina-sshd-api:mina-sshd-api-common'
-    implementation 'io.jenkins.plugins.mina-sshd-api:mina-sshd-api-core'
-    implementation 'io.jenkins.plugins:commons-collections4-api'
-    implementation 'io.jenkins.plugins:commons-lang3-api'
-    implementation 'io.jenkins.plugins:commons-text-api'
-    implementation 'io.jenkins.plugins:jackson3-api'
-    implementation 'io.jenkins.plugins:snakeyaml-engine-api'
-    implementation 'org.jenkins-ci.plugins.workflow:workflow-step-api@jar'
-    implementation 'org.jenkins-ci.plugins:credentials@jar'
-    implementation 'org.jenkins-ci.plugins:ssh-credentials@jar'
-    implementation 'org.jenkins-ci.plugins:git-client@jar'
-  }
-}
-
-static def customPom(Project project, MavenPom pom) {
+def customPom = { Project project, MavenPom pom ->
   pom.with {
     name.set project.name
     description.set project.description
@@ -196,5 +134,59 @@ static def customPom(Project project, MavenPom pom) {
         timezone = '+8'
       }
     }
+  }
+}
+
+
+allprojects { subproject ->
+  standardMavenPublish {
+    pom {
+      customPom(subproject, it)
+    }
+  }
+}
+
+project(':febit-libci-jenkins-support-plugin') {
+
+  description = "Febit LibCI Support Plugin"
+  dependencies {
+    implementation project(':febit-libci-core'), {
+      exclude group: 'org.slf4j', module: 'slf4j-api'
+
+      // exclude group: 'commons-io', module: 'commons-io'
+      // exclude group: 'commons-codec', module: 'commons-codec'
+      // exclude group: 'org.springframework', module: 'spring-core'
+
+      // commons-lang3 v3.x Jenkins API Plugin
+      exclude group: 'org.apache.commons', module: 'commons-lang3'
+
+      // commons-collections4 v4.x API Wrapper Plugin
+      exclude group: 'org.apache.commons', module: 'commons-collections4'
+      // Commons Compress API
+      exclude group: 'org.apache.commons', module: 'commons-compress'
+      // commons-text API
+      exclude group: 'org.apache.commons', module: 'commons-text'
+
+      // SnakeYAML Engine API Plugin
+      exclude group: 'org.snakeyaml', module: 'snakeyaml-engine'
+      // Jackson 3 API Plugin
+      exclude group: 'tools.jackson.core', module: 'jackson-core'
+      exclude group: 'tools.jackson.core', module: 'jackson-databind'
+      exclude group: 'tools.jackson.dataformat', module: 'jackson-dataformat-yaml'
+
+      exclude group: 'org.eclipse.jgit', module: 'org.eclipse.jgit'
+    }
+
+    implementation 'io.jenkins.plugins.mina-sshd-api:mina-sshd-api-common'
+    implementation 'io.jenkins.plugins.mina-sshd-api:mina-sshd-api-core'
+    implementation 'io.jenkins.plugins:commons-collections4-api'
+    implementation 'io.jenkins.plugins:commons-lang3-api'
+    implementation 'io.jenkins.plugins:commons-text-api'
+    implementation 'io.jenkins.plugins:jackson3-api'
+    implementation 'io.jenkins.plugins:snakeyaml-engine-api'
+    implementation 'org.jenkins-ci.plugins.workflow:workflow-step-api@jar'
+    implementation 'org.jenkins-ci.plugins:credentials@jar'
+    implementation 'org.jenkins-ci.plugins:ssh-credentials@jar'
+    implementation 'org.jenkins-ci.plugins:git-client@jar'
   }
 }

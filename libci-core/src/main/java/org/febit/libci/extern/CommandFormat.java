@@ -15,9 +15,10 @@
  */
 package org.febit.libci.extern;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.text.translate.CharSequenceTranslator;
 import org.apache.commons.text.translate.LookupTranslator;
+
+import lombok.experimental.UtilityClass;
 
 import java.util.Collection;
 import java.util.Map;

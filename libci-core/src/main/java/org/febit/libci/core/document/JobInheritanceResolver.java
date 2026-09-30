@@ -15,13 +15,15 @@
  */
 package org.febit.libci.core.document;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import org.febit.lang.util.Logs;
+
 import org.febit.libci.core.exception.ProfileException;
 import org.febit.libci.core.spec.Keywords;
 import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.util.SetUtils;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

@@ -16,6 +16,9 @@
 package org.febit.libci.runtime;
 
 import org.febit.lang.PeriodDuration;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.Profile;
 import org.febit.libci.core.rule.WorkspaceApi;
 import org.febit.libci.core.spec.InheritPolicy;
@@ -28,8 +31,6 @@ import org.febit.libci.core.variable.VarDefinedPhase;
 import org.febit.libci.core.variable.VarsHeapImpl;
 import org.febit.libci.runtime.plan.JobPlan;
 import org.febit.libci.runtime.state.JobState;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -191,7 +192,7 @@ class PipelineEvaluatorTest {
                 Map.of("OS", "linux", "ARCH", "arm64"),
                 Map.of("OS", "macos", "ARCH", "amd64"),
                 Map.of("OS", "macos", "ARCH", "arm64")
-        ), states.stream().map(state -> state.plan().matrixVars()).collect(java.util.stream.Collectors.toSet()));
+        ), states.stream().map(state -> state.plan().matrixVars()).collect(Collectors.toSet()));
     }
 
     @Test
@@ -397,4 +398,3 @@ class PipelineEvaluatorTest {
         }
     }
 }
-

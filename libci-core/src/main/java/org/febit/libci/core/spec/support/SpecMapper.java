@@ -15,16 +15,10 @@
  */
 package org.febit.libci.core.spec.support;
 
-import lombok.experimental.UtilityClass;
 import org.febit.lang.PeriodDuration;
 import org.febit.lang.jackson.JacksonCodec;
 import org.febit.lang.jackson.JacksonCodecImpl;
 import org.febit.lang.jackson.JacksonStandard;
-import org.febit.libci.core.document.yaml.YamlUtils;
-import org.febit.libci.core.spec.ISpec;
-import org.febit.libci.core.spec.support.jackson.HandlerInstantiatorImpl;
-import org.febit.libci.core.spec.support.jackson.PeriodDurationDeserializer;
-import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy;
@@ -32,6 +26,14 @@ import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.introspect.ClassIntrospector;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
+
+import org.febit.libci.core.document.yaml.YamlUtils;
+import org.febit.libci.core.spec.ISpec;
+import org.febit.libci.core.spec.support.jackson.HandlerInstantiatorImpl;
+import org.febit.libci.core.spec.support.jackson.PeriodDurationDeserializer;
+
+import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

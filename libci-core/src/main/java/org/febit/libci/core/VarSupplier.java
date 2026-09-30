@@ -16,6 +16,7 @@
 package org.febit.libci.core;
 
 import org.febit.libci.core.variable.VarPatterns;
+
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;

@@ -15,13 +15,14 @@
  */
 package org.febit.libci.core.document.yaml;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import org.febit.libci.core.VarSupplier;
 import org.febit.libci.core.resource.Resource;
 import org.febit.libci.core.resource.ResourceId;
 import org.febit.libci.core.variable.InputPatterns;
 import org.febit.libci.core.variable.InputSupplier;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.atomic.AtomicReference;

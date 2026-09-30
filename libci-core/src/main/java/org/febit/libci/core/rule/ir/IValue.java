@@ -16,6 +16,7 @@
 package org.febit.libci.core.rule.ir;
 
 import org.febit.libci.core.rule.Context;
+
 import org.jspecify.annotations.Nullable;
 
 public interface IValue extends IExpr {

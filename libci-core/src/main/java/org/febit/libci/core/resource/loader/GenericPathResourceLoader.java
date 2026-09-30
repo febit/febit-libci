@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.resource.loader;
 
-import lombok.RequiredArgsConstructor;
 import org.febit.libci.core.resource.GenericPathResource;
 import org.febit.libci.core.resource.PathResource;
 import org.febit.libci.core.resource.source.PathSource;
+
+import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 

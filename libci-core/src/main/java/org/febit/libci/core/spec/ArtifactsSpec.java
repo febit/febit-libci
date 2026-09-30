@@ -18,14 +18,16 @@ package org.febit.libci.core.spec;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.febit.lang.PeriodDuration;
+
+import org.febit.libci.core.spec.support.SpecMapper;
+import org.febit.libci.core.util.Immutables;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.jackson.Jacksonized;
-import org.febit.lang.PeriodDuration;
-import org.febit.libci.core.spec.support.SpecMapper;
-import org.febit.libci.core.util.Immutables;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;

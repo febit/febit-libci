@@ -15,16 +15,6 @@
  */
 package org.febit.libci.core.document.yaml;
 
-import lombok.experimental.Tolerate;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-import org.febit.libci.core.VarSupplier;
-import org.febit.libci.core.exception.ProfileException;
-import org.febit.libci.core.resource.Resource;
-import org.febit.libci.core.spec.header.HeaderSpec;
-import org.febit.libci.core.spec.support.SpecMapper;
-import org.febit.libci.core.variable.InputSuppliers;
-import org.jspecify.annotations.Nullable;
 import org.snakeyaml.engine.v2.api.Dump;
 import org.snakeyaml.engine.v2.api.DumpSettings;
 import org.snakeyaml.engine.v2.api.LoadSettings;
@@ -32,6 +22,18 @@ import org.snakeyaml.engine.v2.common.FlowStyle;
 import org.snakeyaml.engine.v2.composer.Composer;
 import org.snakeyaml.engine.v2.parser.ParserImpl;
 import org.snakeyaml.engine.v2.scanner.StreamReader;
+
+import org.febit.libci.core.VarSupplier;
+import org.febit.libci.core.exception.ProfileException;
+import org.febit.libci.core.resource.Resource;
+import org.febit.libci.core.spec.header.HeaderSpec;
+import org.febit.libci.core.spec.support.SpecMapper;
+import org.febit.libci.core.variable.InputSuppliers;
+
+import lombok.experimental.Tolerate;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;

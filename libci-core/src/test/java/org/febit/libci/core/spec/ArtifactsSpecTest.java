@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -246,7 +247,7 @@ class ArtifactsSpecTest {
 
         @Test
         void filtersNullReportKey() {
-            var map = new java.util.LinkedHashMap<ArtifactsSpec.ReportKind, Serializable>();
+            var map = new LinkedHashMap<ArtifactsSpec.ReportKind, Serializable>();
             map.put(ArtifactsSpec.ReportKind.DOTENV, "build/artifacts.env");
             map.put(null, "should-be-filtered");
 

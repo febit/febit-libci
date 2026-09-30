@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.predefined;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.predefined.git.GitCommitField;
 import org.febit.libci.core.predefined.git.GitScmMetadata;
 import org.febit.libci.core.variable.VarsHeapImpl;
-import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 

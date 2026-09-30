@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.document;
 
-import lombok.RequiredArgsConstructor;
 import org.febit.libci.core.ProfileDocument;
 import org.febit.libci.core.resource.Resource;
+
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
 @RequiredArgsConstructor(staticName = "create")

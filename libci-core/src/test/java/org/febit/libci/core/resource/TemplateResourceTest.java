@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.resource;
 
-import org.febit.libci.core.spec.IncludeSpec;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.spec.IncludeSpec;
 
 import static org.junit.jupiter.api.Assertions.*;
 

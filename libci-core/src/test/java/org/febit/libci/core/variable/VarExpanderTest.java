@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.variable;
 
-import org.febit.libci.core.spec.ExpandPhase;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.spec.ExpandPhase;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

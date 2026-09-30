@@ -19,21 +19,22 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.febit.lang.PeriodDuration;
+import tools.jackson.databind.annotation.JsonDeserialize;
+
+import org.febit.libci.core.spec.variable.IVariable;
+import org.febit.libci.core.spec.variable.JobRuleVariable;
+import org.febit.libci.core.spec.variable.JobVariable;
+import org.febit.libci.core.util.Immutables;
+
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.experimental.UtilityClass;
 import lombok.extern.jackson.Jacksonized;
-import org.febit.lang.PeriodDuration;
-import org.febit.libci.core.spec.variable.IVariable;
-import org.febit.libci.core.spec.variable.JobRuleVariable;
-import org.febit.libci.core.spec.variable.JobVariable;
-import org.febit.libci.core.util.Immutables;
 import org.jspecify.annotations.Nullable;
-import tools.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -46,7 +47,7 @@ import java.util.function.Consumer;
  * See: <a href="https://docs.gitlab.com/ci/yaml/#job-keywords">job-keywords</a>
  */
 @Jacksonized
-@Builder(
+@lombok.Builder(
         toBuilder = true,
         builderClassName = "Builder"
 )

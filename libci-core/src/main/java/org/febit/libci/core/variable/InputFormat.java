@@ -15,10 +15,12 @@
  */
 package org.febit.libci.core.variable;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.BooleanUtils;
+
 import org.febit.libci.core.exception.ProfileException;
 import org.febit.libci.core.spec.header.HeaderSpec;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.variable;
 
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 import org.febit.libci.core.VarSupplier;
 import org.febit.libci.core.VarsHeap;
+
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;

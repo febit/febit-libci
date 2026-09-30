@@ -15,10 +15,12 @@
  */
 package org.febit.libci.core.variable;
 
-import lombok.experimental.UtilityClass;
 import org.febit.lang.util.CharUtils;
 import org.febit.lang.util.StringWalker;
+
 import org.febit.libci.core.VarSupplier;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 @UtilityClass

@@ -15,11 +15,12 @@
  */
 package org.febit.libci.core.document.yaml;
 
-import org.febit.libci.core.exception.ProfileException;
 import org.snakeyaml.engine.v2.api.LoadSettings;
 import org.snakeyaml.engine.v2.constructor.StandardConstructor;
 import org.snakeyaml.engine.v2.nodes.Node;
 import org.snakeyaml.engine.v2.nodes.Tag;
+
+import org.febit.libci.core.exception.ProfileException;
 
 import java.util.LinkedHashMap;
 import java.util.Optional;

@@ -15,6 +15,8 @@
  */
 package org.febit.libci.core.rule;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.exception.RuleFormatException;
 import org.febit.libci.core.rule.ir.BiPredicateChain;
 import org.febit.libci.core.rule.ir.DirectValue;
@@ -23,7 +25,6 @@ import org.febit.libci.core.rule.ir.VarValue;
 import org.febit.libci.core.rule.parser.RegexUtils;
 import org.febit.libci.core.variable.VarDefinedPhase;
 import org.febit.libci.core.variable.VarsHeapImpl;
-import org.junit.jupiter.api.Test;
 
 import java.util.regex.Pattern;
 

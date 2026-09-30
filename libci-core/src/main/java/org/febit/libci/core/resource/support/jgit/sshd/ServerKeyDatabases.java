@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.resource.support.jgit.sshd;
 
-import lombok.experimental.UtilityClass;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.sshd.ServerKeyDatabase;
+
+import lombok.experimental.UtilityClass;
 
 import java.net.InetSocketAddress;
 import java.security.PublicKey;

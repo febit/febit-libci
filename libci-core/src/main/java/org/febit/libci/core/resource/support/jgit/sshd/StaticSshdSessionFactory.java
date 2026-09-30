@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.resource.support.jgit.sshd;
 
-import lombok.RequiredArgsConstructor;
 import org.eclipse.jgit.transport.sshd.ServerKeyDatabase;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 import org.febit.lang.util.Lists;
+
+import lombok.RequiredArgsConstructor;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,4 +72,3 @@ public class StaticSshdSessionFactory extends SshdSessionFactory {
         return keys;
     }
 }
-

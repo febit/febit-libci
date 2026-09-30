@@ -15,12 +15,13 @@
  */
 package org.febit.libci.core;
 
-import lombok.Singular;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
 import org.febit.libci.core.spec.variable.IVariable;
 import org.febit.libci.core.util.Immutables;
+
+import lombok.Singular;
 
 import java.util.List;
 import java.util.SortedMap;

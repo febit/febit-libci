@@ -16,6 +16,9 @@
 package org.febit.libci.runtime;
 
 import org.febit.lang.PeriodDuration;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.Profile;
 import org.febit.libci.core.spec.InheritPolicy;
 import org.febit.libci.core.spec.JobSpec;
@@ -23,8 +26,6 @@ import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
 import org.febit.libci.core.variable.VarsHeapImpl;
 import org.febit.libci.runtime.plan.PipelinePlan;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;

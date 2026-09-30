@@ -15,7 +15,6 @@
  */
 package org.febit.libci.core.spec.support.jackson;
 
-import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.DeserializationConfig;
 import tools.jackson.databind.KeyDeserializer;
 import tools.jackson.databind.SerializationConfig;
@@ -27,6 +26,8 @@ import tools.jackson.databind.deser.ValueInstantiator;
 import tools.jackson.databind.introspect.Annotated;
 import tools.jackson.databind.jsontype.TypeIdResolver;
 import tools.jackson.databind.jsontype.TypeResolverBuilder;
+
+import org.jspecify.annotations.Nullable;
 
 public class HandlerInstantiatorImpl extends HandlerInstantiator {
 

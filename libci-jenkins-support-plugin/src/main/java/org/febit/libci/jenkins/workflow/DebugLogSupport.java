@@ -49,5 +49,3 @@ final class DebugLogSupport {
         return builder.toString();
     }
 }
-
-

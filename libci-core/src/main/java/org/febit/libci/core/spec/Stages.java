@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.spec;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.collections4.CollectionUtils;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;

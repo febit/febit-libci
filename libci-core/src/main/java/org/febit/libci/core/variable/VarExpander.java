@@ -15,19 +15,21 @@
  */
 package org.febit.libci.core.variable;
 
-import lombok.RequiredArgsConstructor;
 import org.febit.lang.UncheckedException;
 import org.febit.lang.jackson.JacksonTypes;
 import org.febit.lang.util.Lists;
-import org.febit.libci.core.VarSupplier;
-import org.febit.libci.core.spec.ExpandPhase;
-import org.febit.libci.core.spec.Expandable;
-import org.febit.libci.core.spec.support.SpecMapper;
-import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.BeanDescription;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.introspect.AnnotatedMethod;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
+
+import org.febit.libci.core.VarSupplier;
+import org.febit.libci.core.spec.ExpandPhase;
+import org.febit.libci.core.spec.Expandable;
+import org.febit.libci.core.spec.support.SpecMapper;
+
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;

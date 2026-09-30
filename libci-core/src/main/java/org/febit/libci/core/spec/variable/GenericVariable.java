@@ -15,11 +15,13 @@
  */
 package org.febit.libci.core.spec.variable;
 
-import lombok.extern.jackson.Jacksonized;
+import tools.jackson.databind.annotation.JsonValueInstantiator;
+
 import org.febit.libci.core.spec.support.jackson.VariableValueInstantiator;
 import org.febit.libci.core.util.Immutables;
+
+import lombok.extern.jackson.Jacksonized;
 import org.jspecify.annotations.Nullable;
-import tools.jackson.databind.annotation.JsonValueInstantiator;
 
 import java.util.List;
 

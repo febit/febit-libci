@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.resource;
 
-import org.febit.libci.core.resource.source.FileSystemSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import org.febit.libci.core.resource.source.FileSystemSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,7 +34,7 @@ class PathResourceTest {
         Files.writeString(ymlFile, "key: value");
         var source = FileSystemSource.create(tempDir);
 
-        var resource = new org.febit.libci.core.resource.GenericPathResource(source, "test.yml", null);
+        var resource = new GenericPathResource(source, "test.yml", null);
         assertEquals("test.yml", resource.path());
         assertNotNull(resource.id());
 

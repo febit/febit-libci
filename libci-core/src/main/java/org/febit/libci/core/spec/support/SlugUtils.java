@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.spec.support;
 
-import lombok.experimental.UtilityClass;
 import org.febit.lang.util.CharUtils;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 @UtilityClass

@@ -19,6 +19,7 @@ import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.treewalk.filter.OrTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
+
 import org.febit.libci.core.resource.SourceId;
 import org.febit.libci.core.resource.support.PathMapping;
 import org.febit.libci.core.resource.support.jgit.JgitRepoUtils;

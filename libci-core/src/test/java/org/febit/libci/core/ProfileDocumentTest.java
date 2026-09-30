@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.resource.RemoteResource;
 import org.febit.libci.core.spec.IncludeSpec;
-import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -17,15 +17,17 @@ package org.febit.libci.core.spec.header;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+
+import org.febit.libci.core.spec.ISpec;
+import org.febit.libci.core.util.Immutables;
+import org.febit.libci.core.variable.InputFormat;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.extern.jackson.Jacksonized;
-import org.febit.libci.core.spec.ISpec;
-import org.febit.libci.core.util.Immutables;
-import org.febit.libci.core.variable.InputFormat;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

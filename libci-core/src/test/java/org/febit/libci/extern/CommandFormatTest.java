@@ -28,7 +28,7 @@ class CommandFormatTest {
     void joinArgsEscapesEachArgument() {
         assertEquals(
                 "'a b' 'o'\\''clock' '1'",
-                org.febit.libci.extern.CommandFormat.joinArgs(List.of("a b", "o'clock", 1))
+                CommandFormat.joinArgs(List.of("a b", "o'clock", 1))
         );
     }
 
@@ -36,7 +36,7 @@ class CommandFormatTest {
     void appendWithEchoHeaderSkipsBlankCommands() {
         var lines = new ArrayList<String>();
 
-        org.febit.libci.extern.CommandFormat.appendWithEchoHeader("  \n\t  ", lines);
+        CommandFormat.appendWithEchoHeader("  \n\t  ", lines);
 
         assertEquals(List.of(), lines);
     }
@@ -48,11 +48,10 @@ class CommandFormatTest {
                   echo 'hello'  \r
                 next line""";
 
-        org.febit.libci.extern.CommandFormat.appendWithEchoHeader(command, lines);
+        CommandFormat.appendWithEchoHeader(command, lines);
 
         assertEquals(2, lines.size());
         assertEquals("echo '$ echo '\\''hello'\\'' ## collapsed multi-line command'", lines.getFirst());
         assertEquals(command, lines.get(1));
     }
 }
-

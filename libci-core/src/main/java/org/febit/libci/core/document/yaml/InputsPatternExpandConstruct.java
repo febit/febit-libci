@@ -15,13 +15,15 @@
  */
 package org.febit.libci.core.document.yaml;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.febit.libci.core.exception.ProfileException;
-import org.jspecify.annotations.Nullable;
 import org.snakeyaml.engine.v2.constructor.ConstructScalar;
 import org.snakeyaml.engine.v2.nodes.Node;
 import org.snakeyaml.engine.v2.nodes.ScalarNode;
+
+import org.febit.libci.core.exception.ProfileException;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 
 @Slf4j
 @RequiredArgsConstructor(staticName = "of")

@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.exception;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.ProfileDocument;
 import org.febit.libci.core.resource.RemoteResource;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.resource;
 
-import lombok.With;
 import org.febit.libci.core.resource.source.PathSource;
 import org.febit.libci.core.spec.IncludeSpec;
+
+import lombok.With;
 import org.jspecify.annotations.Nullable;
 
 @lombok.Builder(

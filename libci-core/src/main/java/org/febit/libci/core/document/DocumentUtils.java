@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.document;
 
-import lombok.experimental.UtilityClass;
 import org.febit.libci.core.exception.ProfileException;
 import org.febit.libci.core.spec.InheritPolicy;
 import org.febit.libci.core.util.SetUtils;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;

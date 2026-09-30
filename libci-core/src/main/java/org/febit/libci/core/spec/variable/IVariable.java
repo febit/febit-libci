@@ -16,7 +16,9 @@
 package org.febit.libci.core.spec.variable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import org.febit.libci.core.spec.ISpec;
+
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

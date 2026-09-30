@@ -15,17 +15,19 @@
  */
 package org.febit.libci.core.document.yaml;
 
-import lombok.RequiredArgsConstructor;
 import org.febit.lang.util.Lists;
-import org.febit.libci.core.exception.ProfileException;
-import org.febit.libci.core.spec.DocPosition;
-import org.febit.libci.core.spec.ReferenceSpec;
-import org.jspecify.annotations.Nullable;
 import org.snakeyaml.engine.v2.api.ConstructNode;
 import org.snakeyaml.engine.v2.nodes.Node;
 import org.snakeyaml.engine.v2.nodes.ScalarNode;
 import org.snakeyaml.engine.v2.nodes.SequenceNode;
 import org.snakeyaml.engine.v2.nodes.Tag;
+
+import org.febit.libci.core.exception.ProfileException;
+import org.febit.libci.core.spec.DocPosition;
+import org.febit.libci.core.spec.ReferenceSpec;
+
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 @RequiredArgsConstructor(staticName = "of")
 public class ConstructReferenceSpec implements ConstructNode {

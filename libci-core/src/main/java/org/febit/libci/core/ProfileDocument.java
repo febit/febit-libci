@@ -15,9 +15,8 @@
  */
 package org.febit.libci.core;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import org.febit.lang.Lazy;
+
 import org.febit.libci.core.document.DocumentUtils;
 import org.febit.libci.core.document.JobInheritanceResolver;
 import org.febit.libci.core.document.ReferenceResolver;
@@ -26,6 +25,9 @@ import org.febit.libci.core.resource.Resource;
 import org.febit.libci.core.spec.IncludeSpec;
 import org.febit.libci.core.spec.Keywords;
 import org.febit.libci.core.spec.support.SpecMapper;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;

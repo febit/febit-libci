@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.document;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.exception.ProfileException;
 import org.febit.libci.core.spec.InheritPolicy;
-import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -102,7 +103,7 @@ class DocumentUtilsTest {
         ));
 
         var replaced = DocumentUtils.replace(original, v -> {
-            if (v instanceof String s && s.equals("a")) {
+            if (v instanceof String s && "a".equals(s)) {
                 return "b";
             }
             if (v instanceof Integer i && i == 2) {

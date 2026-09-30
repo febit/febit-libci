@@ -15,11 +15,14 @@
  */
 package org.febit.libci.core.spec;
 
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.Profile;
 import org.febit.libci.core.document.yaml.YamlUtils;
 import org.febit.libci.core.spec.support.SpecMapper;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.febit.libci.core.spec.variable.IVariable;
+import org.febit.libci.core.spec.variable.JobVariable;
 
 import java.util.List;
 
@@ -47,7 +50,7 @@ class ProfileTest {
 
     @Test
     void builder() {
-        var variables = VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create();
+        var variables = VariablesSpec.<IVariable>create();
         var workflow = WorkflowSpec.builder().build();
         var raw = YamlUtils.loader().source(jobYaml("build")).load();
         var job = SpecMapper.toBean(raw, JobSpec.class);
@@ -67,7 +70,7 @@ class ProfileTest {
     @Test
     void stagesImmutability() {
         var profile = Profile.builder()
-                .variables(VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create())
+                .variables(VariablesSpec.<IVariable>create())
                 .workflow(WorkflowSpec.builder().build())
                 .stages(List.of("build"))
                 .build();
@@ -80,7 +83,7 @@ class ProfileTest {
         var raw = YamlUtils.loader().source(jobYaml("build")).load();
         var job = SpecMapper.toBean(raw, JobSpec.class);
         var profile = Profile.builder()
-                .variables(VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create())
+                .variables(VariablesSpec.<IVariable>create())
                 .workflow(WorkflowSpec.builder().build())
                 .stages(List.of("build"))
                 .job("build", job)
@@ -92,7 +95,7 @@ class ProfileTest {
     @Test
     void emptyJobs() {
         var profile = Profile.builder()
-                .variables(VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create())
+                .variables(VariablesSpec.<IVariable>create())
                 .workflow(WorkflowSpec.builder().build())
                 .stages(List.of())
                 .build();
@@ -101,8 +104,8 @@ class ProfileTest {
 
     @Test
     void varsAndWorkflow() {
-        var vars = VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create();
-        vars.put("KEY", org.febit.libci.core.spec.variable.JobVariable.of("val"));
+        var vars = VariablesSpec.<IVariable>create();
+        vars.put("KEY", JobVariable.of("val"));
         var wf = WorkflowSpec.builder()
                 .rules(List.of())
                 .build();
@@ -132,7 +135,7 @@ class ProfileTest {
 
         @Test
         void nullWorkflowThrows() {
-            var variables = VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create();
+            var variables = VariablesSpec.<IVariable>create();
             assertThrows(NullPointerException.class, () ->
                     Profile.builder()
                             .variables(variables)
@@ -143,7 +146,7 @@ class ProfileTest {
 
         @Test
         void nullStagesThrows() {
-            var variables = VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create();
+            var variables = VariablesSpec.<IVariable>create();
             var workflow = WorkflowSpec.builder().build();
             assertThrows(NullPointerException.class, () ->
                     Profile.builder()

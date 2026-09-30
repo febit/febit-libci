@@ -15,9 +15,6 @@
  */
 package org.febit.libci.core;
 
-import lombok.Singular;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 import org.febit.libci.core.document.DocumentMerger;
 import org.febit.libci.core.document.yaml.YamlUtils;
 import org.febit.libci.core.exception.ProfileException;
@@ -33,6 +30,10 @@ import org.febit.libci.core.spec.IncludeSpec;
 import org.febit.libci.core.util.Immutables;
 import org.febit.libci.core.variable.VarExpander;
 import org.febit.libci.core.variable.VarsHeapImpl;
+
+import lombok.Singular;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;

@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.predefined.git;
 
+import org.febit.lang.util.Maps;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.febit.lang.util.Maps;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
@@ -69,4 +70,3 @@ public enum GitCommitField implements Comparable<GitCommitField> {
     }
 
 }
-

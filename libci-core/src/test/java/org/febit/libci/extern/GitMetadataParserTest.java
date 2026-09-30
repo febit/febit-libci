@@ -58,4 +58,3 @@ class GitMetadataParserTest {
         assertNull(GitMetadataParser.fromRepoUrl("gitlab.com"));
     }
 }
-

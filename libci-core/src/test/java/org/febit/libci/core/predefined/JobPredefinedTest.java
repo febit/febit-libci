@@ -15,11 +15,12 @@
  */
 package org.febit.libci.core.predefined;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.document.yaml.YamlUtils;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.variable.VarsHeapImpl;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 

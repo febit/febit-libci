@@ -15,13 +15,13 @@
  */
 package org.febit.libci.core.resource.loader;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
 import org.febit.libci.core.resource.PathResource;
 import org.febit.libci.core.resource.ProjectResource;
 import org.febit.libci.core.resource.source.JgitRepositorySource;
@@ -30,6 +30,8 @@ import org.febit.libci.core.resource.support.jgit.JgitRepoUtils;
 import org.febit.libci.core.resource.support.jgit.sshd.EncodedKey;
 import org.febit.libci.core.resource.support.jgit.sshd.ServerKeyDatabases;
 import org.febit.libci.core.resource.support.jgit.sshd.StaticSshdSessionFactory;
+
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;

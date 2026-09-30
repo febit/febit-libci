@@ -16,10 +16,11 @@
 package org.febit.libci.core.spec;
 
 import org.febit.lang.PeriodDuration;
-import org.febit.libci.core.document.yaml.YamlUtils;
-import org.febit.libci.core.spec.support.SpecMapper;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.document.yaml.YamlUtils;
+import org.febit.libci.core.spec.support.SpecMapper;
 
 import java.util.List;
 

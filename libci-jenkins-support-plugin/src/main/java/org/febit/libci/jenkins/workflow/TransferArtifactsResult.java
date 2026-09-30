@@ -50,4 +50,3 @@ public record TransferArtifactsResult(
         return directories;
     }
 }
-

@@ -15,9 +15,11 @@
  */
 package org.febit.libci.core.rule.parser;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
+
 import org.febit.libci.core.exception.ProfileException;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Pattern;

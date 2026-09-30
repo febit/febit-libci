@@ -16,14 +16,17 @@
 package org.febit.libci.jenkins.workflow;
 
 import hudson.Extension;
-import lombok.Getter;
+import hudson.FilePath;
+import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
-import org.jspecify.annotations.Nullable;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+
+import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.List;
@@ -67,9 +70,7 @@ public class ImportDotenvStep extends Step implements Serializable {
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
-            return Set.of(hudson.FilePath.class, hudson.model.TaskListener.class);
+            return Set.of(FilePath.class, TaskListener.class);
         }
     }
 }
-
-

@@ -15,11 +15,12 @@
  */
 package org.febit.libci.core.spec.support;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jspecify.annotations.Nullable;
 import org.springframework.util.AntPathMatcher;
+
+import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 
 @UtilityClass
 public class PathSpecUtils {
@@ -41,7 +42,7 @@ public class PathSpecUtils {
     }
 
     public static boolean isRoot(@Nullable String path) {
-        return path == null || path.isEmpty() || path.equals("/");
+        return path == null || path.isEmpty() || "/".equals(path);
     }
 
     @Nullable

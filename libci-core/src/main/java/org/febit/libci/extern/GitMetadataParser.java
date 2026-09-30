@@ -15,9 +15,10 @@
  */
 package org.febit.libci.extern;
 
-import lombok.experimental.UtilityClass;
 import org.febit.libci.core.predefined.git.GitScmMetadata;
 import org.febit.libci.core.spec.support.SlugUtils;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;

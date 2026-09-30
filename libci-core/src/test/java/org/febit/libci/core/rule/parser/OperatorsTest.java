@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.rule.parser;
 
-import org.febit.libci.core.exception.RuleEvaluationException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.exception.RuleEvaluationException;
 
 import java.util.List;
 import java.util.Map;

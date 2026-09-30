@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.rule.parser;
 
-import lombok.experimental.UtilityClass;
 import org.febit.libci.core.exception.RuleEvaluationException;
+
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;

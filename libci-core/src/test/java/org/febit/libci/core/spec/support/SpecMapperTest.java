@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.spec.support;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.document.yaml.YamlUtils;
 import org.febit.libci.core.spec.WorkflowSpec;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 

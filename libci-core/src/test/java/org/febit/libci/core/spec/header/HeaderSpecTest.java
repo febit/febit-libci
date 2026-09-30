@@ -15,11 +15,12 @@
  */
 package org.febit.libci.core.spec.header;
 
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.spec.ISpec;
 import org.febit.libci.core.spec.header.HeaderSpec.Input;
 import org.febit.libci.core.spec.header.HeaderSpec.InputType;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;

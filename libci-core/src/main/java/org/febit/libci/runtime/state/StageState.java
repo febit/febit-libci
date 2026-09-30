@@ -15,11 +15,12 @@
  */
 package org.febit.libci.runtime.state;
 
+import org.febit.libci.runtime.PipelineContext;
+import org.febit.libci.runtime.plan.StagePlan;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
-import org.febit.libci.runtime.PipelineContext;
-import org.febit.libci.runtime.plan.StagePlan;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;

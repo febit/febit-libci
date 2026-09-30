@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.spec;
 
-import org.febit.libci.core.spec.variable.GenericVariable;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.spec.variable.GenericVariable;
 
 import java.util.LinkedHashMap;
 

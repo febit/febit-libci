@@ -15,28 +15,31 @@
  */
 package org.febit.libci.core.test;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.febit.lang.Unchecked;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.ProfileCompiler;
 import org.febit.libci.core.ProfileLoader;
 import org.febit.libci.core.resource.loader.GenericPathResourceLoader;
 import org.febit.libci.core.resource.source.FileSystemSource;
 import org.febit.libci.core.spec.support.SpecMapper;
-import org.junit.jupiter.api.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.febit.libci.core.test.TestSupport.LIBS_DIR;
 import static org.febit.libci.core.test.TestSupport.PROFILES_DIR;
 import static org.febit.libci.core.test.TestSupport.readIfExists;
 import static org.junit.jupiter.api.Assertions.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Slf4j
 class ProfileCasesTest {

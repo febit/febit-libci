@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.exception;
 
-import lombok.Getter;
 import org.febit.libci.core.rule.parser.Token;
+
+import lombok.Getter;
 
 @Getter
 public class RuleFormatException extends LibciException {

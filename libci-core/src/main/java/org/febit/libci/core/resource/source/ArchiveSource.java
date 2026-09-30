@@ -15,14 +15,16 @@
  */
 package org.febit.libci.core.resource.source;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.io.IOUtils;
+
 import org.febit.libci.core.resource.SourceId;
 import org.febit.libci.core.resource.support.PathMapping;
 import org.febit.libci.core.spec.support.PathSpecUtils;
+
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;

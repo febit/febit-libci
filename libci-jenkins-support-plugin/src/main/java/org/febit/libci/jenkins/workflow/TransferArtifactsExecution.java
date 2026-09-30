@@ -19,9 +19,10 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.MasterToSlaveFileCallable;
-import org.febit.libci.core.spec.ArtifactsSpec;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
+
+import org.febit.libci.core.spec.ArtifactsSpec;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,5 +105,3 @@ public class TransferArtifactsExecution extends SynchronousStepExecution<Object>
         }
     }
 }
-
-

@@ -15,9 +15,11 @@
  */
 package org.febit.libci.extern;
 
-import lombok.experimental.UtilityClass;
 import org.febit.lang.util.Logs;
+
 import org.febit.libci.core.predefined.git.GitCommitField;
+
+import lombok.experimental.UtilityClass;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -93,5 +95,3 @@ public class GitCommitLogFormat {
     }
 
 }
-
-

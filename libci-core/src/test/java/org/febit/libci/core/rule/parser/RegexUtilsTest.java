@@ -15,8 +15,9 @@
  */
 package org.febit.libci.core.rule.parser;
 
-import org.febit.libci.core.exception.ProfileException;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.exception.ProfileException;
 
 import java.util.regex.Pattern;
 

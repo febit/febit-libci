@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.rule;
 
-import lombok.RequiredArgsConstructor;
 import org.febit.libci.core.VarSupplier;
 import org.febit.libci.core.rule.ir.IPredicate;
 import org.febit.libci.core.spec.IRule;
+
+import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;

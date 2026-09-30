@@ -15,14 +15,17 @@
  */
 package org.febit.libci.core.variable;
 
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.dotenv.DotenvEntry;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.variable.GenericVariable;
+import org.febit.libci.core.spec.variable.IVariable;
 import org.febit.libci.core.spec.variable.JobVariable;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -160,7 +163,7 @@ class VarsHeapImplTest {
         from.direct(VarDefinedPhase.CUSTOM, "B", "val_b");
 
         var to = VarsHeapImpl.create();
-        to.imports(from, e -> e.name().equals("A"));
+        to.imports(from, e -> "A".equals(e.name()));
         assertEquals(1, to.size());
         assertEquals("val_a", to.get("A"));
         assertNull(to.get("B"));
@@ -213,7 +216,7 @@ class VarsHeapImplTest {
     void exportExpandedToTarget() {
         var heap = VarsHeapImpl.create();
         heap.direct(VarDefinedPhase.CUSTOM, "A", "val_a");
-        var target = new java.util.HashMap<String, String>();
+        var target = new HashMap<String, String>();
         target.put("PREVIOUS", "old");
         heap.exportExpanded(target);
         assertEquals(Map.of("PREVIOUS", "old", "A", "val_a"), target);
@@ -240,7 +243,7 @@ class VarsHeapImplTest {
     @Test
     void setVariablesSpec() {
         var heap = VarsHeapImpl.create();
-        var vars = VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create();
+        var vars = VariablesSpec.<IVariable>create();
         vars.put("A", GenericVariable.builder().value("val_a").expand(true).build());
         vars.put("B", GenericVariable.builder().value("val_b").expand(false).build());
         heap.set(VarDefinedPhase.CUSTOM, vars);
@@ -251,7 +254,7 @@ class VarsHeapImplTest {
     @Test
     void setAsDirect() {
         var heap = VarsHeapImpl.create();
-        var vars = VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create();
+        var vars = VariablesSpec.<IVariable>create();
         vars.put("A", GenericVariable.builder().value("val_a").expand(true).build());
         heap.setAsDirect(VarDefinedPhase.CUSTOM, vars);
         assertEquals("val_a", heap.get("A"));
@@ -286,7 +289,7 @@ class VarsHeapImplTest {
     @Test
     void phaseViewSetVars() {
         var heap = VarsHeapImpl.create();
-        var vars = VariablesSpec.<org.febit.libci.core.spec.variable.IVariable>create();
+        var vars = VariablesSpec.<IVariable>create();
         vars.put("KEY", JobVariable.of("value"));
         heap.withPhase(VarDefinedPhase.CUSTOM).set(vars);
         assertEquals("value", heap.get("KEY"));

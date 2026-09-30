@@ -16,10 +16,8 @@
 package org.febit.libci.core.spec;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import lombok.Builder;
-import lombok.experimental.UtilityClass;
-import lombok.extern.jackson.Jacksonized;
 import org.febit.lang.PeriodDuration;
+
 import org.febit.libci.core.spec.JobSpec.Cache;
 import org.febit.libci.core.spec.JobSpec.Hooks;
 import org.febit.libci.core.spec.JobSpec.IdTokens;
@@ -27,6 +25,9 @@ import org.febit.libci.core.spec.JobSpec.Image;
 import org.febit.libci.core.spec.JobSpec.Retry;
 import org.febit.libci.core.spec.JobSpec.Service;
 import org.febit.libci.core.util.Immutables;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.jackson.Jacksonized;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.List;
  * Ref: <a href="https://docs.gitlab.com/ci/yaml/#default">...</a>
  */
 @Jacksonized
-@Builder(
+@lombok.Builder(
         toBuilder = true,
         builderClassName = "Builder"
 )

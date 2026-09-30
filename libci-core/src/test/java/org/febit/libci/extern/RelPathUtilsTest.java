@@ -25,12 +25,12 @@ class RelPathUtilsTest {
 
     @Test
     void sanitizeAllReturnsEmptyForNull() {
-        assertEquals(List.of(), org.febit.libci.extern.RelPathUtils.sanitizeAll(null));
+        assertEquals(List.of(), RelPathUtils.sanitizeAll(null));
     }
 
     @Test
     void sanitizeAllNormalizesFiltersAndDeduplicates() {
-        var result = org.febit.libci.extern.RelPathUtils.sanitizeAll(List.of(
+        var result = RelPathUtils.sanitizeAll(List.of(
                 "a//b",
                 "./a/b",
                 "C:/windows",
@@ -41,4 +41,3 @@ class RelPathUtilsTest {
         assertThrows(UnsupportedOperationException.class, () -> result.add("x"));
     }
 }
-

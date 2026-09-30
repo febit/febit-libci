@@ -15,13 +15,12 @@
  */
 package org.febit.libci.core.predefined.git;
 
-import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
 import java.io.Serializable;
 
 @Jacksonized
-@Builder(
+@lombok.Builder(
         builderClassName = "Builder"
 )
 public record GitScmMetadata(

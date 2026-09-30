@@ -16,10 +16,6 @@ tasks.named("sourcesJar") {
   mustRunAfter 'generateJflex'
 }
 
-tasks.named("licenseMain") {
-  mustRunAfter 'generateJflex'
-}
-
 dependencies {
   api('org.febit:febit-lang') {
     exclude group: 'org.yaml', module: 'snakeyaml'

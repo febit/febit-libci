@@ -15,8 +15,9 @@
  */
 package org.febit.libci.extern;
 
-import org.febit.libci.core.predefined.git.GitCommitField;
 import org.junit.jupiter.api.Test;
+
+import org.febit.libci.core.predefined.git.GitCommitField;
 
 import static org.febit.libci.extern.GitCommitLogFormat.parseLog;
 import static org.junit.jupiter.api.Assertions.*;
@@ -92,6 +93,3 @@ class GitCommitLogFormatTest {
         assertEquals("", GitCommitLogFormat.format());
     }
 }
-
-
-

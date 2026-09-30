@@ -15,9 +15,10 @@
  */
 package org.febit.libci.core.variable;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.spec.ExpandPhase;
 import org.febit.libci.core.spec.Expandable;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;

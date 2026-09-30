@@ -15,10 +15,12 @@
  */
 package org.febit.libci.core.test;
 
+import org.apache.commons.io.file.PathFilter;
+
+import org.febit.libci.core.spec.support.PathSpecUtils;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.file.PathFilter;
-import org.febit.libci.core.spec.support.PathSpecUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
@@ -72,4 +74,3 @@ public class AntPathFilter implements PathFilter, Predicate<Path>, Serializable 
         return abs.replace('\\', '/');
     }
 }
-

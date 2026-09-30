@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.variable;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.VarSupplier;
 import org.febit.libci.core.document.DocumentUtils;
 import org.febit.libci.core.exception.ProfileException;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;

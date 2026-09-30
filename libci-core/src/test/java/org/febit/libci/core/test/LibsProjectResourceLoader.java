@@ -15,12 +15,13 @@
  */
 package org.febit.libci.core.test;
 
-import lombok.RequiredArgsConstructor;
 import org.febit.libci.core.resource.PathResource;
 import org.febit.libci.core.resource.ProjectResource;
 import org.febit.libci.core.resource.loader.PathResourceLoader;
 import org.febit.libci.core.resource.source.FileSystemSource;
 import org.febit.libci.core.resource.source.PathSource;
+
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

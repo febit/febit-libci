@@ -15,10 +15,9 @@
  */
 package org.febit.libci.core.rule;
 
-import lombok.Builder;
 import org.febit.libci.core.VarSupplier;
 
-@Builder(
+@lombok.Builder(
         builderClassName = "Builder"
 )
 public record ContextImpl(

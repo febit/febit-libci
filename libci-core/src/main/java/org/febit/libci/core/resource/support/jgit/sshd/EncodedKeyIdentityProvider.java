@@ -15,7 +15,6 @@
  */
 package org.febit.libci.core.resource.support.jgit.sshd;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.input.ReaderInputStream;
 import org.apache.sshd.common.NamedResource;
 import org.apache.sshd.common.config.keys.FilePasswordProvider;
@@ -23,6 +22,8 @@ import org.apache.sshd.common.keyprovider.KeyIdentityProvider;
 import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.util.security.SecurityUtils;
 import org.febit.lang.util.Lists;
+
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;

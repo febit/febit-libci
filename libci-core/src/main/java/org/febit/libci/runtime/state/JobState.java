@@ -15,15 +15,16 @@
  */
 package org.febit.libci.runtime.state;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.spec.CiJobStatus;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.JobSpec.RetryWhen;
 import org.febit.libci.runtime.plan.JobPlan;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;

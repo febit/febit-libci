@@ -15,7 +15,6 @@
  */
 package org.febit.libci.core.rule;
 
-import lombok.RequiredArgsConstructor;
 import org.febit.libci.core.exception.RuleFormatException;
 import org.febit.libci.core.rule.ir.BiPredicate;
 import org.febit.libci.core.rule.ir.BiPredicateChain;
@@ -28,6 +27,8 @@ import org.febit.libci.core.rule.parser.Operators;
 import org.febit.libci.core.rule.parser.Token;
 import org.febit.libci.core.rule.parser.TokenKind;
 import org.febit.libci.core.rule.parser.TokenStream;
+
+import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
 

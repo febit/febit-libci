@@ -17,6 +17,7 @@ package org.febit.libci.core.spec;
 
 import org.febit.libci.core.resource.ResourceId;
 import org.febit.libci.core.util.Immutables;
+
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

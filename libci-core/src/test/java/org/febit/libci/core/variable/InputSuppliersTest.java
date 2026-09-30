@@ -15,10 +15,12 @@
  */
 package org.febit.libci.core.variable;
 
-import org.febit.libci.core.exception.ProfileException;
-import org.febit.libci.core.spec.header.HeaderSpec;
 import org.junit.jupiter.api.Test;
 
+import org.febit.libci.core.exception.ProfileException;
+import org.febit.libci.core.spec.header.HeaderSpec;
+
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -113,7 +115,7 @@ class InputSuppliersTest {
                 .spec(new HeaderSpec.Spec(Map.of(
                         "environment", HeaderSpec.Input.builder()
                                 .type(HeaderSpec.InputType.STRING)
-                                .options(java.util.List.of("test", "prod"))
+                                .options(List.of("test", "prod"))
                                 .default0("test")
                                 .build(),
                         "version", HeaderSpec.Input.builder()
@@ -122,7 +124,7 @@ class InputSuppliersTest {
                                 .build(),
                         "retry", HeaderSpec.Input.builder()
                                 .type(HeaderSpec.InputType.NUMBER)
-                                .options(java.util.List.of("1", "2", "3"))
+                                .options(List.of("1", "2", "3"))
                                 .build()
                 )))
                 .build();
@@ -143,7 +145,7 @@ class InputSuppliersTest {
                 .spec(new HeaderSpec.Spec(Map.of(
                         "environment", HeaderSpec.Input.builder()
                                 .type(HeaderSpec.InputType.STRING)
-                                .options(java.util.List.of("test", "prod"))
+                                .options(List.of("test", "prod"))
                                 .build()
                 )))
                 .build();

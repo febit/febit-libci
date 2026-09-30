@@ -15,10 +15,11 @@
  */
 package org.febit.libci.core.resource.loader;
 
+import org.junit.jupiter.api.Test;
+
 import org.febit.libci.core.resource.ProjectResource;
 import org.febit.libci.core.test.jgit.JgitTestSshServer;
 import org.febit.libci.core.test.jgit.JgitTestUtils;
-import org.junit.jupiter.api.Test;
 
 import java.io.StringWriter;
 import java.util.Map;
@@ -65,4 +66,3 @@ class JgitRepositoryResourceLoaderTest {
         }
     }
 }
-
