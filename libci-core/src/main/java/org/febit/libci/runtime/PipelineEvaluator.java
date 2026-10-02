@@ -76,8 +76,8 @@ public class PipelineEvaluator {
 
         var pipelineVars = VarsHeapImpl.create();
         pipelineVars.set(VarDefinedPhase.DEFINED_PROFILE, profile.variables());
+        CI_PIPELINE_NAME.set(pipelineVars, profile.workflow().name());
         pipelineVars.withPhase(VarDefinedPhase.DEFINED_WORKFLOW)
-                .direct(CI_PIPELINE_NAME, profile.workflow().name())
                 .set(workflowRule.variables());
 
         // Return empty context, if workflow is not allowed to run.

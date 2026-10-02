@@ -16,12 +16,10 @@
 package org.febit.libci.runtime;
 
 import org.febit.libci.core.predefined.JobPredefined;
-import org.febit.libci.core.predefined.Predefined;
 import org.febit.libci.core.spec.CiJobStatus;
 import org.febit.libci.core.spec.ExpandPhase;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.util.Computed;
-import org.febit.libci.core.variable.VarDefinedPhase;
 import org.febit.libci.core.variable.VarExpander;
 import org.febit.libci.runtime.plan.JobDependency;
 import org.febit.libci.runtime.plan.JobRelation;
@@ -40,6 +38,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_JOB_RETRY_ATTEMPT;
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_JOB_RETRY_MAX;
 import static org.febit.libci.core.util.Defaults.nvl;
 
 import static java.util.Objects.requireNonNull;
@@ -60,6 +60,19 @@ public class JobExecution implements Serializable {
     private final ScheduleCtrl schedule = new ScheduleCtrl();
 
     private final Computed<JobSpec> expandedSpecRef = Computed.of();
+
+    public enum ScheduleDecision {
+        PENDING,
+        MANUAL,
+        READY,
+        CANCELED,
+        FAILED,
+        ;
+
+        public boolean isTerminal() {
+            return this == CANCELED || this == FAILED;
+        }
+    }
 
     public JobSpec expandedSpec() {
         return expandedSpecRef.get();
@@ -166,19 +179,6 @@ public class JobExecution implements Serializable {
         return schedule;
     }
 
-    public enum ScheduleDecision {
-        PENDING,
-        MANUAL,
-        READY,
-        CANCELED,
-        FAILED,
-        ;
-
-        public boolean isTerminal() {
-            return this == CANCELED || this == FAILED;
-        }
-    }
-
     public record ScheduleResult(
             ScheduleDecision decision,
             @Nullable String reason
@@ -254,12 +254,6 @@ public class JobExecution implements Serializable {
             return () -> nvl(when(when), ScheduleResult::ready);
         }
 
-        private record JobStateDependency(
-                JobState state,
-                boolean optional
-        ) implements Serializable {
-        }
-
         private @Nullable ScheduleResult validateSupported(JobDependency dependency) {
             var scope = dependency.scope();
             if (scope == JobDependency.Scope.PROJECT
@@ -330,6 +324,12 @@ public class JobExecution implements Serializable {
             }
             return null;
         }
+
+        private record JobStateDependency(
+                JobState state,
+                boolean optional
+        ) implements Serializable {
+        }
     }
 
     @Accessors(fluent = true)
@@ -342,8 +342,7 @@ public class JobExecution implements Serializable {
 
         public void prepare(int max) {
             this.max = Math.max(0, max);
-            job.vars().withPhase(VarDefinedPhase.LIBCI_CONST)
-                    .direct(Predefined.LIBCI_JOB_RETRY_MAX, String.valueOf(max));
+            LIBCI_JOB_RETRY_MAX.set(job.vars(), max);
         }
 
         public synchronized int beginAttempt() {
@@ -354,8 +353,7 @@ public class JobExecution implements Serializable {
                 throw new IllegalStateException("Retry attempt exceeds max limit: " + max);
             }
             attempt++;
-            job.vars().withPhase(VarDefinedPhase.LIBCI_CONST)
-                    .direct(Predefined.LIBCI_JOB_RETRY_ATTEMPT, String.valueOf(this.attempt));
+            LIBCI_JOB_RETRY_ATTEMPT.set(job.vars(), this.attempt);
 
             job.recoverForRetry();
             return attempt;

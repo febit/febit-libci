@@ -17,8 +17,6 @@ package org.febit.libci.core.predefined;
 
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.spec.JobSpec;
-import org.febit.libci.core.spec.support.SlugUtils;
-import org.febit.libci.core.variable.VarDefinedPhase;
 
 import lombok.experimental.UtilityClass;
 
@@ -41,19 +39,15 @@ import static org.febit.libci.core.predefined.Predefined.KUBE_NAMESPACE;
 public class JobPredefined {
 
     public static void persisted(VarsHeap<?> vars, JobSpec job) {
-        vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
-                .direct(CI_JOB_NAME, job.name())
-                .direct(CI_JOB_STAGE, job.stage())
-                .direct(CI_JOB_TIMEOUT, job.timeout().getRaw())
-                .direct(CI_JOB_URL, "")
-                .direct(CI_JOB_TOKEN, "")
-        ;
+        CI_JOB_NAME.set(vars, job.name());
+        CI_JOB_STAGE.set(vars, job.stage());
+        CI_JOB_TIMEOUT.set(vars, job.timeout().getRaw());
+        CI_JOB_URL.set(vars, "");
+        CI_JOB_TOKEN.set(vars, "");
     }
 
     public static void expanded(VarsHeap<?> vars, JobSpec job) {
-        vars.withPhase(VarDefinedPhase.PREDEFINED_JOB)
-                .direct(CI_JOB_IMAGE, job.image().name())
-        ;
+        CI_JOB_IMAGE.set(vars, job.image().name());
         deployment(vars, job);
     }
 
@@ -66,20 +60,16 @@ public class JobPredefined {
         if (envName.isEmpty()) {
             return;
         }
-        vars.withPhase(VarDefinedPhase.PREDEFINED_JOB)
-                .direct(CI_ENVIRONMENT_ID, envName)
-                .direct(CI_ENVIRONMENT_NAME, envName)
-                .direct(CI_ENVIRONMENT_SLUG, SlugUtils.resolve(envName))
-                .pattern(CI_ENVIRONMENT_ACTION, env.action().getValue())
-                .pattern(CI_ENVIRONMENT_TIER, nvl(env.deploymentTier(), "other"))
-                .pattern(CI_ENVIRONMENT_URL, nvl(env.url(), ""))
-        ;
+        CI_ENVIRONMENT_ID.set(vars, envName);
+        CI_ENVIRONMENT_NAME.set(vars, envName);
+        CI_ENVIRONMENT_SLUG.setSlug(vars, envName);
+        CI_ENVIRONMENT_ACTION.pattern(vars, env.action().getValue());
+        CI_ENVIRONMENT_TIER.pattern(vars, nvl(env.deploymentTier(), "other"));
+        CI_ENVIRONMENT_URL.pattern(vars, nvl(env.url(), ""));
 
         var kube = env.kubernetes();
         if (kube != null) {
-            vars.withPhase(VarDefinedPhase.JOB_DEPLOYMENT)
-                    .pattern(KUBE_NAMESPACE, kube.namespace())
-            ;
+            KUBE_NAMESPACE.pattern(vars, kube.namespace());
         }
     }
 }

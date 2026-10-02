@@ -37,12 +37,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_JOB_IID;
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_JOB_MATRIX_IID;
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_JOB_MATRIX_TOTAL;
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_JOB_SLUG;
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_STAGE_IID;
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_STAGE_SLUG;
 import static org.febit.libci.core.predefined.Predefined.CI_JOB_STATUS;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_IID;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_MATRIX_IID;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_JOB_SLUG;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_IID;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_SLUG;
 
 @Slf4j
 @RequiredArgsConstructor(staticName = "create")
@@ -114,11 +115,14 @@ public class PipelinePlanner {
             var slug = slug(iid, spec.name());
 
             var vars = inheritedVars.snapshot();
+
+            LIBCI_JOB_IID.set(vars, iid);
+            LIBCI_JOB_SLUG.set(vars, slug);
+            LIBCI_JOB_MATRIX_IID.set(vars, matrixIid);
+            LIBCI_JOB_MATRIX_TOTAL.set(vars, matrixList.size());
+
+            CI_JOB_STATUS.set(vars, CiJobStatus.PENDING.value());
             vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
-                    .direct(LIBCI_JOB_IID, String.valueOf(iid))
-                    .direct(LIBCI_JOB_SLUG, slug)
-                    .direct(LIBCI_JOB_MATRIX_IID, String.valueOf(matrixIid))
-                    .direct(CI_JOB_STATUS, CiJobStatus.PENDING.value())
                     .directMulti(matrix);
             vars.seal();
 
@@ -156,9 +160,8 @@ public class PipelinePlanner {
         }
 
         JobPredefined.persisted(inherited, spec);
-        inherited.withPhase(VarDefinedPhase.PERSISTED_PIPELINE)
-                .direct(LIBCI_STAGE_IID, String.valueOf(stage.iid()))
-                .direct(LIBCI_STAGE_SLUG, stage.slug());
+        LIBCI_STAGE_IID.set(inherited, stage.iid());
+        LIBCI_STAGE_SLUG.set(inherited, stage.slug());
         return inherited;
     }
 

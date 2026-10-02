@@ -15,6 +15,7 @@
  */
 package org.febit.libci.core;
 
+import org.febit.libci.core.variable.IDefined;
 import org.febit.libci.core.variable.VarPatterns;
 
 import org.jspecify.annotations.Nullable;
@@ -25,6 +26,11 @@ public interface VarSupplier extends Serializable {
 
     @Nullable
     String get(String name);
+
+    @Nullable
+    default String get(IDefined defined) {
+        return get(defined.name());
+    }
 
     /**
      * Groovy style getter.

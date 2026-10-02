@@ -5,13 +5,14 @@ import org.apache.commons.lang3.StringUtils
 import org.febit.libci.core.VarSupplier
 import org.febit.libci.core.VarsHeap
 import org.febit.libci.core.dotenv.DotenvEntry
+import org.febit.libci.core.predefined.LibciPredefined
 import org.febit.libci.core.predefined.Predefined
 import org.febit.libci.core.variable.VarDefinedPhase
 import org.febit.libci.core.variable.VarsHeapImpl
 import org.jenkinsci.plugins.workflow.support.actions.EnvironmentAction
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
-import static org.febit.libci.core.predefined.Predefined.__LIBCI_
+import static org.febit.libci.core.predefined.LibciPredefined.__LIBCI_
 
 class LibciContext {
 
@@ -39,7 +40,7 @@ class LibciContext {
     }
 
     static boolean isDebugEnabled(VarSupplier vars) {
-        return vars.get(Predefined.LIBCI_DEBUG) == 'true'
+        return vars.get(LibciPredefined.LIBCI_DEBUG) == 'true'
     }
 
     static boolean isTracingEnabled(VarSupplier vars) {

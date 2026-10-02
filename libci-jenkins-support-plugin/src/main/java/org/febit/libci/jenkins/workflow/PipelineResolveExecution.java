@@ -32,7 +32,7 @@ import org.febit.libci.core.ProfileDocument;
 import org.febit.libci.core.ProfileLoader;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.document.yaml.YamlUtils;
-import org.febit.libci.core.predefined.Predefined;
+import org.febit.libci.core.predefined.LibciPredefined;
 import org.febit.libci.core.resource.loader.GenericPathResourceLoader;
 import org.febit.libci.core.resource.loader.JgitRepositoryResourceLoader;
 import org.febit.libci.core.resource.source.PathSource;
@@ -75,7 +75,7 @@ public class PipelineResolveExecution extends SynchronousStepExecution<PipelineP
         this.entry = entry;
         this.profiles = profiles;
 
-        this.isDebugEnabled = Boolean.parseBoolean(inputVars.get(Predefined.LIBCI_DEBUG));
+        this.isDebugEnabled = Boolean.parseBoolean(inputVars.get(LibciPredefined.LIBCI_DEBUG));
     }
 
     @Override

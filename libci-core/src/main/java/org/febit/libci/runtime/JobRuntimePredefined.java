@@ -17,33 +17,21 @@ package org.febit.libci.runtime;
 
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.spec.CiJobStatus;
-import org.febit.libci.core.variable.VarDefinedPhase;
 
 import lombok.experimental.UtilityClass;
-import org.jspecify.annotations.Nullable;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-
+import static org.febit.libci.core.predefined.LibciPredefined.LIBCI_STAGE_STARTED_AT;
 import static org.febit.libci.core.predefined.Predefined.CI_JOB_STARTED_AT;
 import static org.febit.libci.core.predefined.Predefined.CI_JOB_STATUS;
-import static org.febit.libci.core.predefined.Predefined.LIBCI_STAGE_STARTED_AT;
 
 @UtilityClass
 public class JobRuntimePredefined {
 
     public static void beforeStart(VarsHeap<?> vars, JobExecution exec) {
-        vars.withPhase(VarDefinedPhase.PERSISTED_JOB)
-                .direct(LIBCI_STAGE_STARTED_AT, format(exec.stage().startedAt()))
-                .direct(CI_JOB_STATUS, CiJobStatus.RUNNING.value())
-                .direct(CI_JOB_STARTED_AT, format(exec.context().clock().instant()))
-        ;
-    }
 
-    private String format(@Nullable Instant instant) {
-        if (instant == null) {
-            return "";
-        }
-        return instant.truncatedTo(ChronoUnit.MILLIS).toString();
+        LIBCI_STAGE_STARTED_AT.set(vars, exec.stage().startedAt());
+
+        CI_JOB_STATUS.set(vars, CiJobStatus.RUNNING.value());
+        CI_JOB_STARTED_AT.set(vars, exec.context().clock().instant());
     }
 }

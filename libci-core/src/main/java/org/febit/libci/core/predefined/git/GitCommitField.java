@@ -17,6 +17,8 @@ package org.febit.libci.core.predefined.git;
 
 import org.febit.lang.util.Maps;
 
+import org.febit.libci.core.variable.IDefined;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -60,7 +62,7 @@ public enum GitCommitField implements Comparable<GitCommitField> {
 
     @Getter
     @Nullable
-    private final String predefined;
+    private final IDefined predefined;
 
     private static final Map<String, GitCommitField> FLAG_MAPPING = Maps.mapping(values(), GitCommitField::getFlag);
 

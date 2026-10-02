@@ -88,8 +88,7 @@ class JobPlanner {
 
         JobRuntimePredefined.beforeStart(target, execution)
 
-        target.withPhase(VarDefinedPhase.PERSISTED_JOB)
-            .pattern(Predefined.CI_JOB_ID, '$CI_PIPELINE_ID/$LIBCI_JOB_IID')
+        Predefined.CI_JOB_ID.pattern(target, '$CI_PIPELINE_ID/$LIBCI_JOB_IID')
 
         // NOTICE: JobSpec is not expanded yet!!
         def spec = execution.unexpandedSpec()
@@ -277,8 +276,7 @@ ${script}\
                 variable: LibciContext.__LIBCI_DEPLOY_KUBE_CONF_FILE
             )]) {
                 String location = ctx.env[LibciContext.__LIBCI_DEPLOY_KUBE_CONF_FILE]
-                vars.withPhase(VarDefinedPhase.JOB_DEPLOYMENT)
-                    .direct(Predefined.CI_KUBERNETES_ACTIVE, 'true')
+                Predefined.CI_KUBERNETES_ACTIVE.set(vars, 'true')
                 vars.withPhase(VarDefinedPhase.LIBCI_CONST)
                     .direct(LibciContext.LIBCI_KUBE_CONF_TMPL_FILE, location)
                 return action.call()
@@ -360,8 +358,8 @@ ${script}\
     }
 
     private void collectKubeVars() {
-        def env = vars[CI_ENVIRONMENT_NAME]
-        def kubeNamespace = vars[KUBE_NAMESPACE]
+        def env = CI_ENVIRONMENT_NAME.get(vars)
+        def kubeNamespace = KUBE_NAMESPACE.get(vars)
 
         if (!(kubeNamespace && env)) {
             return
@@ -648,7 +646,7 @@ Environment Variables:
             }
             def key = cache.key().value()
             def hostCacheDir = "${ctx.dirs.customCaches}/${SlugUtils.resolve(key)}"
-            def projectDir = "${vars[CI_PROJECT_DIR]}"
+            def projectDir = "${CI_PROJECT_DIR.get(vars)}"
             def hostPaths = []
             for (def path : cache.paths()) {
                 def normalized = PathSpecUtils.normalize(path)

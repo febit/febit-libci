@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor(staticName = "of")
 public class VarExpander {
+
     private static final Map<Class<?>, List<PropertyDescription>> TYPE_PROPERTIES = new ConcurrentHashMap<>();
 
     private final Map<Class<?>, Optional<Description>> descriptions = new ConcurrentHashMap<>();

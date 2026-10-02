@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import org.febit.libci.core.Profile;
 import org.febit.libci.core.predefined.JobPredefined;
-import org.febit.libci.core.predefined.Predefined;
+import org.febit.libci.core.predefined.LibciPredefined;
 import org.febit.libci.core.spec.JobSpec;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
@@ -58,8 +58,8 @@ class JobExecutionTest {
         assertEquals(2, retry.max());
         assertEquals(0, attempt);
         assertEquals(0, retry.attempt());
-        assertEquals("2", exec.job().vars().get(Predefined.LIBCI_JOB_RETRY_MAX));
-        assertEquals("0", exec.job().vars().get(Predefined.LIBCI_JOB_RETRY_ATTEMPT));
+        assertEquals("2", exec.job().vars().get(LibciPredefined.LIBCI_JOB_RETRY_MAX));
+        assertEquals("0", exec.job().vars().get(LibciPredefined.LIBCI_JOB_RETRY_ATTEMPT));
         assertEquals(JobState.Status.UNSTARTED, exec.job().status());
         assertEquals(JobState.ResultKind.NONE, exec.job().result().kind());
         assertNull(exec.job().result().code());
@@ -293,7 +293,7 @@ class JobExecutionTest {
         assertEquals(1, state.plan().matrixIid());
         assertEquals("linux", vars.get("OS"));
         assertEquals("amd64", vars.get("ARCH"));
-        assertEquals("1", vars.get(Predefined.LIBCI_JOB_MATRIX_IID));
+        assertEquals("1", vars.get(LibciPredefined.LIBCI_JOB_MATRIX_IID));
         assertEquals("linux-amd64-1", vars.expand("$OS-$ARCH-$LIBCI_JOB_MATRIX_IID"));
         assertEquals(List.of("echo $OS-$ARCH-$LIBCI_JOB_MATRIX_IID"), exec.expandedSpec().script());
     }

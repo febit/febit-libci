@@ -20,8 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.febit.libci.core.VarsHeap;
 import org.febit.libci.core.predefined.git.GitCommitField;
 import org.febit.libci.core.predefined.git.GitScmMetadata;
-import org.febit.libci.core.spec.support.SlugUtils;
-import org.febit.libci.core.variable.VarDefinedPhase;
 
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
@@ -40,22 +38,18 @@ public class ScmPredefined {
         }
 
         var repo = metadata.repo();
-        vars.withPhase(VarDefinedPhase.PREDEFINED_SCM)
-                .direct(Predefined.CI_REPOSITORY_URL, repo.url())
-        ;
+        Predefined.CI_REPOSITORY_URL.set(vars, repo.url());
 
         var project = metadata.project();
-        vars.withPhase(VarDefinedPhase.PREDEFINED_SCM)
-                .direct(Predefined.CI_PROJECT_NAME, project.name())
-                .direct(Predefined.CI_PROJECT_NAMESPACE, project.namespace())
-                .direct(Predefined.CI_PROJECT_NAMESPACE_ID, project.namespace())
-                .direct(Predefined.CI_PROJECT_NAMESPACE_SLUG, SlugUtils.resolve(project.namespace()))
-                .direct(Predefined.CI_PROJECT_PATH, project.path())
-                .direct(Predefined.CI_PROJECT_PATH_SLUG, project.pathSlug())
-                .direct(Predefined.CI_PROJECT_ROOT_NAMESPACE, project.rootNamespace())
-                .direct(Predefined.CI_PROJECT_TITLE, project.name())
-                .direct(Predefined.CI_PROJECT_URL, project.url())
-        ;
+        Predefined.CI_PROJECT_NAME.set(vars, project.name());
+        Predefined.CI_PROJECT_NAMESPACE.set(vars, project.namespace());
+        Predefined.CI_PROJECT_NAMESPACE_ID.set(vars, project.namespace());
+        Predefined.CI_PROJECT_NAMESPACE_SLUG.setSlug(vars, project.namespace());
+        Predefined.CI_PROJECT_PATH.set(vars, project.path());
+        Predefined.CI_PROJECT_PATH_SLUG.set(vars, project.pathSlug());
+        Predefined.CI_PROJECT_ROOT_NAMESPACE.set(vars, project.rootNamespace());
+        Predefined.CI_PROJECT_TITLE.set(vars, project.name());
+        Predefined.CI_PROJECT_URL.set(vars, project.url());
     }
 
     public static void commit(VarsHeap<?> vars, Map<GitCommitField, @Nullable String> props) {
@@ -63,20 +57,20 @@ public class ScmPredefined {
             return;
         }
 
-        var view = vars.withPhase(VarDefinedPhase.PREDEFINED_SCM);
         props.forEach((k, v) -> {
-            if (k.getPredefined() != null) {
-                view.direct(k.getPredefined(), v);
+            var predefined = k.getPredefined();
+            if (predefined != null) {
+                predefined.set(vars, v);
             }
         });
 
-        view.pattern(Predefined.CI_COMMIT_AUTHOR, AUTHOR_PATTERN);
+        Predefined.CI_COMMIT_AUTHOR.pattern(vars, AUTHOR_PATTERN);
 
         var message = props.get(GitCommitField.SUBJECT);
         var body = props.get(GitCommitField.BODY);
         if (StringUtils.isNotBlank(body)) {
             message += "\n\n" + props.get(GitCommitField.BODY);
         }
-        view.direct(Predefined.CI_COMMIT_MESSAGE, message);
+        Predefined.CI_COMMIT_MESSAGE.set(vars, message);
     }
 }

@@ -16,10 +16,11 @@
 package org.febit.libci.core;
 
 import org.febit.libci.core.dotenv.DotenvEntry;
-import org.febit.libci.core.predefined.Predefined;
+import org.febit.libci.core.predefined.LibciPredefined;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.spec.variable.IVariable;
+import org.febit.libci.core.variable.IDefined;
 import org.febit.libci.core.variable.VarDefinedPhase;
 
 import org.jspecify.annotations.Nullable;
@@ -34,122 +35,6 @@ import java.util.Map;
         "UnusedReturnValue"
 })
 public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
-
-    int size();
-
-    /**
-     * Set a variable in the heap. The variable can be either direct (non-expand) or pattern (expand). If the pattern is null, it will be treated as direct variable.
-     *
-     * @param phase    variable defined phase
-     * @param name     variable name
-     * @param pattern  variable pattern
-     * @param expanded variable expanded value
-     * @return this
-     * @throws IllegalStateException if the heap is sealed
-     */
-    H set(VarDefinedPhase phase, String name, @Nullable String pattern, @Nullable String expanded);
-
-    H snapshot();
-
-    Collection<Entry> entries();
-
-    PhaseView<H> withPhase(VarDefinedPhase phase);
-
-    /**
-     * Seal the heap, make it immutable. After sealing, any attempt to modify the heap will throw an exception.
-     */
-    H seal();
-
-    /**
-     * Check if the heap is sealed.
-     *
-     * @return true if the heap is sealed, false otherwise
-     */
-    boolean sealed();
-
-    @SuppressWarnings("unchecked")
-    default H me() {
-        return (H) this;
-    }
-
-    default H set(VarDefinedPhase phase, String name, IVariable variable) {
-        return Boolean.FALSE.equals(variable.expand())
-                ? direct(phase, name, variable.value())
-                : pattern(phase, name, variable.value());
-    }
-
-    default H set(VarDefinedPhase phase, @Nullable VariablesSpec<?> vars) {
-        if (vars == null) {
-            return me();
-        }
-        vars.forEach((k, v) -> set(phase, k, v));
-        return me();
-    }
-
-    /**
-     * Set variables as direct (non-expand).
-     *
-     * @param phase variable phase
-     * @param vars  variables
-     * @return this
-     */
-    default H setAsDirect(VarDefinedPhase phase, @Nullable VariablesSpec<?> vars) {
-        if (vars == null) {
-            return me();
-        }
-        vars.forEach((k, v) -> direct(phase, k, v.value()));
-        return me();
-    }
-
-    default H direct(VarDefinedPhase phase, String name, @Nullable String value) {
-        return set(phase, name, null, value);
-    }
-
-    default H pattern(VarDefinedPhase phase, String name, @Nullable String pattern) {
-        var expanded = expand(pattern);
-        return set(phase, name, pattern, expanded);
-    }
-
-    default H imports(Entry entry) {
-        var pattern = entry.pattern();
-        if (pattern == null) {
-            return direct(entry.phase(), entry.name(), entry.expanded());
-        }
-        return pattern(entry.phase(), entry.name(), pattern);
-    }
-
-    default H imports(VarsHeap<?> from) {
-        from.entries().forEach(this::imports);
-        return me();
-    }
-
-    default H imports(VarsHeap<?> from, Filter filter) {
-        from.entries().stream()
-                .filter(filter::filter)
-                .forEach(this::imports);
-        return me();
-    }
-
-    default H importsDotenv(List<DotenvEntry> dotenv) {
-        dotenv.forEach(e ->
-                direct(VarDefinedPhase.JOB_REPORT_DOTENV, e.key(), e.value())
-        );
-        return me();
-    }
-
-    default void exportExpanded(Map<String, String> target) {
-        entries().forEach(e -> target.put(e.name(), e.expanded()));
-    }
-
-    default Map<String, String> exportExpanded() {
-        var map = LinkedHashMap.<String, String>newLinkedHashMap(entries().size());
-        exportExpanded(map);
-        return map;
-    }
-
-    default String jsonify(boolean pretty) {
-        return SpecMapper.jsonify(exportExpanded(), pretty);
-    }
 
     @FunctionalInterface
     interface Filter extends Serializable {
@@ -200,6 +85,143 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
         }
     }
 
+    int size();
+
+    /**
+     * Set a variable in the heap. The variable can be either direct (non-expand) or pattern (expand). If the pattern is null, it will be treated as direct variable.
+     *
+     * @param phase    variable defined phase
+     * @param name     variable name
+     * @param pattern  variable pattern
+     * @param expanded variable expanded value
+     * @return this
+     * @throws IllegalStateException if the heap is sealed
+     */
+    H set(VarDefinedPhase phase, String name, @Nullable String pattern, @Nullable String expanded);
+
+    default H set(IDefined defined, @Nullable String pattern, @Nullable String expanded) {
+        return set(defined.phase(), defined.name(), pattern, expanded);
+    }
+
+    H snapshot();
+
+    Collection<Entry> entries();
+
+    PhaseView<H> withPhase(VarDefinedPhase phase);
+
+    /**
+     * Seal the heap, make it immutable. After sealing, any attempt to modify the heap will throw an exception.
+     */
+    H seal();
+
+    /**
+     * Check if the heap is sealed.
+     *
+     * @return true if the heap is sealed, false otherwise
+     */
+    boolean sealed();
+
+    @SuppressWarnings("unchecked")
+    default H me() {
+        return (H) this;
+    }
+
+    default H set(VarDefinedPhase phase, String name, IVariable variable) {
+        return Boolean.FALSE.equals(variable.expand())
+                ? direct(phase, name, variable.value())
+                : pattern(phase, name, variable.value());
+    }
+
+    default H set(IDefined defined, IVariable variable) {
+        return set(defined.phase(), defined.name(), variable);
+    }
+
+    default H set(VarDefinedPhase phase, @Nullable VariablesSpec<?> vars) {
+        if (vars == null) {
+            return me();
+        }
+        vars.forEach((k, v) -> set(phase, k, v));
+        return me();
+    }
+
+    /**
+     * Set variables as direct (non-expand).
+     *
+     * @param phase variable phase
+     * @param vars  variables
+     * @return this
+     */
+    default H setAsDirect(VarDefinedPhase phase, @Nullable VariablesSpec<?> vars) {
+        if (vars == null) {
+            return me();
+        }
+        vars.forEach((k, v) -> direct(phase, k, v.value()));
+        return me();
+    }
+
+    default H direct(VarDefinedPhase phase, String name, @Nullable String value) {
+        return set(phase, name, null, value);
+    }
+
+    default H direct(IDefined defined, @Nullable String value) {
+        return set(defined.phase(), defined.name(), null, value);
+    }
+
+    default void setNull(IDefined defined) {
+        direct(defined.phase(), defined.name(), "");
+    }
+
+    default H pattern(VarDefinedPhase phase, String name, @Nullable String pattern) {
+        var expanded = expand(pattern);
+        return set(phase, name, pattern, expanded);
+    }
+
+    default H pattern(IDefined defined, @Nullable String pattern) {
+        var expanded = expand(pattern);
+        return set(defined.phase(), defined.name(), pattern, expanded);
+    }
+
+    default H imports(Entry entry) {
+        var pattern = entry.pattern();
+        if (pattern == null) {
+            return direct(entry.phase(), entry.name(), entry.expanded());
+        }
+        return pattern(entry.phase(), entry.name(), pattern);
+    }
+
+    default H imports(VarsHeap<?> from) {
+        from.entries().forEach(this::imports);
+        return me();
+    }
+
+    default H imports(VarsHeap<?> from, Filter filter) {
+        from.entries().stream()
+                .filter(filter::filter)
+                .forEach(this::imports);
+        return me();
+    }
+
+    default H importsDotenv(List<DotenvEntry> dotenv) {
+        dotenv.forEach(e ->
+                direct(VarDefinedPhase.JOB_REPORT_DOTENV, e.key(), e.value())
+        );
+        return me();
+    }
+
+    default void exportExpanded(Map<String, String> target) {
+        entries().forEach(e -> target.put(e.name(), e.expanded()));
+    }
+
+    default Map<String, String> exportExpanded() {
+        var map = LinkedHashMap.<String, String>newLinkedHashMap(entries().size());
+        exportExpanded(map);
+        return map;
+    }
+
+    default String jsonify(boolean pretty) {
+        return SpecMapper.jsonify(exportExpanded(), pretty);
+    }
+
     record PhaseViewImpl<H extends VarsHeap<H>>(
             H heap,
             VarDefinedPhase phase
@@ -214,7 +236,7 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
     ) implements Serializable {
 
         public boolean isInternal() {
-            return name.startsWith(Predefined.__LIBCI_);
+            return name.startsWith(LibciPredefined.__LIBCI_);
         }
 
         public boolean isRuntimeEnv() {
