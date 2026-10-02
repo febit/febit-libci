@@ -12,9 +12,6 @@ version = '1.0.0-SNAPSHOT'
 
 description = 'Febit LibCI'
 
-ext {
-}
-
 allprojects {
 
   group = rootProject.group
@@ -22,7 +19,7 @@ allprojects {
 
   repositories {
     mavenCentral()
-    maven { url "https://repo.jenkins-ci.org/public" }
+    maven { url = "https://repo.jenkins-ci.org/public" }
   }
 
   codegenModule {
@@ -59,6 +56,8 @@ allprojects {
   }
 }
 
+def LIBS = libs
+
 configure(subprojects.findAll {
   !it.name.endsWith('-bom')
 }) {
@@ -89,14 +88,14 @@ configure(subprojects.findAll {
       cacheChangingModulesFor 0, 'seconds'
     }
     imports {
-      mavenBom "${libs.spring.framework.bom.get()}"
-      mavenBom "${libs.febit.commons.deps.get()}"
-      mavenBom "${libs.jenkins.bom.get()}"
-      mavenBom "${libs.jenkins.tools.bom.get()}"
+      mavenBom "${LIBS.spring.framework.bom.get()}"
+      mavenBom "${LIBS.febit.commons.deps.get()}"
+      mavenBom "${LIBS.jenkins.bom.get()}"
+      mavenBom "${LIBS.jenkins.tools.bom.get()}"
     }
     dependencies {
-      dependency "${libs.jgit.core.get()}"
-      dependency "${libs.mina.sshd.core.get()}"
+      dependency "${LIBS.jgit.core.get()}"
+      dependency "${LIBS.mina.sshd.core.get()}"
     }
   }
 }
@@ -136,7 +135,6 @@ def customPom = { Project project, MavenPom pom ->
     }
   }
 }
-
 
 allprojects { subproject ->
   standardMavenPublish {
