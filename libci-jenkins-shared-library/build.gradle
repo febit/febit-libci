@@ -2,6 +2,8 @@ plugins {
   id 'groovy'
 }
 
+description = 'Febit LibCI Jenkins Shared Library'
+
 sourceSets {
   main {
     groovy {
