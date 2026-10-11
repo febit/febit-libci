@@ -67,14 +67,14 @@ public class ProfileCompiler {
     }
 
     public static Profile compile(ProfileDocument doc) {
-        return create(doc).compile0();
+        return create(doc).compile();
     }
 
     private static HashMap<String, Object> jobDefaultsFallback() {
         return JobDefaultsFallback.FALLBACK;
     }
 
-    private Profile compile0() {
+    private Profile compile() {
         try {
             stages();
             vars();

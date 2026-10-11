@@ -46,12 +46,12 @@ public class ReferenceResolver {
     }
 
     private void resolve() {
-        resolve0(doc);
+        resolveValue(doc);
     }
 
     @Nullable
     @SuppressWarnings("unchecked")
-    private Object resolve0(@Nullable Object target) {
+    private Object resolveValue(@Nullable Object target) {
         if (target == null) {
             return null;
         }
@@ -63,15 +63,15 @@ public class ReferenceResolver {
         }
         this.processed.add(target);
 
-        if (target instanceof List) {
-            ((List<Object>) target).replaceAll(this::resolve0);
+        if (target instanceof List<?> list) {
+            ((List<Object>) list).replaceAll(this::resolveValue);
             return target;
         }
 
-        if (target instanceof Map) {
-            ((Map<?, Object>) target).entrySet()
+        if (target instanceof Map<?, ?> map) {
+            ((Map<?, Object>) map).entrySet()
                     .forEach(e -> e.setValue(
-                            resolve0(e.getValue())
+                            resolveValue(e.getValue())
                     ));
             return target;
         }
@@ -107,7 +107,7 @@ public class ReferenceResolver {
             }
         }
 
-        found = resolve0(found);
+        found = resolveValue(found);
         this.cache.put(segments, found);
         this.processing.remove(segments);
         return found;

@@ -128,11 +128,11 @@ public class InputPatterns {
             if (obj == null) {
                 return null;
             }
-            return DocumentUtils.replace(obj, v -> expandVars0(v, vars));
+            return DocumentUtils.replace(obj, v -> expandValue(v, vars));
         }
 
         @Nullable
-        private static Object expandVars0(@Nullable Object obj, VarSupplier vars) {
+        private static Object expandValue(@Nullable Object obj, VarSupplier vars) {
             if (!(obj instanceof String pattern)) {
                 return obj;
             }

@@ -46,11 +46,12 @@ public class JobInheritanceResolver {
     }
 
     public void resolve() {
-        doc.forEach(this::resolve0);
+        doc.forEach(this::resolveSection);
     }
 
-    private void resolve0(final String name, final Object section) {
-        if (!(section instanceof Map)) {
+    @SuppressWarnings("unchecked")
+    private void resolveSection(final String name, final Object section) {
+        if (!(section instanceof Map<?, ?> rawJob)) {
             return;
         }
         if (!Keywords.isJob(name)) {
@@ -64,16 +65,15 @@ public class JobInheritanceResolver {
         }
         processing.add(section);
 
-        @SuppressWarnings("unchecked")
-        var job = (Map<String, Object>) section;
+        var job = (Map<String, Object>) rawJob;
         var fromList = resolveExtends(job);
 
         for (String from : fromList) {
             if (from == null) {
                 continue;
             }
-            var fromJob = findJob(from);
-            resolve0(from, fromJob);
+            var fromJob = find(from);
+            resolveSection(from, fromJob);
             DocumentUtils.inherit(job, fromJob);
         }
 
@@ -91,7 +91,7 @@ public class JobInheritanceResolver {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> findJob(String name) {
+    private Map<String, Object> find(String name) {
         if (!Keywords.isJob(name)) {
             throw new ProfileException("Invalid job name for extends: '"
                     + name + "', expect a job name, but got: " + Logs.json(name));
@@ -100,9 +100,9 @@ public class JobInheritanceResolver {
         if (raw == null) {
             throw new ProfileException("Job '" + name + "' not found for extends.");
         }
-        if (!(raw instanceof Map)) {
+        if (!(raw instanceof Map<?, ?> job)) {
             throw new ProfileException("Expected job '" + name + "' to be a map, but got: " + raw.getClass());
         }
-        return (Map<String, Object>) raw;
+        return (Map<String, Object>) job;
     }
 }

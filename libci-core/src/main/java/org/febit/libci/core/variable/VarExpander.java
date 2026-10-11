@@ -209,10 +209,10 @@ public class VarExpander {
     }
 
     private Optional<Description> describe(Class<?> type) {
-        return descriptions.computeIfAbsent(type, this::describe0);
+        return descriptions.computeIfAbsent(type, this::loadDescription);
     }
 
-    private Optional<Description> describe0(Class<?> type) {
+    private Optional<Description> loadDescription(Class<?> type) {
         var anno = type.getAnnotation(Expandable.class);
         if (anno == null) {
             return Optional.empty();

@@ -38,11 +38,11 @@ public class DocumentUtils {
     public static final int FLAT_MAX_DEPTH = 16;
 
     public static <T> T copy(T source) {
-        return copy0(source, new IdentityHashMap<>());
+        return copyDeep(source, new IdentityHashMap<>());
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T copy0(T source, IdentityHashMap<Object, Object> processed) {
+    private static <T> T copyDeep(T source, IdentityHashMap<Object, Object> processed) {
         var copied = processed.get(source);
         if (copied != null) {
             return (T) copied;
@@ -50,20 +50,20 @@ public class DocumentUtils {
         if (source instanceof List<?> list) {
             var dump = new ArrayList<Object>(list);
             processed.put(source, dump);
-            dump.replaceAll(v -> copy0(v, processed));
+            dump.replaceAll(v -> copyDeep(v, processed));
             return (T) dump;
         }
-        if (source instanceof Map) {
-            var dump = new LinkedHashMap<String, Object>((Map<String, ?>) source);
+        if (source instanceof Map<?, ?> map) {
+            var dump = new LinkedHashMap<String, Object>((Map<String, ?>) map);
             processed.put(source, dump);
-            dump.replaceAll((k, v) -> copy0(v, processed));
+            dump.replaceAll((k, v) -> copyDeep(v, processed));
             return (T) dump;
         }
         return source;
     }
 
     public static <T> T flat(T raw) {
-        T result = flat0(raw, new IdentityHashMap<>());
+        T result = flatDeep(raw, new IdentityHashMap<>());
         Objects.requireNonNull(result);
         return result;
     }
@@ -72,7 +72,7 @@ public class DocumentUtils {
     @SuppressWarnings({
             "unchecked",
     })
-    private static <T> T flat0(@Nullable T target, IdentityHashMap<Object, Object> processed) {
+    private static <T> T flatDeep(@Nullable T target, IdentityHashMap<Object, Object> processed) {
         if (target == null) {
             return null;
         }
@@ -84,7 +84,7 @@ public class DocumentUtils {
 
         if (target instanceof Map<?, ?> map) {
             processed.put(target, target);
-            ((Map<Object, Object>) map).replaceAll((k, v) -> flat0(v, processed));
+            ((Map<Object, Object>) map).replaceAll((k, v) -> flatDeep(v, processed));
             return target;
         }
 
@@ -97,12 +97,12 @@ public class DocumentUtils {
         );
         if (withoutNested) {
             processed.put(target, target);
-            ((List<Object>) list).replaceAll(v -> flat0(v, processed));
+            ((List<Object>) list).replaceAll(v -> flatDeep(v, processed));
             return target;
         }
 
         var copy = new ArrayList<>();
-        collectFlatten(target, v -> copy.add(flat0(v, processed)), 0);
+        collectFlatten(target, v -> copy.add(flatDeep(v, processed)), 0);
         return (T) copy;
     }
 
@@ -125,11 +125,11 @@ public class DocumentUtils {
     }
 
     public static <T> T replace(T target, UnaryOperator<@Nullable Object> replacer) {
-        return replace0(target, replacer, new IdentityHashMap<>());
+        return replaceDeep(target, replacer, new IdentityHashMap<>());
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T replace0(
+    private static <T> T replaceDeep(
             T target,
             UnaryOperator<Object> replacer,
             IdentityHashMap<Object, Object> processed
@@ -141,28 +141,26 @@ public class DocumentUtils {
         var replaced = (T) replacer.apply(target);
         processed.put(target, replaced);
         if (replaced instanceof List<?> list) {
-            ((List<Object>) list).replaceAll(v -> replace0(v, replacer, processed));
+            ((List<Object>) list).replaceAll(v -> replaceDeep(v, replacer, processed));
             return (T) list;
         }
         if (replaced instanceof Map<?, ?> map) {
-            ((Map<Object, Object>) map).replaceAll((k, v) -> replace0(v, replacer, processed));
+            ((Map<Object, Object>) map).replaceAll((k, v) -> replaceDeep(v, replacer, processed));
             return (T) map;
         }
         return replaced;
     }
 
     public static void inherit(Map<String, Object> base, @Nullable Map<String, Object> from) {
-        inherit0(base, from, SetUtils.newIdentity(), InheritPolicy.all());
+        inheritDeep(base, from, SetUtils.newIdentity(), InheritPolicy.all());
     }
 
     public static void inherit(Map<String, Object> base, @Nullable Map<String, Object> from, InheritPolicy policy) {
-        inherit0(base, from, SetUtils.newIdentity(), policy);
+        inheritDeep(base, from, SetUtils.newIdentity(), policy);
     }
 
-    @SuppressWarnings({
-            "unchecked",
-    })
-    private static void inherit0(
+    @SuppressWarnings("unchecked")
+    private static void inheritDeep(
             Map<String, Object> base,
             @Nullable Map<String, Object> from,
             Set<Object> processed,
@@ -184,16 +182,14 @@ public class DocumentUtils {
             if (!policy.isAllowed(entry.getKey())) {
                 continue;
             }
-            if (!(entry.getValue() instanceof Map)) {
+            var source = from.get(entry.getKey());
+            if (!(entry.getValue() instanceof Map<?, ?> rawValue)
+                    || !(source instanceof Map<?, ?> rawSource)) {
                 continue;
             }
-            var subSource = from.get(entry.getKey());
-            if (!(subSource instanceof Map)) {
-                continue;
-            }
-            inherit0(
-                    (Map<String, Object>) entry.getValue(),
-                    (Map<String, Object>) subSource,
+            inheritDeep(
+                    (Map<String, Object>) rawValue,
+                    (Map<String, Object>) rawSource,
                     processed,
                     InheritPolicy.all()
             );

@@ -40,12 +40,12 @@ public class VariableValueInstantiator extends ValueInstantiator.Base {
             return context.reportBadDefinition(_valueType,
                     "Cannot create variable instance using default constructor: " + e.getMessage());
         }
-        if (!(builder instanceof IVariable.IBuilder)) {
-            return context.reportBadDefinition(_valueType,
-                    "Expect a variable builder (IVariable.IBuilder), but got: "
-                            + type.getName());
+        if (builder instanceof IVariable.IBuilder<?> variableBuilder) {
+            return variableBuilder;
         }
-        return (IVariable.IBuilder<?>) builder;
+        return context.reportBadDefinition(_valueType,
+                "Expect a variable builder (IVariable.IBuilder), but got: "
+                        + type.getName());
     }
 
     @Override
@@ -88,44 +88,44 @@ public class VariableValueInstantiator extends ValueInstantiator.Base {
         return true;
     }
 
-    private Object create0(DeserializationContext context, Object value) throws JacksonException {
+    private Object build(DeserializationContext context, Object value) throws JacksonException {
         return createUsingDefault(context)
                 .value(value);
     }
 
     @Override
     public Object createFromString(DeserializationContext context, String value) throws JacksonException {
-        return create0(context, value);
+        return build(context, value);
     }
 
     @Override
     public Object createFromInt(DeserializationContext context, int value) throws JacksonException {
-        return create0(context, value);
+        return build(context, value);
     }
 
     @Override
     public Object createFromLong(DeserializationContext context, long value) throws JacksonException {
-        return create0(context, value);
+        return build(context, value);
     }
 
     @Override
     public Object createFromBigInteger(DeserializationContext context, BigInteger value) throws JacksonException {
-        return create0(context, value);
+        return build(context, value);
     }
 
     @Override
     public Object createFromDouble(DeserializationContext context, double value) throws JacksonException {
-        return create0(context, value);
+        return build(context, value);
     }
 
     @Override
     public Object createFromBigDecimal(DeserializationContext context, BigDecimal value) throws JacksonException {
-        return create0(context, value);
+        return build(context, value);
     }
 
     @Override
     public Object createFromBoolean(DeserializationContext context, boolean value) throws JacksonException {
-        return create0(context, value);
+        return build(context, value);
     }
 
 }
