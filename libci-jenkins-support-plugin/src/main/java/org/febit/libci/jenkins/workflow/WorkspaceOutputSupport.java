@@ -32,7 +32,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @UtilityClass
-final class WorkspaceOutputSupport {
+class WorkspaceOutputSupport {
 
     private static final List<String> ARTIFACT_DEFAULT_EXCLUDES = List.of(
             "**/*~",

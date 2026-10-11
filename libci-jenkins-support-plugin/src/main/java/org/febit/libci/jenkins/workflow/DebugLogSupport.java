@@ -15,14 +15,13 @@
  */
 package org.febit.libci.jenkins.workflow;
 
+import lombok.experimental.UtilityClass;
+
 import java.io.PrintStream;
 import java.util.Collection;
 
-final class DebugLogSupport {
-
-    private DebugLogSupport() {
-        // utility class
-    }
+@UtilityClass
+class DebugLogSupport {
 
     static void debugHeader(PrintStream logger, String title) {
         logger.printf("[DEBUG] %s%n", title);

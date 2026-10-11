@@ -88,13 +88,8 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
     int size();
 
     /**
-     * Set a variable in the heap. The variable can be either direct (non-expand) or pattern (expand). If the pattern is null, it will be treated as direct variable.
+     * Set a variable in the heap; the variable is direct when {@code pattern} is null.
      *
-     * @param phase    variable defined phase
-     * @param name     variable name
-     * @param pattern  variable pattern
-     * @param expanded variable expanded value
-     * @return this
      * @throws IllegalStateException if the heap is sealed
      */
     H set(VarDefinedPhase phase, String name, @Nullable String pattern, @Nullable String expanded);
@@ -114,11 +109,6 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
      */
     H seal();
 
-    /**
-     * Check if the heap is sealed.
-     *
-     * @return true if the heap is sealed, false otherwise
-     */
     boolean sealed();
 
     @SuppressWarnings("unchecked")
@@ -146,10 +136,6 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
 
     /**
      * Set variables as direct (non-expand).
-     *
-     * @param phase variable phase
-     * @param vars  variables
-     * @return this
      */
     default H setAsDirect(VarDefinedPhase phase, @Nullable VariablesSpec<?> vars) {
         if (vars == null) {

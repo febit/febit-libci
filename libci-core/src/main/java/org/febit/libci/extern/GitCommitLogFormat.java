@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 @UtilityClass
@@ -73,7 +74,7 @@ public class GitCommitLogFormat {
     }
 
     public static String format(GitCommitField... fields) {
-        return format(Arrays.asList(fields));
+        return format(List.of(fields));
     }
 
     public static String format(Collection<GitCommitField> fields) {

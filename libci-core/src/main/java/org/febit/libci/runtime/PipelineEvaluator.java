@@ -28,7 +28,6 @@ import org.febit.libci.core.variable.VarsHeapImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Optional;
@@ -80,7 +79,6 @@ public class PipelineEvaluator {
         pipelineVars.withPhase(VarDefinedPhase.DEFINED_WORKFLOW)
                 .set(workflowRule.variables());
 
-        // Return empty context, if workflow is not allowed to run.
         if (!workflowRule.when().isAlways()) {
             return PipelineSpec.empty(profile.workflow());
         }
@@ -89,12 +87,11 @@ public class PipelineEvaluator {
                 .set(VarDefinedPhase.DEFINED_WORKFLOW, workflowRule.variables())
                 .seal();
 
-        var establishedJobs = new ArrayList<JobSpec>();
-        profile.jobs().values().stream()
+        var establishedJobs = profile.jobs().values().stream()
                 .map(this::establish)
                 .flatMap(Optional::stream)
                 .sorted(Comparator.comparing(JobSpec::name))
-                .forEach(establishedJobs::add);
+                .toList();
 
         var jobMap = LinkedHashMap.<String, JobSpec>newLinkedHashMap(establishedJobs.size());
         for (var job : establishedJobs) {
@@ -103,7 +100,7 @@ public class PipelineEvaluator {
 
         var groupedByStage = establishedJobs.stream()
                 .map(JobSpec::stage)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
 
         var effectiveStages = profile.stages().stream()
                 .filter(groupedByStage::contains)
@@ -131,7 +128,6 @@ public class PipelineEvaluator {
 
     private Optional<JobSpec> establish(JobSpec job) {
         if (job.rules().isEmpty()) {
-            // No rule limit, returns without changes.
             return Optional.of(job);
         }
 
@@ -164,7 +160,6 @@ public class PipelineEvaluator {
             return Optional.empty();
         }
 
-        // Merge the job with the rule.
         return Optional.of(
                 job.merge(rule)
         );

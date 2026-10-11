@@ -144,7 +144,7 @@ public class Keywords {
         if (StringUtils.isEmpty(name)) {
             return false;
         }
-        if (Keywords.isGlobalKeyword(name)) {
+        if (isGlobalKeyword(name)) {
             return false;
         }
 

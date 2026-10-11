@@ -70,7 +70,7 @@ public class Operators {
             throw new RuleEvaluationException("Regex pattern is null");
         }
         if (!(regex instanceof Pattern pattern)) {
-            // TODO: should not throw exception, but do contains match instead, to be compatible with GitHub Actions behavior？
+            // TODO: should not throw exception, but do contains match instead, to be compatible with GitHub Actions behavior?
             //    ref https://docs.gitlab.com/ci/jobs/job_rules/#unexpected-behavior-from-regular-expression-matching-with-
             throw new RuleEvaluationException("Expected a regex pattern, but got: " + regex.getClass().getName());
         }

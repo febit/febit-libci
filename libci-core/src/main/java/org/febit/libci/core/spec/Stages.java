@@ -37,9 +37,6 @@ public class Stages {
     public static final String DEPLOY = "deploy";
     public static final String POST = ".post";
 
-    /**
-     * Default pipeline stages.
-     */
     public static List<String> defaults() {
         return List.of(
                 PRE,
@@ -52,15 +49,15 @@ public class Stages {
 
     public static List<String> normalize(@Nullable List<String> raw) {
         if (CollectionUtils.isEmpty(raw)) {
-            return Stages.defaults();
+            return defaults();
         }
 
-        var normalized = new ArrayList<String>();
-        normalized.add(Stages.PRE);
+        var normalized = new ArrayList<String>(raw.size() + 2);
+        normalized.add(PRE);
         raw.stream()
-                .filter(s -> !Stages.PRE.equals(s) && !Stages.POST.equals(s))
+                .filter(s -> !PRE.equals(s) && !POST.equals(s))
                 .forEach(normalized::add);
-        normalized.add(Stages.POST);
-        return normalized;
+        normalized.add(POST);
+        return List.copyOf(normalized);
     }
 }
