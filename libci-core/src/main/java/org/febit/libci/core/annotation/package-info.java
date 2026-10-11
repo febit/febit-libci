@@ -13,11 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.febit.libci.runtime.state;
+@NullMarked
+package org.febit.libci.core.annotation;
 
-import lombok.experimental.UtilityClass;
-
-@UtilityClass
-public class Slugs {
-
-}
+import org.jspecify.annotations.NullMarked;
