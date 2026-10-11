@@ -35,7 +35,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serial;
 import java.io.UncheckedIOException;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -75,7 +75,7 @@ public record JenkinsFilePathSource(
             Thread.currentThread().interrupt();
             throw new UncheckedException(e);
         }
-        return new InputStreamReader(input);
+        return new InputStreamReader(input, StandardCharsets.UTF_8);
     }
 
     @Override
@@ -94,14 +94,14 @@ public record JenkinsFilePathSource(
             @Nullable String excludes
     ) implements ControllerToAgentFileCallable<List<String>> {
         @Serial
-        private static final long serialVersionUID = 1;
+        private static final long serialVersionUID = 1L;
 
         @Override
         public List<String> invoke(File basedir, VirtualChannel channel) {
             var files = Util.createFileSet(basedir, includes, excludes)
                     .getDirectoryScanner()
                     .getIncludedFiles();
-            return Arrays.asList(files);
+            return List.of(files);
         }
     }
 }

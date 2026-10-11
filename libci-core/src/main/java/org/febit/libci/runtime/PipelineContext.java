@@ -89,8 +89,11 @@ public class PipelineContext implements Serializable {
         }
 
         public Stream<JobState> findJobsBeforeStage(int stageIid) {
+            var end = stageIid < 0
+                    ? stages.size()
+                    : Math.min(stageIid, stages.size());
             return stages()
-                    .subList(0, stageIid < 0 ? stages.size() : stageIid)
+                    .subList(0, end)
                     .stream()
                     .flatMap(s -> jobsOf(s).stream());
         }
@@ -103,22 +106,10 @@ public class PipelineContext implements Serializable {
             return jobs.get(plan.iid() - 1);
         }
 
-        /**
-         * Get stage state by stage.
-         *
-         * @param job job state
-         * @return stage state
-         */
         public StageState stageOf(JobState job) {
             return stages.get(job.plan().stageIid() - 1);
         }
 
-        /**
-         * Get job states of stage.
-         *
-         * @param stage stage state
-         * @return job states of stage
-         */
         public List<JobState> jobsOf(StageState stage) {
             var stageIid = stage.plan().iid();
             return jobs.stream()

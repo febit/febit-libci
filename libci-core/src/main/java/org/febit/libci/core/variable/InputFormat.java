@@ -31,7 +31,12 @@ public class InputFormat {
     private static final String EMPTY = "";
 
     private static ProfileException invalidInputFormat(String name, HeaderSpec.InputType type) {
-        return new ProfileException("Invalid input format: '" + name + "' must be " + type.getValue() + ".");
+        return invalidInputFormat(name, type, null);
+    }
+
+    private static ProfileException invalidInputFormat(String name, HeaderSpec.InputType type,
+                                                       @Nullable Throwable cause) {
+        return new ProfileException("Invalid input format: '" + name + "' must be " + type.getValue() + ".", cause);
     }
 
     public static boolean isNullOrEmpty(@Nullable Object value) {
@@ -58,11 +63,10 @@ public class InputFormat {
         try {
             if (str.indexOf('.') >= 0) {
                 return Double.parseDouble(str);
-            } else {
-                return Long.parseLong(str);
             }
+            return Long.parseLong(str);
         } catch (NumberFormatException e) {
-            throw invalidInputFormat("not a number", HeaderSpec.InputType.NUMBER);
+            throw invalidInputFormat("not a number", HeaderSpec.InputType.NUMBER, e);
         }
     }
 
