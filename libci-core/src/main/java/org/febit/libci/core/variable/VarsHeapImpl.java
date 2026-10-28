@@ -88,7 +88,8 @@ public class VarsHeapImpl implements VarSupplier, VarsHeap<VarsHeapImpl> {
             VarDefinedPhase phase,
             String name,
             @Nullable String pattern,
-            @Nullable String expanded
+            @Nullable String expanded,
+            VarMeta meta
     ) {
         if (sealed()) {
             throw new IllegalStateException("VarsHeap is sealed, cannot be modified");
@@ -101,7 +102,13 @@ public class VarsHeapImpl implements VarSupplier, VarsHeap<VarsHeapImpl> {
             table.remove(name);
             return this;
         }
-        var entry = new Entry(phase, name, pattern, expanded);
+        var entry = Entry.builder()
+                .phase(phase)
+                .name(name)
+                .pattern(pattern)
+                .expanded(expanded)
+                .meta(meta)
+                .build();
         table.put(name, entry);
         return this;
     }

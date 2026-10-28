@@ -16,20 +16,23 @@
 package org.febit.libci.core;
 
 import org.febit.libci.core.dotenv.DotenvEntry;
-import org.febit.libci.core.predefined.LibciPredefined;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.support.SpecMapper;
 import org.febit.libci.core.spec.variable.IVariable;
 import org.febit.libci.core.variable.IDefined;
 import org.febit.libci.core.variable.VarDefinedPhase;
+import org.febit.libci.core.variable.VarMeta;
 
 import org.jspecify.annotations.Nullable;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.febit.libci.core.util.Defaults.nvl;
 
 @SuppressWarnings({
         "UnusedReturnValue"
@@ -48,20 +51,27 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
 
         VarDefinedPhase phase();
 
+        VarMeta meta();
+
+        /**
+         * Returns a view carrying {@code meta}; the current view is unchanged.
+         */
+        default PhaseView<H> meta(VarMeta meta) {
+            return new PhaseViewImpl<>(heap(), phase(), meta);
+        }
+
         default PhaseView<H> set(@Nullable VariablesSpec<?> vars) {
-            heap().set(phase(), vars);
+            heap().set(phase(), vars, meta());
             return this;
         }
 
         default PhaseView<H> direct(String name, @Nullable String value) {
-            heap().direct(phase(), name, value);
+            heap().set(phase(), name, null, value, meta());
             return this;
         }
 
         default PhaseView<H> direct(String name, @Nullable Boolean value) {
-            heap().direct(phase(), name,
-                    value == null ? null : value.toString()
-            );
+            direct(name, value == null ? null : value.toString());
             return this;
         }
 
@@ -73,7 +83,7 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
         }
 
         default PhaseView<H> pattern(String name, @Nullable String pattern) {
-            heap().pattern(phase(), name, pattern);
+            heap().set(phase(), name, pattern, heap().expand(pattern), meta());
             return this;
         }
 
@@ -90,12 +100,24 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
     /**
      * Set a variable in the heap; the variable is direct when {@code pattern} is null.
      *
+     * <p>An overriding definition replaces {@code meta} as a whole; markers are never merged.
+     *
      * @throws IllegalStateException if the heap is sealed
      */
-    H set(VarDefinedPhase phase, String name, @Nullable String pattern, @Nullable String expanded);
+    H set(
+            VarDefinedPhase phase,
+            String name,
+            @Nullable String pattern,
+            @Nullable String expanded,
+            VarMeta meta
+    );
+
+    default H set(VarDefinedPhase phase, String name, @Nullable String pattern, @Nullable String expanded) {
+        return set(phase, name, pattern, expanded, VarMeta.NONE);
+    }
 
     default H set(IDefined defined, @Nullable String pattern, @Nullable String expanded) {
-        return set(defined.phase(), defined.name(), pattern, expanded);
+        return set(defined.phase(), defined.name(), pattern, expanded, defined.meta());
     }
 
     H snapshot();
@@ -117,20 +139,28 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
     }
 
     default H set(VarDefinedPhase phase, String name, IVariable variable) {
+        return set(phase, name, variable, VarMeta.NONE);
+    }
+
+    default H set(VarDefinedPhase phase, String name, IVariable variable, VarMeta meta) {
         return Boolean.FALSE.equals(variable.expand())
-                ? direct(phase, name, variable.value())
-                : pattern(phase, name, variable.value());
+                ? direct(phase, name, variable.value(), meta)
+                : pattern(phase, name, variable.value(), meta);
     }
 
     default H set(IDefined defined, IVariable variable) {
-        return set(defined.phase(), defined.name(), variable);
+        return set(defined.phase(), defined.name(), variable, defined.meta());
     }
 
     default H set(VarDefinedPhase phase, @Nullable VariablesSpec<?> vars) {
+        return set(phase, vars, VarMeta.NONE);
+    }
+
+    default H set(VarDefinedPhase phase, @Nullable VariablesSpec<?> vars, VarMeta meta) {
         if (vars == null) {
             return me();
         }
-        vars.forEach((k, v) -> set(phase, k, v));
+        vars.forEach((k, v) -> set(phase, k, v, meta));
         return me();
     }
 
@@ -149,30 +179,40 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
         return set(phase, name, null, value);
     }
 
+    default H direct(VarDefinedPhase phase, String name, @Nullable String value, VarMeta meta) {
+        return set(phase, name, null, value, meta);
+    }
+
     default H direct(IDefined defined, @Nullable String value) {
-        return set(defined.phase(), defined.name(), null, value);
+        return set(defined.phase(), defined.name(), null, value, defined.meta());
     }
 
     default void setNull(IDefined defined) {
-        direct(defined.phase(), defined.name(), "");
+        direct(defined, "");
     }
 
     default H pattern(VarDefinedPhase phase, String name, @Nullable String pattern) {
-        var expanded = expand(pattern);
-        return set(phase, name, pattern, expanded);
+        return set(phase, name, pattern, expand(pattern));
+    }
+
+    default H pattern(VarDefinedPhase phase, String name, @Nullable String pattern, VarMeta meta) {
+        return set(phase, name, pattern, expand(pattern), meta);
     }
 
     default H pattern(IDefined defined, @Nullable String pattern) {
-        var expanded = expand(pattern);
-        return set(defined.phase(), defined.name(), pattern, expanded);
+        return set(defined.phase(), defined.name(), pattern, expand(pattern), defined.meta());
     }
 
+    /**
+     * Copy a variable, markers included.
+     */
     default H imports(Entry entry) {
+        var meta = entry.meta();
         var pattern = entry.pattern();
         if (pattern == null) {
-            return direct(entry.phase(), entry.name(), entry.expanded());
+            return direct(entry.phase(), entry.name(), entry.expanded(), meta);
         }
-        return pattern(entry.phase(), entry.name(), pattern);
+        return pattern(entry.phase(), entry.name(), pattern, meta);
     }
 
     default H imports(VarsHeap<?> from) {
@@ -210,19 +250,36 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
 
     record PhaseViewImpl<H extends VarsHeap<H>>(
             H heap,
-            VarDefinedPhase phase
+            VarDefinedPhase phase,
+            VarMeta meta
     ) implements PhaseView<H> {
+
+        public PhaseViewImpl(H heap, VarDefinedPhase phase) {
+            this(heap, phase, VarMeta.NONE);
+        }
     }
 
+    @lombok.Builder(
+            builderClassName = "Builder"
+    )
     record Entry(
-            VarDefinedPhase phase,
-            String name,
+            @lombok.NonNull VarDefinedPhase phase,
+            @lombok.NonNull String name,
             @Nullable String pattern,
-            String expanded
+            String expanded,
+            VarMeta meta
     ) implements Serializable {
 
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        public Entry {
+            meta = nvl(meta, VarMeta.NONE);
+            expanded = nvl(expanded, "");
+        }
+
         public boolean isInternal() {
-            return name.startsWith(LibciPredefined.__LIBCI_);
+            return meta.isInternal(name);
         }
 
         public boolean isRuntimeEnv() {

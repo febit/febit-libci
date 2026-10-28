@@ -40,6 +40,10 @@ public interface IDefined {
 
     String name();
 
+    default VarMeta meta() {
+        return VarMeta.NONE;
+    }
+
     default void setNull(VarsHeap<?> target) {
         target.setNull(this);
     }

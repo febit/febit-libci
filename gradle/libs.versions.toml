@@ -16,7 +16,7 @@ spring = "7.0.9"
 jgit = "7.6.0.202603022253-r"
 
 # Ref: https://repo.jenkins-ci.org/artifactory/public/io/jenkins/tools/bom/bom-weekly/
-jenkins-tools-bom = "7093.v37de7b_4a_8a_4f"
+jenkins-tools-bom = "7237.v5071b_f4589f1"
 
 [libraries]
 febit-commons-deps = { module = "org.febit:febit-commons-dependencies", version.ref = "febit-commons" }
