@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.febit.libci.core.spec.support.SlugUtils;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -262,6 +263,91 @@ class IDefinedTest {
             var heap = VarsHeapImpl.create();
             TestVar.BRANCH.set(heap, "");
             assertEquals("", TestVar.BRANCH.require(heap));
+        }
+    }
+
+    @Nested
+    class OptionalAccess {
+
+        @Test
+        void emptyWhenNeverSet() {
+            var heap = VarsHeapImpl.create();
+            assertTrue(TestVar.BRANCH.optional(heap).isEmpty());
+        }
+
+        @Test
+        void emptyWhenCleared() {
+            var heap = VarsHeapImpl.create();
+            TestVar.BRANCH.set(heap, "value");
+            TestVar.BRANCH.setNull(heap);
+            assertTrue(TestVar.BRANCH.optional(heap).isEmpty());
+        }
+
+        @Test
+        void returnsTextWhenPresent() {
+            var heap = VarsHeapImpl.create();
+            TestVar.BRANCH.set(heap, "main");
+            assertEquals("main", TestVar.BRANCH.optional(heap).orElseThrow());
+        }
+
+        @Test
+        void emptyStringIsTreatedAsMissing() {
+            var heap = VarsHeapImpl.create();
+            TestVar.BRANCH.set(heap, "");
+            // get() still exposes the raw empty string; optional() filters it out.
+            assertEquals("", TestVar.BRANCH.get(heap));
+            assertTrue(TestVar.BRANCH.optional(heap).isEmpty());
+        }
+
+        @Test
+        void decodedTypesAreEmptyOnEmptyString() {
+            var heap = VarsHeapImpl.create();
+            TestVar.BRANCH.set(heap, "");
+            // Empty raw text must not reach the codecs, otherwise they would throw.
+            assertTrue(TestVar.BRANCH.optionalLong(heap).isEmpty());
+            assertTrue(TestVar.BRANCH.optionalInt(heap).isEmpty());
+            assertTrue(TestVar.BRANCH.optionalBoolean(heap).isEmpty());
+            assertTrue(TestVar.BRANCH.optionalUUID(heap).isEmpty());
+            assertTrue(TestVar.BRANCH.optionalInstant(heap).isEmpty());
+        }
+
+        @Test
+        void longDecodesWhenPresent() {
+            var heap = VarsHeapImpl.create();
+            TestVar.BRANCH.set(heap, 123L);
+            assertEquals(123L, TestVar.BRANCH.optionalLong(heap).orElseThrow());
+        }
+
+        @Test
+        void intDecodesWhenPresent() {
+            var heap = VarsHeapImpl.create();
+            TestVar.BRANCH.set(heap, 42);
+            assertEquals(42, TestVar.BRANCH.optionalInt(heap).orElseThrow());
+        }
+
+        @Test
+        void booleanDecodesWhenPresent() {
+            var heap = VarsHeapImpl.create();
+            TestVar.BRANCH.set(heap, false);
+            assertFalse(TestVar.BRANCH.optionalBoolean(heap).orElseThrow());
+        }
+
+        @Test
+        void uuidDecodesWhenPresent() {
+            var heap = VarsHeapImpl.create();
+            var uuid = UUID.randomUUID();
+            TestVar.BRANCH.set(heap, uuid);
+            assertEquals(uuid, TestVar.BRANCH.optionalUUID(heap).orElseThrow());
+        }
+
+        @Test
+        void instantDecodesWhenPresent() {
+            var heap = VarsHeapImpl.create();
+            var instant = Instant.ofEpochSecond(1, 123_456_789);
+            TestVar.BRANCH.set(heap, instant);
+            // set() truncates to millis, so the decoded value does too.
+            assertEquals(instant.truncatedTo(ChronoUnit.MILLIS),
+                    TestVar.BRANCH.optionalInstant(heap).orElseThrow());
         }
     }
 }

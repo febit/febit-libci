@@ -22,6 +22,7 @@ import org.febit.libci.core.spec.support.SlugUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -44,8 +45,7 @@ public interface IDefined {
     }
 
     default boolean isAbsent(VarSupplier target) {
-        var value = target.get(name());
-        return value == null || value.isEmpty();
+        return optional(target).isEmpty();
     }
 
     default String require(VarSupplier target) {
@@ -56,9 +56,16 @@ public interface IDefined {
         return value;
     }
 
+
     @Nullable
     default String get(VarSupplier target) {
         return target.get(name());
+    }
+
+    default Optional<String> optional(VarSupplier target) {
+        return Optional.ofNullable(
+                get(target)
+        ).filter(value -> !value.isEmpty());
     }
 
     private <T> void set(VarsHeap<?> target, @Nullable T value, VarCodec<T> codec) {
@@ -82,6 +89,11 @@ public interface IDefined {
         return codec.decode(value);
     }
 
+    private <T> Optional<T> optional(VarSupplier target, VarCodec<T> codec) {
+        return optional(target)
+                .map(codec::decode);
+    }
+
     private <T> T computeIfAbsent(
             VarsHeap<?> target,
             Supplier<T> supplier,
@@ -100,12 +112,20 @@ public interface IDefined {
         return require(target, LONG);
     }
 
+    default Optional<Long> optionalLong(VarSupplier target) {
+        return optional(target, LONG);
+    }
+
     default Long computeLongIfAbsent(VarsHeap<?> target, Supplier<Long> supplier) {
         return computeIfAbsent(target, supplier, LONG);
     }
 
     default UUID requireUUID(VarSupplier target) {
         return require(target, VarCodecUtils.UUID);
+    }
+
+    default Optional<UUID> optionalUUID(VarSupplier target) {
+        return optional(target, VarCodecUtils.UUID);
     }
 
     default UUID computeUUIDIfAbsent(VarsHeap<?> target, Supplier<UUID> supplier) {
@@ -116,6 +136,10 @@ public interface IDefined {
         return require(target, INT);
     }
 
+    default Optional<Integer> optionalInt(VarSupplier target) {
+        return optional(target, INT);
+    }
+
     default Integer computeIntIfAbsent(VarsHeap<?> target, Supplier<Integer> supplier) {
         return computeIfAbsent(target, supplier, INT);
     }
@@ -124,12 +148,24 @@ public interface IDefined {
         return require(target, BOOLEAN);
     }
 
+    default Optional<Boolean> optionalBoolean(VarSupplier target) {
+        return optional(target, BOOLEAN);
+    }
+
     default Boolean computeBooleanIfAbsent(VarsHeap<?> target, Supplier<Boolean> supplier) {
         return computeIfAbsent(target, supplier, BOOLEAN);
     }
 
     default String computeIfAbsent(VarsHeap<?> target, Supplier<String> supplier) {
         return computeIfAbsent(target, supplier, TEXT);
+    }
+
+    default Instant requireInstant(VarSupplier target) {
+        return require(target, INSTANT);
+    }
+
+    default Optional<Instant> optionalInstant(VarSupplier target) {
+        return optional(target, INSTANT);
     }
 
     default void set(VarsHeap<?> target, @Nullable String text) {
