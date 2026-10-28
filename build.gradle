@@ -17,13 +17,8 @@ allprojects {
   group = rootProject.group
   version = rootProject.version
 
-  repositories {
-    mavenCentral()
-    maven { url = "https://repo.jenkins-ci.org/public" }
-  }
-
   codegenModule {
-    defaultTemplate = fromFile("$rootDir/etc/module.java.tmpl")
+    defaultTemplate = fromFile("$rootDir/gradle/module.java.tmpl")
   }
 
   tasks.withType(AbstractPublishToMaven).configureEach {
@@ -32,7 +27,7 @@ allprojects {
 
   spotless {
     java {
-      licenseHeaderFile rootProject.file('etc/license-header.txt')
+      licenseHeaderFile rootProject.file('gradle/license-header.txt')
 
       shortenFullyQualifiedTypes()
 

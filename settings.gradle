@@ -1,7 +1,28 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
 pluginManagement {
   repositories {
     mavenCentral()
     gradlePluginPortal()
+  }
+}
+
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    mavenCentral()
+    maven {
+      url = "https://repo.jenkins-ci.org/public"
+      content {
+        // Jenkins ecosystem artifacts that are absent from Maven Central.
+        includeGroupByRegex "org\\.jenkins-ci(\\..+)?"
+        includeGroupByRegex "io\\.jenkins(\\..+)?"
+        includeGroupByRegex "org\\.jvnet(\\..+)?"
+        includeGroupByRegex "org\\.kohsuke(\\..+)?"
+        includeGroupByRegex "com\\.infradna(\\..+)?"
+        includeGroupByRegex "com\\.jcraft(\\..+)?"
+      }
+    }
   }
 }
 
