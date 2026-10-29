@@ -120,8 +120,9 @@ public class PipelineEvaluator {
         if (rules.isEmpty()) {
             return WorkflowSpec.Rule.ALWAYS;
         }
+        var ruleVars = varsForWorkflowRules.expandableView();
         return rules.stream()
-                .filter(r -> ruleEvaluator.matches(r, varsForWorkflowRules))
+                .filter(r -> ruleEvaluator.matches(r, ruleVars))
                 .findFirst()
                 .orElse(WorkflowSpec.Rule.NEVER);
     }
@@ -150,8 +151,9 @@ public class PipelineEvaluator {
         // XXX: un-expanded variables are used for rules evaluation
         vars.setAsDirect(VarDefinedPhase.DEFINED_JOB, job.variables());
 
+        var ruleVars = vars.expandableView();
         var rule = job.rules().stream()
-                .filter(r -> ruleEvaluator.matches(r, vars))
+                .filter(r -> ruleEvaluator.matches(r, ruleVars))
                 .findFirst()
                 .orElse(null);
 

@@ -27,7 +27,10 @@ import org.febit.libci.core.spec.RuleChangesSpec;
 import org.febit.libci.core.spec.RuleExistsSpec;
 import org.febit.libci.core.spec.VariablesSpec;
 import org.febit.libci.core.spec.WorkflowSpec;
+import org.febit.libci.core.spec.variable.GenericVariable;
+import org.febit.libci.core.spec.variable.IVariable;
 import org.febit.libci.core.variable.VarDefinedPhase;
+import org.febit.libci.core.variable.VarMeta;
 import org.febit.libci.core.variable.VarsHeapImpl;
 import org.febit.libci.runtime.plan.JobPlan;
 import org.febit.libci.runtime.state.JobState;
@@ -245,12 +248,16 @@ class PipelineEvaluatorTest {
     }
 
     private static Profile newProfile(JobSpec... jobs) {
+        return newProfile(VariablesSpec.create(), jobs);
+    }
+
+    private static Profile newProfile(VariablesSpec<IVariable> vars, JobSpec... jobs) {
         var jobMapping = new TreeMap<String, JobSpec>();
         for (var job : jobs) {
             jobMapping.put(job.name(), job);
         }
         return new Profile(
-                VariablesSpec.create(),
+                vars,
                 WorkflowSpec.builder().build(),
                 List.of("build"),
                 jobMapping
@@ -276,11 +283,22 @@ class PipelineEvaluatorTest {
     }
 
     private static JobSpec newJob(String name, List<JobSpec.Rule> rules, JobSpec.Parallel parallel) {
+        return jobBuilder(name, rules)
+                .parallel(parallel)
+                .build();
+    }
+
+    private static JobSpec newJobWithTags(List<String> tags) {
+        return jobBuilder("cert-job", List.of())
+                .tags(tags)
+                .build();
+    }
+
+    private static JobSpec.Builder jobBuilder(String name, List<JobSpec.Rule> rules) {
         return JobSpec.builder()
                 .name(name)
                 .stage("build")
                 .image(new JobSpec.Image("alpine", null, null, null, null))
-                .parallel(parallel)
                 .services(List.of())
                 .tags(List.of())
                 .timeout(PeriodDuration.NEVER)
@@ -291,8 +309,7 @@ class PipelineEvaluatorTest {
                 .afterScript(List.of())
                 .hooks(JobSpec.Hooks.NONE)
                 .interruptible(false)
-                .rules(rules)
-                .build();
+                .rules(rules);
     }
 
     private static JobSpec.ParallelMatrix matrix(
@@ -361,6 +378,163 @@ class PipelineEvaluatorTest {
                             .profile(profile)
                             .baseVars(null)
                             .build());
+        }
+    }
+
+    @Nested
+    class FileVariables {
+
+        @Test
+        void notAvailableToJobRules() {
+            var context = newContext(newProfile(
+                    vars("file-content", true),
+                    certJob()
+            ));
+
+            assertTrue(context.spec().jobs().isEmpty());
+        }
+
+        @Test
+        void availableToJobRulesWhenNotFileTyped() {
+            var context = newContext(newProfile(
+                    vars("file-content", false),
+                    certJob()
+            ));
+
+            assertEquals(Set.of("cert-job"), context.spec().jobs().keySet());
+        }
+
+        @Test
+        void notAvailableToWorkflowRules() {
+            var context = newContext(certWorkflowProfile(vars("file-content", true)));
+
+            assertTrue(context.spec().jobs().isEmpty());
+        }
+
+        @Test
+        void availableToWorkflowRulesWhenNotFileTyped() {
+            var context = newContext(certWorkflowProfile(vars("file-content", false)));
+
+            assertEquals(Set.of("cert-job"), context.spec().jobs().keySet());
+        }
+
+        @Test
+        void fileVariableIsNotAvailableAsPresenceCheck() {
+            var rule = JobSpec.Rule.builder()
+                    .if0("$CERT")
+                    .when(JobSpec.When.ALWAYS)
+                    .build();
+            var job = newJob("cert-job", List.of(rule, ruleNever()));
+
+            assertTrue(newContext(newProfile(vars("file-content", true), job))
+                    .spec().jobs().isEmpty());
+            assertEquals(Set.of("cert-job"),
+                    newContext(newProfile(vars("file-content", false), job))
+                            .spec().jobs().keySet());
+        }
+
+        @Test
+        void hiddenVariableMatchesNegativeRule() {
+            var rule = JobSpec.Rule.builder()
+                    .if0("$CERT != \"file-content\"")
+                    .when(JobSpec.When.ALWAYS)
+                    .build();
+            var job = newJob("cert-job", List.of(rule, ruleNever()));
+
+            assertEquals(Set.of("cert-job"),
+                    newContext(newProfile(vars("file-content", true), job))
+                            .spec().jobs().keySet());
+        }
+
+        @Test
+        void internalVariableIsNotAvailableToJobRules() {
+            var vars = VariablesSpec.<IVariable>create();
+            vars.put("__LIBCI_DEPLOY_KUBE_CONF_FILE",
+                    GenericVariable.builder().value("kube").build());
+
+            var job = newJob("cert-job", List.of(
+                    JobSpec.Rule.builder()
+                            .if0("$__LIBCI_DEPLOY_KUBE_CONF_FILE == \"kube\"")
+                            .when(JobSpec.When.ALWAYS)
+                            .build(),
+                    ruleNever()
+            ));
+
+            assertTrue(newContext(newProfile(vars, job)).spec().jobs().isEmpty());
+        }
+
+        @Test
+        void fileVariableIsNotExpandedInRunPhase() {
+            var vars = vars("file-content", true);
+            vars.put("PLAIN", GenericVariable.builder().value("plain").build());
+
+            var context = newContext(newProfile(
+                    vars,
+                    newJobWithTags(List.of("$CERT", "$PLAIN"))
+            ));
+            var state = context.states()
+                    .jobsOf(context.states().stages().getFirst())
+                    .getFirst();
+
+            var execution = new JobExecution(context, state);
+            execution.expand();
+
+            assertEquals(List.of("", "plain"), execution.expandedSpec().tags());
+        }
+
+        @Test
+        void plainVariableIsExpandedInRunPhase() {
+            var context = newContext(newProfile(
+                    vars("cert-content", false),
+                    newJobWithTags(List.of("$CERT"))
+            ));
+            var state = context.states()
+                    .jobsOf(context.states().stages().getFirst())
+                    .getFirst();
+
+            var execution = new JobExecution(context, state);
+            execution.expand();
+
+            assertEquals(List.of("cert-content"), execution.expandedSpec().tags());
+        }
+
+        private VariablesSpec<IVariable> vars(String value, boolean file) {
+            var vars = VariablesSpec.<IVariable>create();
+            vars.put("CERT", file
+                    ? new FileVariable(value)
+                    : GenericVariable.builder().value(value).build());
+            return vars;
+        }
+
+        private Profile certWorkflowProfile(VariablesSpec<IVariable> vars) {
+            return new Profile(
+                    vars,
+                    WorkflowSpec.builder()
+                            .rules(List.of(WorkflowSpec.Rule.builder()
+                                    .if0("$CERT == \"file-content\"")
+                                    .build()))
+                            .build(),
+                    List.of("build"),
+                    new TreeMap<>(Map.of("cert-job", newJob("cert-job", List.of())))
+            );
+        }
+
+        private JobSpec certJob() {
+            return newJob("cert-job", List.of(
+                    JobSpec.Rule.builder()
+                            .if0("$CERT == \"file-content\"")
+                            .when(JobSpec.When.ALWAYS)
+                            .build(),
+                    ruleNever()
+            ));
+        }
+    }
+
+    private record FileVariable(String value) implements IVariable {
+
+        @Override
+        public VarMeta meta() {
+            return VarMeta.FILE;
         }
     }
 

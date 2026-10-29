@@ -52,11 +52,8 @@ public class VarsHeapImpl implements VarSupplier, VarsHeap<VarsHeapImpl> {
     @Nullable
     @Override
     public String get(String name) {
-        var entry = table.get(name);
-        if (entry == null) {
-            return null;
-        }
-        return entry.expanded();
+        var entry = find(name);
+        return entry == null ? null : entry.expanded();
     }
 
     @Override
@@ -64,6 +61,12 @@ public class VarsHeapImpl implements VarSupplier, VarsHeap<VarsHeapImpl> {
         return Collections.unmodifiableCollection(
                 this.table.values()
         );
+    }
+
+    @Nullable
+    @Override
+    public Entry find(String name) {
+        return table.get(name);
     }
 
     @Override

@@ -67,6 +67,48 @@ class VarMetaTest {
     }
 
     @Nested
+    class Merge {
+
+        @Test
+        void unmarkedSideFallsBackToOther() {
+            assertEquals(VarMeta.FILE, VarMeta.NONE.merge(VarMeta.FILE));
+            assertEquals(VarMeta.FILE, VarMeta.FILE.merge(VarMeta.NONE));
+            assertEquals(VarMeta.MASKED, VarMeta.MASKED.merge(null));
+        }
+
+        @Test
+        void unsetMarkersAreFilled() {
+            var merged = VarMeta.FILE.merge(VarMeta.MASKED.withInternal(true));
+
+            assertTrue(merged.file());
+            assertTrue(merged.masked());
+            assertTrue(merged.internal());
+        }
+
+        @Test
+        void setMarkersAreKept() {
+            var merged = VarMeta.NONE.withInternal(false)
+                    .merge(VarMeta.MASKED.withInternal(true));
+
+            assertFalse(merged.internal());
+            assertTrue(merged.masked());
+        }
+
+        @Test
+        void mergeIsIdempotent() {
+            assertEquals(VarMeta.FILE, VarMeta.FILE.merge(VarMeta.FILE));
+            assertEquals(VarMeta.NONE, VarMeta.NONE.merge(VarMeta.NONE));
+        }
+
+        @Test
+        void mergeReturnsThisWhenNothingToFill() {
+            var masked = VarMeta.MASKED;
+            assertSame(masked, masked.merge(null));
+            assertSame(masked, masked.merge(VarMeta.NONE));
+        }
+    }
+
+    @Nested
     class Immutability {
 
         @Test

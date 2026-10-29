@@ -39,4 +39,5 @@ dependencies {
   compileOnly 'org.jenkins-ci.plugins:pipeline-utility-steps@jar'
 
   testImplementation localGroovy()
+  testImplementation project(':febit-libci-core')
 }

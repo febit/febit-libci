@@ -98,9 +98,48 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
     int size();
 
     /**
+     * Returns the entry named {@code name}, or {@code null} if absent.
+     *
+     * <p>The default implementation scans {@link #entries()}; implementations should
+     * override it when a direct lookup is available.
+     */
+    @Nullable
+    default Entry find(String name) {
+        for (var entry : entries()) {
+            if (entry.name().equals(name)) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns a read-only view for interpolation and rule evaluation, in which file
+     * typed and internal variables read as absent; a negative rule like
+     * {@code $VAR != "x"} therefore still matches.
+     *
+     * <p>Filtering is opt-in: {@link #get(String)} and {@link #expand(String)} keep
+     * reading raw values, so that a consumer decides where the markers apply.
+     * Masked variables stay resolvable, masking only affects how values are
+     * displayed.
+     */
+    default VarSupplier expandableView() {
+        return name -> {
+            var entry = find(name);
+            if (entry == null
+                    || entry.meta().file()
+                    || entry.isInternal()) {
+                return null;
+            }
+            return entry.expanded();
+        };
+    }
+
+    /**
      * Set a variable in the heap; the variable is direct when {@code pattern} is null.
      *
-     * <p>An overriding definition replaces {@code meta} as a whole; markers are never merged.
+     * <p>{@code meta} is stored as given; an overriding definition replaces the
+     * previous markers as a whole.
      *
      * @throws IllegalStateException if the heap is sealed
      */
@@ -138,14 +177,22 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
         return (H) this;
     }
 
+    /** Set a variable, with the markers of its own definition. */
     default H set(VarDefinedPhase phase, String name, IVariable variable) {
         return set(phase, name, variable, VarMeta.NONE);
     }
 
+    /**
+     * Set a variable; the markers of {@code variable} are kept, {@code meta} only
+     * fills the ones it does not define.
+     *
+     * <p>A file typed variable is always stored verbatim.
+     */
     default H set(VarDefinedPhase phase, String name, IVariable variable, VarMeta meta) {
-        return Boolean.FALSE.equals(variable.expand())
-                ? direct(phase, name, variable.value(), meta)
-                : pattern(phase, name, variable.value(), meta);
+        var merged = variable.meta().merge(meta);
+        return Boolean.FALSE.equals(variable.expand()) || merged.file()
+                ? direct(phase, name, variable.value(), merged)
+                : pattern(phase, name, variable.value(), merged);
     }
 
     default H set(IDefined defined, IVariable variable) {
@@ -171,7 +218,7 @@ public interface VarsHeap<H extends VarsHeap<H>> extends VarSupplier {
         if (vars == null) {
             return me();
         }
-        vars.forEach((k, v) -> direct(phase, k, v.value()));
+        vars.forEach((k, v) -> direct(phase, k, v.value(), v.meta()));
         return me();
     }
 

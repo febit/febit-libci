@@ -84,8 +84,11 @@ public class PipelineResolveExecution extends SynchronousStepExecution<PipelineP
         var logger = logger();
 
         if (isDebugEnabled) {
-            DebugLogSupport.debugHeader(logger, "Input variables (" + inputVars.entries().size() + "):");
-            inputVars.entries().forEach(e ->
+            var visible = inputVars.entries().stream()
+                    .filter(e -> !e.isInternal())
+                    .toList();
+            DebugLogSupport.debugHeader(logger, "Input variables (" + visible.size() + "):");
+            visible.forEach(e ->
                     logger.printf("  - %s=%s%n", e.name(), jsonify(e.expanded(), true))
             );
         }
@@ -129,7 +132,7 @@ public class PipelineResolveExecution extends SynchronousStepExecution<PipelineP
         var local = loadWorkspaceYaml(workspace);
         var builder = ProfileLoader.loader()
                 .entry(local.resource(entry))
-                .vars(vars)
+                .vars(vars.expandableView())
                 .resourceLoader(GenericPathResourceLoader.get());
 
         try (var jgitLoader = createJgitLoader()) {

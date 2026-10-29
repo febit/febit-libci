@@ -32,6 +32,7 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -541,7 +542,7 @@ class VarsHeapImplTest {
         }
 
         @Test
-        void setVarsCarriesMeta() {
+        void setVarsWithExplicitMeta() {
             var heap = VarsHeapImpl.create();
             var vars = VariablesSpec.<IVariable>create();
             vars.put("A", GenericVariable.builder().value("val_a").build());
@@ -566,13 +567,13 @@ class VarsHeapImplTest {
         void variableCarriesMetaOnBothBranches() {
             var heap = VarsHeapImpl.create();
             heap.set(VarDefinedPhase.DEFINED_JOB, "EXPANDED",
-                    GenericVariable.builder().value("v").expand(true).build(), VarMeta.FILE);
+                    GenericVariable.builder().value("v").expand(true).build(), VarMeta.MASKED);
             heap.set(VarDefinedPhase.DEFINED_JOB, "DIRECT",
                     GenericVariable.builder().value("v").expand(false).build(), VarMeta.MASKED);
 
             var expanded = this.entryOf(heap, "EXPANDED");
             assertEquals("v", expanded.pattern());
-            assertTrue(expanded.meta().file());
+            assertTrue(expanded.meta().masked());
 
             var direct = this.entryOf(heap, "DIRECT");
             assertNull(direct.pattern());
@@ -615,6 +616,133 @@ class VarsHeapImplTest {
         }
 
         @Test
+        void setVariableCarriesDefinitionMeta() {
+            var heap = VarsHeapImpl.create();
+            heap.set(VarDefinedPhase.DEFINED_PROFILE, "KUBECONFIG",
+                    new FileVariable("content"));
+
+            assertTrue(this.entryOf(heap, "KUBECONFIG").meta().file());
+        }
+
+        @Test
+        void explicitNoneDoesNotEraseDefinitionMeta() {
+            var heap = VarsHeapImpl.create();
+            heap.set(VarDefinedPhase.DEFINED_PROFILE, "CERT",
+                    new FileVariable("v"), VarMeta.NONE);
+
+            assertTrue(this.entryOf(heap, "CERT").meta().file());
+        }
+
+        @Test
+        void fileVariableIsStoredVerbatim() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.RUNTIME_ENV, "BASE", "content");
+
+            heap.set(VarDefinedPhase.DEFINED_PROFILE, "CERT",
+                    new FileVariable("$BASE"));
+
+            var entry = this.entryOf(heap, "CERT");
+            assertNull(entry.pattern());
+            assertEquals("$BASE", entry.expanded());
+            assertTrue(entry.meta().file());
+        }
+
+        @Test
+        void setVarsCarriesDefinitionMeta() {
+            var heap = VarsHeapImpl.create();
+            var vars = VariablesSpec.<IVariable>create();
+            vars.put("PLAIN", GenericVariable.builder().value("v1").build());
+            vars.put("FILE", new FileVariable("v2"));
+
+            heap.set(VarDefinedPhase.DEFINED_PROFILE, vars);
+
+            assertEquals(VarMeta.NONE, this.entryOf(heap, "PLAIN").meta());
+            assertTrue(this.entryOf(heap, "FILE").meta().file());
+        }
+
+        @Test
+        void setAsDirectCarriesDefinitionMeta() {
+            var heap = VarsHeapImpl.create();
+            var vars = VariablesSpec.<IVariable>create();
+            vars.put("FILE", new FileVariable("$BASE"));
+
+            heap.setAsDirect(VarDefinedPhase.DEFINED_JOB, vars);
+
+            var entry = this.entryOf(heap, "FILE");
+            assertNull(entry.pattern());
+            assertEquals("$BASE", entry.expanded());
+            assertTrue(entry.meta().file());
+        }
+
+        @Test
+        void setVarsMergesExplicitMeta() {
+            var heap = VarsHeapImpl.create();
+            var vars = VariablesSpec.<IVariable>create();
+            vars.put("FILE", new FileVariable("v"));
+
+            heap.set(VarDefinedPhase.DEFINED_JOB, vars, VarMeta.MASKED);
+
+            var meta = this.entryOf(heap, "FILE").meta();
+            assertTrue(meta.file());
+            assertTrue(meta.masked());
+        }
+
+        @Test
+        void explicitMetaFillsUnsetMarkers() {
+            var heap = VarsHeapImpl.create();
+            heap.set(VarDefinedPhase.DEFINED_JOB, "KEY",
+                    GenericVariable.builder().value("v").build(),
+                    VarMeta.NONE.withInternal(true));
+
+            assertTrue(this.entryOf(heap, "KEY").isInternal());
+        }
+
+        @Test
+        void variableMetaWinsOverExplicitMeta() {
+            var heap = VarsHeapImpl.create();
+            var declaredInternal = new IVariable() {
+                @Override
+                public String value() {
+                    return "v";
+                }
+
+                @Override
+                public VarMeta meta() {
+                    return VarMeta.NONE.withInternal(true);
+                }
+            };
+
+            heap.set(VarDefinedPhase.DEFINED_JOB, "KEY", declaredInternal,
+                    VarMeta.NONE.withInternal(false));
+
+            assertTrue(this.entryOf(heap, "KEY").isInternal());
+        }
+
+        @Test
+        void definedAndVariableMetaAreMerged() {
+            var heap = VarsHeapImpl.create();
+            heap.set(MaskedVar.TOKEN, new FileVariable("v"));
+
+            var meta = this.entryOf(heap, "TOKEN").meta();
+            assertTrue(meta.masked());
+            assertTrue(meta.file());
+        }
+
+        @Test
+        void setAsDirectKeepsPlainVariablesUnmarked() {
+            var heap = VarsHeapImpl.create();
+            var vars = VariablesSpec.<IVariable>create();
+            vars.put("PLAIN", GenericVariable.builder().value("$BASE").build());
+
+            heap.setAsDirect(VarDefinedPhase.DEFINED_JOB, vars);
+
+            var entry = this.entryOf(heap, "PLAIN");
+            assertNull(entry.pattern());
+            assertEquals("$BASE", entry.expanded());
+            assertEquals(VarMeta.NONE, entry.meta());
+        }
+
+        @Test
         void builderDefaultsToNone() {
             var entry = VarsHeap.Entry.builder()
                     .phase(VarDefinedPhase.DEFINED_JOB)
@@ -654,10 +782,111 @@ class VarsHeapImplTest {
         }
 
         private VarsHeap.Entry entryOf(VarsHeap<?> heap, String name) {
-            return heap.entries().stream()
-                    .filter(e -> name.equals(e.name()))
-                    .findFirst()
-                    .orElseThrow();
+            return Objects.requireNonNull(heap.find(name), name);
+        }
+    }
+
+    @Nested
+    class ExpandableView {
+
+        @Test
+        void findIsAbsent() {
+            assertNull(VarsHeapImpl.create().find("MISSING"));
+        }
+
+        @Test
+        void hidesFileVariables() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.DEFINED_PROFILE, "CERT", "file-content", VarMeta.FILE);
+
+            assertNull(heap.expandableView().get("CERT"));
+            assertEquals("[]", VarPatterns.expand("[$CERT]", heap.expandableView()));
+            assertEquals("file-content", heap.get("CERT"));
+            assertEquals("file-content", heap.find("CERT").expanded());
+        }
+
+        @Test
+        void keepsRawValuesByDefault() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.DEFINED_PROFILE, "CERT", "file-content", VarMeta.FILE);
+
+            assertEquals("[file-content]", heap.expand("[$CERT]"));
+        }
+
+        @Test
+        void escapedDollarIsNotAffected() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.DEFINED_PROFILE, "CERT", "file-content", VarMeta.FILE);
+
+            assertEquals("$CERT", heap.expand("$$CERT"));
+        }
+
+        @Test
+        void hidesInternalVariables() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.CUSTOM, "__LIBCI_DEPLOY_KUBE_CONF_FILE", "/tmp/kube");
+            heap.direct(VarDefinedPhase.CUSTOM, "EXPLICIT", "val", VarMeta.NONE.withInternal(true));
+
+            assertNull(heap.expandableView().get("__LIBCI_DEPLOY_KUBE_CONF_FILE"));
+            assertNull(heap.expandableView().get("EXPLICIT"));
+            assertEquals("/tmp/kube", heap.get("__LIBCI_DEPLOY_KUBE_CONF_FILE"));
+        }
+
+        @Test
+        void resolvesMaskedVariables() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.DEFINED_PROFILE, "TOKEN", "s3cret", VarMeta.MASKED);
+
+            assertEquals("s3cret", heap.expandableView().get("TOKEN"));
+            assertEquals("[s3cret]", heap.expand("[${TOKEN}]"));
+        }
+
+        @Test
+        void patternInterpolationUsesRawValues() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.DEFINED_PROFILE, "CERT", "content", VarMeta.FILE);
+
+            heap.pattern(VarDefinedPhase.DEFINED_JOB, "CERT_PATH", "/tmp/$CERT");
+
+            assertEquals("/tmp/content", heap.get("CERT_PATH"));
+        }
+
+        @Test
+        void findReturnsStoredInstance() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.DEFINED_JOB, "KEY", "val");
+            var stored = heap.entries().iterator().next();
+
+            assertSame(stored, heap.find("KEY"));
+        }
+
+        @Test
+        void exposedWhenInternalIsExplicitlyFalse() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.CUSTOM, "__LIBCI_CUSTOM", "val",
+                    VarMeta.NONE.withInternal(false));
+
+            assertEquals("val", heap.expandableView().get("__LIBCI_CUSTOM"));
+            assertEquals("[val]", heap.expand("[${__LIBCI_CUSTOM}]"));
+        }
+
+        @Test
+        void keepsResolvingAfterSeal() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.DEFINED_JOB, "KEY", "val");
+            heap.seal();
+
+            assertEquals("val", heap.expandableView().get("KEY"));
+            assertEquals("val", heap.expand("$KEY"));
+        }
+
+        @Test
+        void resolvesRuntimeEnvVariables() {
+            var heap = VarsHeapImpl.create();
+            heap.direct(VarDefinedPhase.RUNTIME_ENV, "FROM_HOST", "host-value");
+
+            assertEquals("host-value", heap.expandableView().get("FROM_HOST"));
+            assertEquals("host-value", heap.expand("$FROM_HOST"));
         }
     }
 
@@ -672,6 +901,28 @@ class VarsHeapImplTest {
         @Override
         public VarMeta meta() {
             return VarMeta.FILE;
+        }
+    }
+
+    private record FileVariable(String value) implements IVariable {
+
+        @Override
+        public VarMeta meta() {
+            return VarMeta.FILE;
+        }
+    }
+
+    private enum MaskedVar implements IDefined {
+        TOKEN;
+
+        @Override
+        public VarDefinedPhase phase() {
+            return VarDefinedPhase.DEFINED_JOB;
+        }
+
+        @Override
+        public VarMeta meta() {
+            return VarMeta.MASKED;
         }
     }
 }

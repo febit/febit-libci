@@ -44,4 +44,22 @@ public record VarMeta(
         }
         return name.startsWith(LibciPredefined.__LIBCI_);
     }
+
+    /**
+     * Merges {@code other} into these markers: {@code file} and {@code masked} are
+     * combined, while an unset {@code internal} falls back to {@code other}.
+     */
+    public VarMeta merge(@Nullable VarMeta other) {
+        if (other == null || NONE.equals(other)) {
+            return this;
+        }
+        if (NONE.equals(this)) {
+            return other;
+        }
+        return new VarMeta(
+                internal != null ? internal : other.internal,
+                file || other.file,
+                masked || other.masked
+        );
+    }
 }

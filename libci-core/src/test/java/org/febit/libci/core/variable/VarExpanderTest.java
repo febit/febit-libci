@@ -111,4 +111,17 @@ class VarExpanderTest {
         assertEquals(nullable, expander.expand(raw));
     }
 
+    @Test
+    void heapExpandableViewSkipsFileAndInternalVariables() {
+        var heap = VarsHeapImpl.create();
+        heap.direct(VarDefinedPhase.DEFINED_PROFILE, "PLAIN", "plain");
+        heap.direct(VarDefinedPhase.DEFINED_PROFILE, "CERT", "cert", VarMeta.FILE);
+        heap.direct(VarDefinedPhase.CUSTOM, "__LIBCI_HIDDEN", "hidden");
+
+        var actual = VarExpander.of(heap.expandableView(), ExpandPhase.RUN)
+                .expand(List.of("$PLAIN", "x$CERT", "$__LIBCI_HIDDEN"));
+
+        assertEquals(List.of("plain", "x", ""), actual);
+    }
+
 }

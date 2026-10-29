@@ -96,4 +96,9 @@ public class VarPatterns {
         }
         return buf.toString();
     }
+
+    public static String expandOrEmpty(@Nullable String pattern, VarSupplier vars) {
+        var expanded = expand(pattern, vars);
+        return expanded == null ? "" : expanded;
+    }
 }

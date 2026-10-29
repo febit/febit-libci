@@ -15,6 +15,7 @@
  */
 package org.febit.libci.core.variable;
 
+import org.junit.jupiter.api.Test;
 import org.tabletest.junit.TableTest;
 
 import org.febit.libci.core.VarSupplier;
@@ -53,5 +54,12 @@ class VarPatternsTest {
             """)
     void expandPattern(String template, String expected) {
         assertEquals(expected, VarPatterns.expand(template, VARS));
+    }
+
+    @Test
+    void expandOrEmptyPattern() {
+        assertNull(VarPatterns.expand(null, VARS));
+        assertEquals("", VarPatterns.expandOrEmpty(null, VARS));
+        assertEquals("a-b", VarPatterns.expandOrEmpty("$A-$B", VARS));
     }
 }

@@ -166,7 +166,7 @@ public class PipelinePlanner {
     }
 
     private List<JobDependency> resolveJobDependencies(JobSpec spec, VarsHeap<?> vars) {
-        var expander = VarExpander.of(vars, ExpandPhase.PLAN);
+        var expander = VarExpander.of(vars.expandableView(), ExpandPhase.PLAN);
         var needs = expander.expandNullable(spec.needs());
         var deps = expander.expandNullable(spec.dependencies());
 

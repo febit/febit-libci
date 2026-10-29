@@ -45,8 +45,7 @@ public interface VarSupplier extends Serializable {
     }
 
     default String expand(@Nullable String pattern) {
-        var expanded = VarPatterns.expand(pattern, this);
-        return expanded == null ? "" : expanded;
+        return VarPatterns.expandOrEmpty(pattern, this);
     }
 
 }

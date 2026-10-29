@@ -15,9 +15,11 @@
  */
 package org.febit.libci.core.spec.variable;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import org.febit.libci.core.spec.support.SpecMapper;
+import org.febit.libci.core.variable.VarMeta;
 
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,18 @@ class VariableJacksonTest {
                 .returns(false, IVariable::expand)
                 .returns("desc", IVariable::description)
                 .returns(List.of("opt1", "opt2"), IVariable::options)
+                .returns(null, IVariable::file)
+        ;
+
+        // `file` is not part of the CI YAML, so it is ignored when parsing.
+        assertThat(SpecMapper.toBean(Map.of(
+                "value", "abc",
+                "file", true
+        ), GenericVariable.class))
+                .isNotNull()
+                .returns("abc", IVariable::value)
+                .returns(null, IVariable::file)
+                .returns(VarMeta.NONE, IVariable::meta)
         ;
     }
 
@@ -155,5 +169,37 @@ class VariableJacksonTest {
                 .returns(null, IVariable::description)
                 .returns(null, IVariable::options)
         ;
+    }
+
+    @Nested
+    class Meta {
+
+        @Test
+        void defaultsToNone() {
+            assertThat(JobVariable.of("v").meta()).isEqualTo(VarMeta.NONE);
+            assertThat(GenericVariable.builder().value("v").build().meta())
+                    .isEqualTo(VarMeta.NONE);
+        }
+
+        @Test
+        void fileVariableIsMarked() {
+            assertThat(new FileVariable("v").meta()).isEqualTo(VarMeta.FILE);
+        }
+
+        @Test
+        void yamlVariablesDoNotSupportFile() {
+            assertThat(GenericVariable.builder().value("v").build().file()).isNull();
+            assertThat(JobVariable.of("v").file()).isNull();
+            assertThat(new JobRuleVariable("v").file()).isNull();
+            assertThat(new WorkflowRuleVariable("v").file()).isNull();
+        }
+    }
+
+    private record FileVariable(String value) implements IVariable {
+
+        @Override
+        public VarMeta meta() {
+            return VarMeta.FILE;
+        }
     }
 }

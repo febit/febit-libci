@@ -89,7 +89,7 @@ public class JobExecution implements Serializable {
     public void expand() {
         var vars = job.vars();
         var unexpanded = unexpandedSpec();
-        var expanded = VarExpander.of(vars, ExpandPhase.RUN).expand(unexpanded);
+        var expanded = VarExpander.of(vars.expandableView(), ExpandPhase.RUN).expand(unexpanded);
         this.expandedSpecRef.set(expanded);
         JobPredefined.expanded(vars, expanded);
     }

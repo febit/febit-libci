@@ -18,6 +18,7 @@ package org.febit.libci.core.spec.variable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.febit.libci.core.spec.ISpec;
+import org.febit.libci.core.variable.VarMeta;
 
 import org.jspecify.annotations.Nullable;
 
@@ -31,6 +32,26 @@ public interface IVariable extends ISpec {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     default Boolean expand() {
         return null;
+    }
+
+    /**
+     * Whether {@link #value()} is the content of a file, which is materialized as a
+     * path when the job runs.
+     *
+     * <p>Variables defined in the CI YAML cannot be file typed; implementations that
+     * do not support it keep the default {@code null}.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    default Boolean file() {
+        return null;
+    }
+
+    /** Behaviour markers of this definition. */
+    default VarMeta meta() {
+        return Boolean.TRUE.equals(file())
+                ? VarMeta.FILE
+                : VarMeta.NONE;
     }
 
     @Nullable
