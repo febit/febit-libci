@@ -1,15 +1,15 @@
 [versions]
 febit-devkit = '1.7.0'
 febit-commons = "4.2.0-M1"
-mina-sshd = "2.19.0"
+mina-sshd = "2.20.0"
 groovy-cps = "1.31"
-jpi2 = "0.58.1"
+jpi2 = "0.58.4"
 eddsa = "0.3.0"
 
 xbib-jflex = "3.0.2"
 
-# Ref: https://github.com/jenkinsci/jenkins/blob/jenkins-2.580.1/bom/pom.xml
-jenkins-bom = "2.580.1"
+# Ref: https://github.com/jenkinsci/jenkins/blob/jenkins-2.580.2/bom/pom.xml
+jenkins-bom = "2.580.2"
 spring = "7.0.9"
 
 # Ref: https://github.com/jenkinsci/git-client-plugin/blob/git-client-6.6.1/pom.xml
