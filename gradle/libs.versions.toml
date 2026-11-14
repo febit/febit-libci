@@ -1,9 +1,9 @@
 [versions]
 febit-devkit = '1.7.0'
 febit-commons = "4.2.0-M1"
-mina-sshd = "2.20.0"
+mina-sshd = "2.20.1"
 groovy-cps = "1.31"
-jpi2 = "0.58.4"
+jpi2 = "0.59.0"
 eddsa = "0.3.0"
 
 xbib-jflex = "3.0.2"
@@ -12,11 +12,11 @@ xbib-jflex = "3.0.2"
 jenkins-bom = "2.580.2"
 spring = "7.0.9"
 
-# Ref: https://github.com/jenkinsci/git-client-plugin/blob/git-client-6.6.1/pom.xml
-jgit = "7.6.0.202603022253-r"
+# Ref: https://github.com/jenkinsci/git-client-plugin/blob/git-client-6.7.1/pom.xml
+jgit = "7.8.1.202611041320-r"
 
 # Ref: https://repo.jenkins-ci.org/artifactory/public/io/jenkins/tools/bom/bom-weekly/
-jenkins-tools-bom = "7237.v5071b_f4589f1"
+jenkins-tools-bom = "7349.vd0a_cb_6c87a_31"
 
 [libraries]
 febit-commons-deps = { module = "org.febit:febit-commons-dependencies", version.ref = "febit-commons" }

@@ -150,7 +150,11 @@ public class JgitRepoUtils {
                 .build();
         try (var git = new Git(repo)) {
             var sourceRef = normalizeRefSpecSource(ref);
-            var refSpec = new RefSpec(sourceRef + ":" + sourceRef)
+            // HEAD is not a valid fetch destination (JGit 7.8.1+ only accepts
+            // refs/ targets), so fetch into refs/libci/head and detach onto the
+            // commit this spec wrote.
+            var destRef = Constants.HEAD.equals(sourceRef) ? "refs/libci/head" : sourceRef;
+            var refSpec = new RefSpec(sourceRef + ":" + destRef)
                     .setForceUpdate(true);
             var fetch = git.fetch()
                     .setRemote(repoUrl)
@@ -165,6 +169,23 @@ public class JgitRepoUtils {
             // silently return an empty repository; fail fast instead.
             if (refSpec.isWildcard() && result.getTrackingRefUpdates().isEmpty()) {
                 throw new RefNotFoundException("No matching refs found for: " + ref);
+            }
+            if (Constants.HEAD.equals(sourceRef)) {
+                // take the commit this spec wrote (not the remote HEAD)
+                ObjectId headId = null;
+                for (var update : result.getTrackingRefUpdates()) {
+                    if (destRef.equals(update.getLocalName())) {
+                        headId = update.getNewObjectId();
+                        break;
+                    }
+                }
+                if (headId == null) {
+                    throw new RefNotFoundException("Fetched HEAD but no commit at: " + destRef);
+                }
+                var headUpdate = repo.updateRef(Constants.HEAD);
+                headUpdate.setNewObjectId(headId);
+                headUpdate.forceUpdate();
+                repo.updateRef(destRef).delete();
             }
         }
         return repo;
